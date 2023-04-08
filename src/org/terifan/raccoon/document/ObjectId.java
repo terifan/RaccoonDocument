@@ -133,13 +133,12 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	@Override
 	public int compareTo(ObjectId aOther)
 	{
-		return
-			mTime < aOther.mTime ? -1 :
-				mTime > aOther.mTime ? 1 :
-					mSession < aOther.mSession ? -1 :
-						mSession > aOther.mSession ? 1 :
-							mSequence < aOther.mSequence ? -1 :
-								mSequence > aOther.mSequence ? 1 : 0;
+		return mTime < aOther.mTime ? -1
+			: mTime > aOther.mTime ? 1
+				: mSession < aOther.mSession ? -1
+					: mSession > aOther.mSession ? 1
+						: mSequence < aOther.mSequence ? -1
+							: mSequence > aOther.mSequence ? 1 : 0;
 	}
 
 
@@ -159,7 +158,6 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		aBuffer[aPosition++] = (byte)(aValue >> 8);
 		aBuffer[aPosition] = (byte)(aValue);
 	}
-
 
 //	public static void main(String... args)
 //	{
