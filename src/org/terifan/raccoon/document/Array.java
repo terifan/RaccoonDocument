@@ -199,7 +199,7 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 
 
 	@Override
-	public Array removeImpl(Integer aIndex)
+	public Array remove(Integer aIndex)
 	{
 		mValues.remove((int)aIndex);
 		return this;

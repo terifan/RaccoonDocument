@@ -122,7 +122,7 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 
 
 	@Override
-	public Document removeImpl(String aKey)
+	public Document remove(String aKey)
 	{
 		mValues.remove(aKey);
 		return this;

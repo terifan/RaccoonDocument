@@ -682,7 +682,7 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	abstract R putImpl(K aKey, Object aValue);
 
 
-	abstract R removeImpl(K aKey);
+	abstract R remove(K aKey);
 
 
 	abstract Checksum hashCode(Checksum aChecksum);
