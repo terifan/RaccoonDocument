@@ -344,4 +344,40 @@ public class DocumentNGTest
 		assertEquals((int)v, a);
 		assertEquals((int)(v >>> 32), b);
 	}
+
+
+//	@Test
+//	public void testPaths()
+//	{
+//		Document doc = new Document();
+//		doc.put("@a/b/c", "test");
+//		System.out.println(doc);
+//
+//		String text = doc.get("@a/b/c");
+//
+//		assertEquals(doc.toTypedJson(), "{'a':{'b':{'c':'test'}}}");
+//		assertEquals(text, "test");
+//
+//		doc.remove("@a/b/c");
+//		System.out.println(doc);
+//	}
+//
+//
+//	@Test
+//	public void testArrayPaths()
+//	{
+//		Document doc = new Document();
+//		doc.put("@a", "A");
+//		doc.put("@b/c", "B-C");
+//		doc.put("@d/e/0", "D-E-0");
+//		doc.put("@f/g/0/h", "F-G-0-H");
+//
+//		String text = doc.get("@f/g/0/h");
+//
+//		assertEquals(doc.toTypedJson(), "{'a':'A','b':{'c':'B-C'},'d':{'e':{'0':'D-E-0'}},'f':{'g':[{'h':'F-G-0-H'}]}}");
+//		assertEquals(text, "F-G-0-H");
+//
+//		doc.remove("@a/b/0/c");
+//		System.out.println(doc);
+//	}
 }

@@ -31,10 +31,7 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	}
 
 
-	public <T> T get(K aKey)
-	{
-		return (T)getImpl(aKey);
-	}
+	public abstract <T> T get(K aKey);
 
 
 	public <T> T get(K aKey, T aDefaultValue)
@@ -382,6 +379,30 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	}
 
 
+	public Array getOrCreateArray(K aKey)
+	{
+		Array v = (Array)getImpl(aKey);
+		if (v == null)
+		{
+			v = new Array();
+			putImpl(aKey, v);
+		}
+		return v;
+	}
+
+
+	public Document getOrCreateDocument(K aKey)
+	{
+		Document v = (Document)getImpl(aKey);
+		if (v == null)
+		{
+			v = new Document();
+			putImpl(aKey, v);
+		}
+		return v;
+	}
+
+
 	public byte[] getBinary(K aKey)
 	{
 		Object v = getImpl(aKey);
@@ -417,17 +438,6 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 
 		throw new IllegalArgumentException("Unsupported format: " + v.getClass());
 	}
-
-
-//	public R put(K aKey, Object aValue)
-//	{
-//		if (isSupportedType(aValue))
-//		{
-//			return putImpl(aKey, aValue);
-//		}
-//
-//		throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
-//	}
 
 
 	public boolean isNull(K aKey)
@@ -529,7 +539,7 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	@Override
 	public String toString()
 	{
-		return new JSONEncoder().marshal(this, false, true);
+		return new JSONEncoder().marshal(this, false, true, true);
 	}
 
 
@@ -541,7 +551,7 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 
 	public String toJson()
 	{
-		return new JSONEncoder().marshal(this, true, false);
+		return new JSONEncoder().marshal(this, true, false, false);
 	}
 
 
@@ -550,7 +560,7 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	 */
 	public String toTypedJson()
 	{
-		return new JSONEncoder().marshal(this, true, true);
+		return new JSONEncoder().marshal(this, true, true, true);
 	}
 
 
@@ -672,10 +682,10 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	abstract R putImpl(K aKey, Object aValue);
 
 
+	abstract R removeImpl(K aKey);
+
+
 	abstract Checksum hashCode(Checksum aChecksum);
-
-
-	public abstract R remove(K aKey);
 
 
 	public abstract int size();
@@ -688,4 +698,24 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 
 
 	public abstract Iterable<K> keySet();
+
+
+//	protected Result resolve(String aPath)
+//	{
+//		if (aPath.startsWith("@"))
+//		{
+//			if (aPath.startsWith("@/"))
+//			{
+//				return resolveImpl(aPath.substring(2));
+//			}
+//			return resolveImpl(aPath.substring(1));
+//		}
+//		return new Result(aPath, this);
+//	}
+//
+//
+//	protected abstract Result resolveImpl(String aPath);
+//
+//
+//	record Result (Object name, KeyValueCollection collection) {}
 }

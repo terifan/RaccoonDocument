@@ -19,6 +19,29 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	}
 
 
+	public <T> T get(Integer aKey)
+	{
+		return (T)getImpl(aKey);
+	}
+
+
+//	public <T> T get(String aPath)
+//	{
+//		if (aPath.startsWith("@"))
+//		{
+//			aPath = aPath.substring(1);
+//			int i = aPath.indexOf('/');
+//			if (i != -1)
+//			{
+//				String next = aPath.substring(0, i);
+//				KeyValueCollection coll = (KeyValueCollection)getImpl(Integer.valueOf(next));
+//				return (T)coll.get("@" + aPath.substring(i + 1));
+//			}
+//		}
+//		return (T)getImpl(Integer.valueOf(aPath));
+//	}
+
+
 	public Array addAll(Array aSource)
 	{
 		mValues.addAll(aSource.mValues);
@@ -28,19 +51,63 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 
 	public <T extends Array> T put(Integer aKey, Object aValue)
 	{
-		if (isSupportedType(aValue))
+		if (!isSupportedType(aValue))
 		{
-			return (T)putImpl(aKey, aValue);
+			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
 		}
 
-		throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
+		return (T)putImpl(aKey, aValue);
 	}
+
+
+	public <T extends Array> T put(String aPath, Object aValue)
+	{
+		if (!isSupportedType(aValue))
+		{
+			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
+		}
+
+		return (T)putImpl(Integer.valueOf(aPath), aValue);
+	}
+
+
+//	void putPath(String aPath, Object aValue)
+//	{
+//		int i = aPath.indexOf('/');
+//
+//		if (i == -1)
+//		{
+//			put(Integer.valueOf(aPath), aValue);
+//			return;
+//		}
+//
+//		Integer subpath = Integer.valueOf(aPath.substring(0, i));
+//
+//		KeyValueCollection coll = (KeyValueCollection)getImpl(subpath);
+//
+//		String next = aPath.substring(i + 1);
+//
+//		if (coll == null)
+//		{
+//			coll = next.matches("[0-9]+|[0-9]+/.*") ? new Array() : new Document();
+//			putImpl(subpath, coll);
+//		}
+//
+//		if (coll instanceof Document)
+//		{
+//			((Document)coll).putPath(next, aValue);
+//		}
+//		else
+//		{
+//			((Array)coll).putPath(next, aValue);
+//		}
+//	}
 
 
 	@Override
 	Object getImpl(Integer aIndex)
 	{
-		return mValues.get(aIndex);
+		return aIndex >= mValues.size() ? null : mValues.get(aIndex);
 	}
 
 
@@ -132,7 +199,7 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 
 
 	@Override
-	public Array remove(Integer aIndex)
+	public Array removeImpl(Integer aIndex)
 	{
 		mValues.remove((int)aIndex);
 		return this;
@@ -367,4 +434,42 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 			}
 		};
 	}
+
+
+//	@Override
+//	protected Result resolveImpl(String aPath)
+//	{
+//		System.out.println(aPath+" "+getClass());
+//
+//		int i = aPath.indexOf('/');
+//
+//		if (i == -1)
+//		{
+//			return new Result(aPath, this);
+//		}
+//
+//		String subpath = aPath.substring(0, i);
+//
+//		boolean numeric = subpath.matches("[0-9]+");
+//
+//		String nextPath = aPath.substring(i + 1);
+//		boolean nextNumeric = nextPath.matches("[0-9]+/.*|[0-9]+");
+//
+//		System.out.println("    "+numeric);
+//
+//		Integer xx = Integer.valueOf(subpath);
+//
+//		KeyValueCollection next = (KeyValueCollection)getImpl(xx);
+//
+//
+//		if (next == null)
+//		{
+//			next = nextNumeric ? new Array() : new Document();
+//			putImpl(xx, next);
+//		}
+//
+//		System.out.println("  -    "+nextPath+" "+nextPath.getClass());
+//
+//		return next.resolveImpl(nextPath);
+//	}
 }

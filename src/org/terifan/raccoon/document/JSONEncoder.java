@@ -17,16 +17,18 @@ class JSONEncoder
 	private boolean mCompact;
 	private boolean mNewLine;
 	private boolean mFirst;
+	private char mQuote;
 	private int mIndent;
 
 
-	public String marshal(KeyValueCollection aContainer, boolean aCompact, boolean aTyped)
+	public String marshal(KeyValueCollection aContainer, boolean aCompact, boolean aTyped, boolean aApostrophes)
 	{
 		mBuffer = new StringBuilder();
 		mNewLine = false;
 		mCompact = aCompact;
 		mTyped = aTyped;
 		mFirst = true;
+		mQuote = aApostrophes ? '\'' : '\"';
 
 		if (aContainer instanceof Document)
 		{
@@ -72,7 +74,7 @@ class JSONEncoder
 
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
-			print("\"" + escapeString(entry.getKey()) + "\": ");
+			print(mQuote + escapeString(entry.getKey()) + mQuote + ": ");
 
 			marshal(entry.getValue());
 
@@ -198,7 +200,7 @@ class JSONEncoder
 	{
 		if (aValue instanceof String)
 		{
-			print("\"" + escapeString(aValue.toString()) + "\"");
+			print(mQuote + escapeString(aValue.toString()) + mQuote);
 		}
 		else if (aValue == null)
 		{
@@ -215,7 +217,7 @@ class JSONEncoder
 		{
 			if (!mTyped)
 			{
-				print("\"" + escapeString(aValue.toString()) + "\"");
+				print(mQuote + escapeString(aValue.toString()) + mQuote);
 			}
 			else
 			{
@@ -263,7 +265,7 @@ class JSONEncoder
 		}
 		else if (aValue instanceof byte[])
 		{
-			print("\"" + marshalBinary((byte[])aValue) + "\"");
+			print(mQuote + marshalBinary((byte[])aValue) + mQuote);
 		}
 		else
 		{
