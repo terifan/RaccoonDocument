@@ -539,7 +539,7 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	@Override
 	public String toString()
 	{
-		return new JSONEncoder().marshal(this, false, true, true);
+		return new JSONEncoder().marshal(this, false, true, false);
 	}
 
 
@@ -560,7 +560,7 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	 */
 	public String toTypedJson()
 	{
-		return new JSONEncoder().marshal(this, true, true, true);
+		return new JSONEncoder().marshal(this, true, true, false);
 	}
 
 

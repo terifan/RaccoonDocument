@@ -213,11 +213,19 @@ class JSONEncoder
 			 || aValue instanceof LocalDate
 			 || aValue instanceof LocalTime
 			 || aValue instanceof LocalDateTime
-			 || aValue instanceof OffsetDateTime)
+			 || aValue instanceof OffsetDateTime
+			 || aValue instanceof byte[])
 		{
 			if (!mTyped)
 			{
-				print(mQuote + escapeString(aValue.toString()) + mQuote);
+				if (aValue instanceof byte[])
+				{
+					print(mQuote + marshalBinary((byte[])aValue) + mQuote);
+				}
+				else
+				{
+					print(mQuote + escapeString(aValue.toString()) + mQuote);
+				}
 			}
 			else
 			{
@@ -262,10 +270,6 @@ class JSONEncoder
 		else if (aValue instanceof Number || aValue instanceof Boolean) // note: bigdecimal is number
 		{
 			print(aValue);
-		}
-		else if (aValue instanceof byte[])
-		{
-			print(mQuote + marshalBinary((byte[])aValue) + mQuote);
 		}
 		else
 		{
