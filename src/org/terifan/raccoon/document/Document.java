@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 
 public class Document extends KeyValueCollection<String, Document> implements Externalizable, Cloneable, Comparable<Document>
@@ -49,48 +50,8 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
 		}
 
-//		if (aPath.startsWith("@"))
-//		{
-//			putPath(aPath.substring(1), aValue);
-//			return (T)this;
-//		}
-
 		return (T)putImpl(aPath, aValue);
 	}
-
-
-//	void putPath(String aPath, Object aValue)
-//	{
-//		int i = aPath.indexOf('/');
-//
-//		if (i == -1)
-//		{
-//			put(aPath, aValue);
-//			return;
-//		}
-//
-//		String subpath = aPath.substring(0, i);
-//
-//		KeyValueCollection coll = (KeyValueCollection)getImpl(subpath);
-//
-//		String next = aPath.substring(i + 1);
-//		System.out.println(next);
-//
-//		if (coll == null)
-//		{
-//			coll = next.matches("[0-9]+|[0-9]+/.*") ? new Array() : new Document();
-//			putImpl(subpath, coll);
-//		}
-//
-//		if (coll instanceof Document)
-//		{
-//			((Document)coll).putPath(next, aValue);
-//		}
-//		else
-//		{
-//			((Array)coll).putPath(next, aValue);
-//		}
-//	}
 
 
 	@Override
@@ -287,39 +248,4 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 	{
 		return new Document().fromJson(aJSON);
 	}
-
-
-//	@Override
-//	protected Result resolveImpl(String aPath)
-//	{
-//		System.out.println(aPath+" "+getClass());
-//
-//		int i = aPath.indexOf('/');
-//
-//		if (i == -1)
-//		{
-//			return new Result(aPath, this);
-//		}
-//
-//		String subpath = aPath.substring(0, i);
-//
-//		boolean numeric = subpath.matches("[0-9]+");
-//
-//		String nextPath = aPath.substring(i + 1);
-//		boolean nextNumeric = nextPath.matches("[0-9]+/.*|[0-9]+");
-//
-//		System.out.println("    "+numeric);
-//
-//		KeyValueCollection next = (KeyValueCollection)getImpl(subpath);
-//
-//		if (next == null)
-//		{
-//			next = nextNumeric ? new Array() : new Document();
-//			putImpl(subpath, next);
-//		}
-//
-//		System.out.println("  -    "+nextPath+" "+nextPath.getClass());
-//
-//		return next.resolveImpl(nextPath);
-//	}
 }

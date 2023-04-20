@@ -11,7 +11,7 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 
 
-enum BinaryType
+public enum SupportedTypes
 {
 	TERMINATOR(0),
 	DOCUMENT(1,
@@ -22,6 +22,7 @@ enum BinaryType
 		(aEncoder, aValue) -> aEncoder.writeArray((Array)aValue),
 		aDecoder -> aDecoder.readArray(new Array())
 	),
+	/** type: org.terifan.raccoon.document.ObjectId */
 	OBJECTID(3,
 		(aEncoder, aValue) -> aEncoder.writeBytes(((ObjectId)aValue).toByteArray()),
 		aDecoder -> ObjectId.fromBytes(aDecoder.readBytes(new byte[ObjectId.LENGTH]))
@@ -62,46 +63,53 @@ enum BinaryType
 		(aEncoder, aValue) -> aEncoder.writeVarint(Float.floatToIntBits((Float)aValue)),
 		aDecoder -> Float.intBitsToFloat((int)aDecoder.readVarint())
 	),
+	/** type: byte[] */
 	BINARY(13,
 		(aEncoder, aValue) -> aEncoder.writeBuffer((byte[])aValue),
 		aDecoder -> aDecoder.readBuffer()
 	),
+	/** type: java.util.UUID */
 	UUID(14,
 		(aEncoder, aValue) -> aEncoder.writeVarint(((UUID)aValue).getMostSignificantBits()).writeVarint(((UUID)aValue).getLeastSignificantBits()),
 		aDecoder -> new java.util.UUID(aDecoder.readVarint(), aDecoder.readVarint())
 	),
+	/** type: java.time.LocalDateTime */
 	DATETIME(15,
 		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(localDateToNumber(((LocalDateTime)aValue).toLocalDate())).writeUnsignedVarint(localTimeToNumber(((LocalDateTime)aValue).toLocalTime())),
 		aDecoder -> LocalDateTime.of(numberToLocalDate((int)aDecoder.readUnsignedVarint()), numberToLocalTime(aDecoder.readUnsignedVarint()))
 	),
+	/** type: java.time.LocalDate */
 	DATE(16,
 		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(localDateToNumber((LocalDate)aValue)),
 		aDecoder -> numberToLocalDate((int)aDecoder.readUnsignedVarint())
 	),
+	/** type: java.time.LocalTime */
 	TIME(17,
 		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(localTimeToNumber((LocalTime)aValue)),
 		aDecoder -> numberToLocalTime(aDecoder.readUnsignedVarint())
 	),
+	/** type: java.time.OffsetDateTime */
 	OFFSETDATETIME(18,
 		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(localDateToNumber(((OffsetDateTime)aValue).toLocalDate())).writeUnsignedVarint(localTimeToNumber(((OffsetDateTime)aValue).toLocalTime())).writeVarint(((OffsetDateTime)aValue).getOffset().getTotalSeconds()),
 		aDecoder -> OffsetDateTime.of(numberToLocalDate((int)aDecoder.readUnsignedVarint()), numberToLocalTime(aDecoder.readUnsignedVarint()), ZoneOffset.ofTotalSeconds((int)aDecoder.readVarint()))
 	),
+	/** type: java.lang.BigDecimal */
 	DECIMAL(19,
 		(aEncoder, aValue) -> aEncoder.writeString(aValue.toString()),
 		aDecoder -> new BigDecimal(aDecoder.readString())
 	);
 
-	public Encoder encoder;
-	public Decoder decoder;
+	Encoder encoder;
+	Decoder decoder;
 
 
-	private BinaryType(int aCode)
+	private SupportedTypes(int aCode)
 	{
 		this(aCode, null, null);
 	}
 
 
-	private BinaryType(int aCode, Encoder aEncoder, Decoder aDecoder)
+	private SupportedTypes(int aCode, Encoder aEncoder, Decoder aDecoder)
 	{
 		assert aCode == ordinal();
 
@@ -110,7 +118,7 @@ enum BinaryType
 	}
 
 
-	static BinaryType identify(Object aValue)
+	public static SupportedTypes identify(Object aValue)
 	{
 		if (aValue == null)
 		{
@@ -138,7 +146,7 @@ enum BinaryType
 		if (Byte.class == cls) return BYTE;
 		if (Short.class == cls) return SHORT;
 
-		throw new IllegalArgumentException("Failed to marshal; unsupported value of type " + cls.getCanonicalName());
+		return null;
 	}
 
 

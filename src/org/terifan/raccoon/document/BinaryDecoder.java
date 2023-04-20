@@ -14,26 +14,30 @@ class BinaryDecoder implements AutoCloseable
 	BinaryDecoder(InputStream aInputStream)
 	{
 		mInputStream = aInputStream;
-		mChecksum = new Checksum();
 	}
 
 
 	void unmarshal(KeyValueCollection aContainer) throws IOException
 	{
+		if (mChecksum == null)
+		{
+			mChecksum = new Checksum();
+		}
+
 		Token token = readToken();
 
-		if (token.value != VERSION)
+		if (token.value != BinaryEncoder.VERSION)
 		{
 			throw new StreamException("Unsupported version");
 		}
 
 		if (aContainer instanceof Document)
 		{
-			if (token.type == BinaryType.ARRAY)
+			if (token.type == SupportedTypes.ARRAY)
 			{
 				throw new StreamException("Attempt to unmarshal a Document failed; found an Array in the binary stream.");
 			}
-			else if (token.type != BinaryType.DOCUMENT)
+			else if (token.type != SupportedTypes.DOCUMENT)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
@@ -42,16 +46,52 @@ class BinaryDecoder implements AutoCloseable
 		}
 		else
 		{
-			if (token.type == BinaryType.DOCUMENT)
+			if (token.type == SupportedTypes.DOCUMENT)
 			{
 				throw new StreamException("Attempt to unmarshal an Array failed; found a Document in the binary stream.");
 			}
-			else if (token.type != BinaryType.ARRAY)
+			else if (token.type != SupportedTypes.ARRAY)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
 
 			readArray((Array)aContainer);
+		}
+	}
+
+
+	Object unmarshal() throws IOException
+	{
+		boolean first = mChecksum == null;
+		if (first)
+		{
+			mChecksum = new Checksum();
+		}
+
+		Token token = readToken();
+
+		if (first)
+		{
+			if (token.value != VERSION)
+			{
+				throw new StreamException("Unsupported version");
+			}
+		}
+		else if (token.value != token.checksum)
+		{
+			throw new StreamException("Checksum error in data stream");
+		}
+
+		switch (token.type)
+		{
+			case DOCUMENT:
+				return readDocument(new Document());
+			case ARRAY:
+				return readArray(new Array());
+			case TERMINATOR:
+				return token.type;
+			default:
+				return readValue(token.type);
 		}
 	}
 
@@ -81,7 +121,7 @@ class BinaryDecoder implements AutoCloseable
 		{
 			Token token = readToken();
 
-			if (token.type == BinaryType.TERMINATOR)
+			if (token.type == SupportedTypes.TERMINATOR)
 			{
 				if (token.value != token.checksum)
 				{
@@ -105,7 +145,7 @@ class BinaryDecoder implements AutoCloseable
 		{
 			Token token = readToken();
 
-			if (token.type == BinaryType.TERMINATOR)
+			if (token.type == SupportedTypes.TERMINATOR)
 			{
 				if (token.value != token.checksum)
 				{
@@ -124,7 +164,7 @@ class BinaryDecoder implements AutoCloseable
 	}
 
 
-	private Object readValue(BinaryType aType) throws IOException
+	private Object readValue(SupportedTypes aType) throws IOException
 	{
 		return aType.decoder.decode(this);
 	}
@@ -140,7 +180,7 @@ class BinaryDecoder implements AutoCloseable
 			Token token = new Token();
 			token.checksum = checksum;
 			token.value = (int)(params >>> 32);
-			token.type = BinaryType.values()[(int)params];
+			token.type = SupportedTypes.values()[(int)params];
 			return token;
 		}
 		catch (ArrayIndexOutOfBoundsException e)
@@ -154,7 +194,7 @@ class BinaryDecoder implements AutoCloseable
 	{
 		int value;
 		int checksum;
-		BinaryType type;
+		SupportedTypes type;
 	}
 
 

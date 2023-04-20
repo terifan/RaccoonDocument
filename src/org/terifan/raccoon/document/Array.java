@@ -3,6 +3,7 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 
@@ -384,6 +385,15 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 				};
 			}
 		};
+	}
+
+
+	public void forEach(BiConsumer<Integer, Object> aAction)
+	{
+		for (int i = 0; i < mValues.size(); i++)
+		{
+			aAction.accept(i, mValues.get(i));
+		}
 	}
 
 

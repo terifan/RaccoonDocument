@@ -15,13 +15,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 
-public abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
+abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 {
 	private final static long serialVersionUID = 1L;
 
@@ -188,6 +189,25 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 			return null;
 		}
 		return v.toString();
+	}
+
+
+	public Date getMillis(K aKey)
+	{
+		Object v = getImpl(aKey);
+		if (v == null)
+		{
+			return null;
+		}
+		if (v instanceof Date)
+		{
+			return (Date)v;
+		}
+		if (v instanceof Long)
+		{
+			return new Date((Long)v);
+		}
+		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a Date");
 	}
 
 
@@ -508,28 +528,30 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 
 	public static boolean isSupportedType(Object aValue)
 	{
-		Class type = aValue == null ? null : aValue.getClass();
+		return SupportedTypes.identify(aValue) != null;
 
-		return false
-			|| type == Document.class
-			|| type == Array.class
-			|| type == String.class
-			|| type == Integer.class
-			|| type == Long.class
-			|| type == Double.class
-			|| type == Boolean.class
-			|| type == Byte.class
-			|| type == Short.class
-			|| type == Float.class
-			|| type == LocalDate.class
-			|| type == LocalTime.class
-			|| type == LocalDateTime.class
-			|| type == OffsetDateTime.class
-			|| type == UUID.class
-			|| type == ObjectId.class
-			|| type == BigDecimal.class
-			|| type == byte[].class
-			|| type == null;
+//		Class type = aValue == null ? null : aValue.getClass();
+//
+//		return false
+//			|| type == Document.class
+//			|| type == Array.class
+//			|| type == String.class
+//			|| type == Integer.class
+//			|| type == Long.class
+//			|| type == Double.class
+//			|| type == Boolean.class
+//			|| type == Byte.class
+//			|| type == Short.class
+//			|| type == Float.class
+//			|| type == LocalDate.class
+//			|| type == LocalTime.class
+//			|| type == LocalDateTime.class
+//			|| type == OffsetDateTime.class
+//			|| type == UUID.class
+//			|| type == ObjectId.class
+//			|| type == BigDecimal.class
+//			|| type == byte[].class
+//			|| type == null;
 	}
 
 
@@ -624,22 +646,25 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	}
 
 
+	/**
+	 * Read a binary representation of this Object from the ObjectInput provided.
+	 */
 	@Override
-	public void readExternal(ObjectInput aInputStream) throws IOException, ClassNotFoundException
+	public void readExternal(ObjectInput aObjectInput) throws IOException, ClassNotFoundException
 	{
 		InputStream in = new InputStream()
 		{
 			@Override
 			public int read() throws IOException
 			{
-				return aInputStream.read();
+				return aObjectInput.read();
 			}
 
 
 			@Override
 			public int read(byte[] aBuffer, int aOffset, int aLength) throws IOException
 			{
-				return aInputStream.read(aBuffer, aOffset, aLength);
+				return aObjectInput.read(aBuffer, aOffset, aLength);
 			}
 		};
 
@@ -650,22 +675,25 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 	}
 
 
+	/**
+	 * Write a binary representation of this Object to the ObjectOutput provided.
+	 */
 	@Override
-	public void writeExternal(ObjectOutput aOutputStream) throws IOException
+	public void writeExternal(ObjectOutput aObjectOutput) throws IOException
 	{
 		OutputStream tmp = new OutputStream()
 		{
 			@Override
 			public void write(int aByte) throws IOException
 			{
-				aOutputStream.write(aByte);
+				aObjectOutput.write(aByte);
 			}
 
 
 			@Override
 			public void write(byte[] aBuffer, int aOffset, int aLength) throws IOException
 			{
-				aOutputStream.write(aBuffer, aOffset, aLength);
+				aObjectOutput.write(aBuffer, aOffset, aLength);
 			}
 		};
 
@@ -698,24 +726,4 @@ public abstract class KeyValueCollection<K, R> implements Externalizable, Serial
 
 
 	public abstract Iterable<K> keySet();
-
-
-//	protected Result resolve(String aPath)
-//	{
-//		if (aPath.startsWith("@"))
-//		{
-//			if (aPath.startsWith("@/"))
-//			{
-//				return resolveImpl(aPath.substring(2));
-//			}
-//			return resolveImpl(aPath.substring(1));
-//		}
-//		return new Result(aPath, this);
-//	}
-//
-//
-//	protected abstract Result resolveImpl(String aPath);
-//
-//
-//	record Result (Object name, KeyValueCollection collection) {}
 }

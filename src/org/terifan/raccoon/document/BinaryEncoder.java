@@ -3,35 +3,52 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map.Entry;
-import static org.terifan.raccoon.document.BinaryType.identify;
 
 
 class BinaryEncoder implements AutoCloseable
 {
-	final static int VERSION = 0;
+	final static int VERSION = 99;
 
 	private Checksum mChecksum;
 	private OutputStream mOutputStream;
 
 
-	BinaryEncoder(OutputStream aOutputStream)
+	public BinaryEncoder(OutputStream aOutputStream)
 	{
 		mOutputStream = aOutputStream;
-		mChecksum = new Checksum();
 	}
 
 
-	void marshal(KeyValueCollection aContainer) throws IOException
+	void marshal(Object aObject) throws IOException
 	{
-		if (aContainer instanceof Document)
+		SupportedTypes type = SupportedTypes.identify(aObject);
+
+		if (type == null)
 		{
-			writeToken(BinaryType.DOCUMENT, VERSION);
-			writeDocument((Document)aContainer);
+			throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
+		}
+
+		if (mChecksum == null)
+		{
+			mChecksum = new Checksum();
+			writeToken(type, VERSION);
 		}
 		else
 		{
-			writeToken(BinaryType.ARRAY, VERSION);
-			writeArray((Array)aContainer);
+			writeToken(type, getChecksumValue());
+		}
+
+		switch (type)
+		{
+			case DOCUMENT:
+				writeDocument((Document)aObject);
+				break;
+			case ARRAY:
+				writeArray((Array)aObject);
+				break;
+			default:
+				writeValue(type, aObject);
+				break;
 		}
 	}
 
@@ -55,14 +72,14 @@ class BinaryEncoder implements AutoCloseable
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
 			Object value = entry.getValue();
-			BinaryType type = identify(value);
+			SupportedTypes type = SupportedTypes.identify(value);
 
 			writeToken(type, entry.getKey().length());
 			writeUTF(entry.getKey());
 			writeValue(type, value);
 		}
 
-		writeToken(BinaryType.TERMINATOR, getChecksumValue());
+		terminate();
 	}
 
 
@@ -72,12 +89,12 @@ class BinaryEncoder implements AutoCloseable
 
 		for (int offset = 0; offset < elementCount;)
 		{
-			BinaryType type = null;
+			SupportedTypes type = null;
 			int runLen = 0;
 
 			for (int i = offset; i < elementCount; i++, runLen++)
 			{
-				BinaryType nextType = identify(aArray.get(i));
+				SupportedTypes nextType = SupportedTypes.identify(aArray.get(i));
 				if (type != null && type != nextType)
 				{
 					break;
@@ -93,17 +110,23 @@ class BinaryEncoder implements AutoCloseable
 			}
 		}
 
-		writeToken(BinaryType.TERMINATOR, getChecksumValue());
+		terminate();
 	}
 
 
-	private void writeValue(BinaryType aType, Object aValue) throws IOException
+	public void terminate() throws IOException
+	{
+		writeToken(SupportedTypes.TERMINATOR, getChecksumValue());
+	}
+
+
+	private void writeValue(SupportedTypes aType, Object aValue) throws IOException
 	{
 		aType.encoder.encode(this, aValue);
 	}
 
 
-	private void writeToken(BinaryType aType, int aValue) throws IOException
+	private void writeToken(SupportedTypes aType, int aValue) throws IOException
 	{
 		writeInterleaved(aType.ordinal(), aValue);
 	}

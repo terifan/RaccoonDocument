@@ -335,11 +335,15 @@ public class DocumentNGTest
 		int b = 789;
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		new BinaryEncoder(baos).writeInterleaved(a, b);
+		BinaryEncoder encoder = new BinaryEncoder(baos);
+		encoder.marshal(0);
+		encoder.writeInterleaved(a, b);
 
 //		Log.hexDump(baos.toByteArray());
 
-		long v = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray())).readInterleaved();
+		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
+		decoder.unmarshal();
+		long v = decoder.readInterleaved();
 
 		assertEquals((int)v, a);
 		assertEquals((int)(v >>> 32), b);
