@@ -48,7 +48,7 @@ class MurmurHash3
 	}
 
 
-	public MurmurHash3 updateChars(CharSequence aChars)
+	public void updateChars(CharSequence aChars)
 	{
 		aChars.chars().forEach(c ->
 		{
@@ -58,7 +58,6 @@ class MurmurHash3
 			}
 			updateByte(0xff & c);
 		});
-		return this;
 	}
 
 
