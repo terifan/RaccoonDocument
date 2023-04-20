@@ -31,11 +31,11 @@ class MurmurHash3
 	}
 
 
-	public void updateInt(int b)
+	public void updateInt(int aInt)
 	{
 		total += 4;
-		impl(buf | (b >>> len));
-		buf = b << (32 - len);
+		impl(buf | (aInt >>> len));
+		buf = aInt << (32 - len);
 	}
 
 
@@ -48,7 +48,7 @@ class MurmurHash3
 	}
 
 
-	MurmurHash3 updateChars(CharSequence aChars)
+	public MurmurHash3 updateChars(CharSequence aChars)
 	{
 		aChars.chars().forEach(c ->
 		{
@@ -87,6 +87,7 @@ class MurmurHash3
 			k1 *= 0x1b873593;
 			o ^= k1;
 		}
+
 		o ^= total;
 
 		o ^= o >>> 16;

@@ -10,7 +10,33 @@ import org.testng.annotations.Test;
 public class MarshallerNGTest
 {
 	@Test
-	public void testSomeMethod() throws IOException
+	public void testMarshallerCompatible() throws IOException
+	{
+		Array arr = Array.of(1,2,3);
+		Document doc = new Document()
+			.put("test", "hello world")
+			.put("arr", arr);
+
+		byte[] buf = doc.toByteArray();
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (Marshaller m = new Marshaller(baos))
+		{
+			m.write(doc);
+		}
+
+		assertEquals(buf, baos.toByteArray());
+
+		try (Marshaller m = new Marshaller(new ByteArrayInputStream(buf)))
+		{
+			Document d = m.read();
+			assertEquals(d, doc);
+		}
+	}
+
+
+	@Test
+	public void testMarshalling() throws IOException
 	{
 		Array arr = Array.of(1,2,3);
 		Document doc = new Document()
