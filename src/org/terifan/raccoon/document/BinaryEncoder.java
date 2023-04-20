@@ -7,7 +7,7 @@ import java.util.Map.Entry;
 
 class BinaryEncoder implements AutoCloseable
 {
-	final static int VERSION = 99;
+	final static int VERSION = 1;
 
 	private Checksum mChecksum;
 	private OutputStream mOutputStream;

@@ -28,7 +28,7 @@ class BinaryDecoder implements AutoCloseable
 
 		if (token.value != BinaryEncoder.VERSION)
 		{
-			throw new StreamException("Unsupported version");
+			throw new StreamException("Unsupported stream encoding version: " + token.value);
 		}
 
 		if (aContainer instanceof Document)
@@ -74,7 +74,7 @@ class BinaryDecoder implements AutoCloseable
 		{
 			if (token.value != VERSION)
 			{
-				throw new StreamException("Unsupported version");
+				throw new StreamException("Unsupported stream encoding version: " + token.value);
 			}
 		}
 		else if (token.value != token.checksum)

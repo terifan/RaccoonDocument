@@ -30,7 +30,7 @@ public class MarshallerNGTest
 
 		ByteArrayInputStream in = new ByteArrayInputStream(baos.toByteArray());
 
-		Marshaller dec = new Marshaller(new ByteArrayInputStream(baos.toByteArray()));
+		Marshaller dec = new Marshaller(in);
 		int i = dec.read();
 		String s = dec.read();
 		Array a = dec.read();
@@ -45,5 +45,37 @@ public class MarshallerNGTest
 		byte[] end = new byte[3];
 		in.read(end);
 		assertEquals(end, "END".getBytes());
+	}
+
+
+	@Test(expectedExceptions = StreamException.class)
+	public void testChecksumError() throws IOException
+	{
+		Array arr = Array.of(1,2,3);
+		Document doc = new Document()
+			.put("test", "hello world")
+			.put("arr", arr);
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (Marshaller enc = new Marshaller(baos))
+		{
+			enc.write(4);
+			enc.write("test");
+			enc.write(arr);
+			enc.write(doc);
+			enc.writeTerminator();
+		}
+
+		byte[] data = baos.toByteArray();
+		data[7] ^= 1;
+
+		try (Marshaller dec = new Marshaller(new ByteArrayInputStream(data)))
+		{
+			int i = dec.read();
+			String s = dec.read();
+			Array a = dec.read();
+			Document d = dec.read();
+			dec.expectTerminator();
+		}
 	}
 }
