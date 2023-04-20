@@ -202,7 +202,7 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 
 
 	@Override
-	Checksum hashCode(Checksum aChecksum)
+	MurmurHash3 hashCode(MurmurHash3 aChecksum)
 	{
 		aChecksum.updateInt(93090393 ^ size()); // == "array".hashCode()
 

@@ -9,7 +9,7 @@ class BinaryEncoder implements AutoCloseable
 {
 	final static int VERSION = 1;
 
-	private Checksum mChecksum;
+	private MurmurHash3 mChecksum;
 	private OutputStream mOutputStream;
 
 
@@ -30,7 +30,7 @@ class BinaryEncoder implements AutoCloseable
 
 		if (mChecksum == null)
 		{
-			mChecksum = new Checksum();
+			mChecksum = new MurmurHash3(VERSION);
 			writeToken(type, VERSION);
 		}
 		else

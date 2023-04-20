@@ -7,7 +7,7 @@ import static org.terifan.raccoon.document.BinaryEncoder.VERSION;
 
 class BinaryDecoder implements AutoCloseable
 {
-	private Checksum mChecksum;
+	private MurmurHash3 mChecksum;
 	private InputStream mInputStream;
 
 
@@ -21,7 +21,7 @@ class BinaryDecoder implements AutoCloseable
 	{
 		if (mChecksum == null)
 		{
-			mChecksum = new Checksum();
+			mChecksum = new MurmurHash3(VERSION);
 		}
 
 		Token token = readToken();
@@ -65,7 +65,7 @@ class BinaryDecoder implements AutoCloseable
 		boolean first = mChecksum == null;
 		if (first)
 		{
-			mChecksum = new Checksum();
+			mChecksum = new MurmurHash3(VERSION);
 		}
 
 		Token token = readToken();

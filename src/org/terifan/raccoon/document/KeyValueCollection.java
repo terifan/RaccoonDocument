@@ -500,11 +500,11 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	@Override
 	public int hashCode()
 	{
-		return hashCode(new Checksum()).getValue();
+		return hashCode(new MurmurHash3(0)).getValue();
 	}
 
 
-	void hashCode(Checksum aChecksum, Object aValue)
+	void hashCode(MurmurHash3 aChecksum, Object aValue)
 	{
 		if (aValue instanceof KeyValueCollection)
 		{
@@ -713,7 +713,7 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	abstract R remove(K aKey);
 
 
-	abstract Checksum hashCode(Checksum aChecksum);
+	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum);
 
 
 	public abstract int size();

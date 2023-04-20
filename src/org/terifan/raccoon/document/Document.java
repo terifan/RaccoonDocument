@@ -131,7 +131,7 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 
 
 	@Override
-	Checksum hashCode(Checksum aChecksum)
+	MurmurHash3 hashCode(MurmurHash3 aChecksum)
 	{
 		aChecksum.updateInt(861720859 ^ size()); // == "document".hashCode()
 
