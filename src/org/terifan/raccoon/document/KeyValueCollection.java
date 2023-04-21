@@ -483,14 +483,39 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		String path = aPath.substring(0, i);
 		String remain = aPath.substring(i + 1);
 
-		KeyValueCollection collection;
+		KeyValueCollection collection = null;
 		if (this instanceof Document)
 		{
 			collection = ((Document)this).get(path);
 		}
 		else
 		{
-			collection = ((Array)this).get(Integer.valueOf(path));
+			if (path.matches("[0-9]{1,}"))
+			{
+				collection = ((Array)this).get(Integer.valueOf(path));
+			}
+			else if (path.startsWith("[") && path.endsWith("]") && path.contains("="))
+			{
+				String key = path.substring(1, path.indexOf("="));
+				String value = path.substring(path.indexOf("=") + 1, path.length() - 1);
+				Array arr = (Array)this;
+				for (Object o : arr)
+				{
+					if (o instanceof Document)
+					{
+						Document doc = (Document)o;
+						if (value.equals(doc.get(key)))
+						{
+							collection = doc;
+						}
+					}
+				}
+			}
+
+			if (collection == null)
+			{
+				throw new IllegalArgumentException();
+			}
 		}
 
 		return (T)collection.find(remain);

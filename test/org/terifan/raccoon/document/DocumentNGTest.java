@@ -33,6 +33,19 @@ public class DocumentNGTest
 
 
 	@Test
+	public void testInsert()
+	{
+		Document doc = new Document();
+
+		doc.append("key", Document.of("value:1"));
+		doc.append("key", Document.of("value:2"));
+		doc.append("key", Document.of("value:3"));
+
+		assertEquals(doc.toString().length(), 86);
+	}
+
+
+	@Test
 	public void testToByteArray()
 	{
 		Document source = new Document().put("_id", 1).put("text", "hello").put("array", Array.of(1, 2, 3));

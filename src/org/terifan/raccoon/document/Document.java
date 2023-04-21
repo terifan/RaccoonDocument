@@ -24,16 +24,16 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 
 
 	@Override
-	public <T> T get(String aPath)
+	public <T> T get(String aKey)
 	{
-		return (T)getImpl(aPath);
+		return (T)getImpl(aKey);
 	}
 
 
 	@Override
-	public <T> T get(String aPath, T aDefaultValue)
+	public <T> T get(String aKey, T aDefaultValue)
 	{
-		Object v = getImpl(aPath);
+		Object v = getImpl(aKey);
 		if (v == null)
 		{
 			return aDefaultValue;
@@ -42,14 +42,14 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 	}
 
 
-	public <T extends Document> T put(String aPath, Object aValue)
+	public <T extends Document> T put(String aKey, Object aValue)
 	{
 		if (!isSupportedType(aValue))
 		{
 			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
 		}
 
-		return (T)putImpl(aPath, aValue);
+		return (T)putImpl(aKey, aValue);
 	}
 
 
@@ -123,9 +123,9 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 	}
 
 
-	public boolean containsKey(String aPath)
+	public boolean containsKey(String aKey)
 	{
-		return mValues.containsKey(aPath);
+		return mValues.containsKey(aKey);
 	}
 
 
@@ -246,5 +246,35 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 	public static Document of(String aJSON)
 	{
 		return new Document().fromJson(aJSON);
+	}
+
+
+	/**
+	 * Puts the value for the key specified, appends the value to an existing array, or create an array if a value already exists.
+	 * <pre>
+	 * doc = new Document();
+	 *   {}
+	 * doc.append("name", "bob");
+	 *   {"name": "bob"}
+	 * doc.append("name", "cindy");
+	 *   {"name": ["bob", "cindy"]}
+	 * </pre>
+	 */
+	public Document append(String aKey, Object aValue)
+	{
+		Object existing = get(aKey);
+		if (existing instanceof Array)
+		{
+			((Array)existing).add(aValue);
+		}
+		else if (existing != null)
+		{
+			put(aKey, Array.of(existing, aValue));
+		}
+		else
+		{
+			put(aKey, aValue);
+		}
+		return this;
 	}
 }

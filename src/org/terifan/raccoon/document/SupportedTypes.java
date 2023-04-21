@@ -120,6 +120,30 @@ public enum SupportedTypes
 
 	public static SupportedTypes identify(Object aValue)
 	{
+//		return switch (aValue)
+//		{
+//			case null -> NULL;
+//			case Document o -> DOCUMENT;
+//			case Array o -> ARRAY;
+//			case ObjectId o -> OBJECTID;
+//			case String o -> STRING;
+//			case Integer o -> INT;
+//			case Boolean o -> BOOLEAN;
+//			case Double o -> DOUBLE;
+//			case Long o -> LONG;
+//			case Float o -> FLOAT;
+//			case byte[] o -> BINARY;
+//			case Byte o -> BYTE;
+//			case Short o -> SHORT;
+//			case UUID o -> UUID;
+//			case BigDecimal o -> DECIMAL;
+//			case OffsetDateTime o -> OFFSETDATETIME;
+//			case LocalDateTime o -> DATETIME;
+//			case LocalDate o -> DATE;
+//			case LocalTime o -> TIME;
+//			default -> null;
+//		}
+
 		if (aValue == null)
 		{
 			return NULL;
