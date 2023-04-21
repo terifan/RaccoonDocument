@@ -18,13 +18,26 @@ import org.testng.annotations.Test;
 public class DocumentNGTest
 {
 	@Test
-	public void testSomeMethod()
+	public void testFind()
+	{
+		Document doc = Document.of("a:{b:{c:[{d:1},{e:2},{f:3}]}}");
+
+		int d = doc.find("a/b/c/0/d");
+		int e = doc.find("a/b/c/1/e");
+		int f = doc.find("a/b/c/2/f");
+
+		assertEquals(d, 1);
+		assertEquals(e, 2);
+		assertEquals(f, 3);
+	}
+
+
+	@Test
+	public void testToByteArray()
 	{
 		Document source = new Document().put("_id", 1).put("text", "hello").put("array", Array.of(1, 2, 3));
 
 		byte[] data = source.toByteArray();
-
-//		Log.hexDump(data);
 
 		Document unmarshaled = new Document().fromByteArray(data);
 
@@ -46,8 +59,6 @@ public class DocumentNGTest
 
 		Document doc = new Document().fromByteArray(data);
 
-//		Log.hexDump(data);
-
 		assertEquals(doc.getOffsetDateTime("offset"), odt);
 		assertEquals(doc.getDate("date"), odt.toLocalDate());
 		assertEquals(doc.getTime("time"), odt.toLocalTime());
@@ -65,8 +76,6 @@ public class DocumentNGTest
 			.toByteArray();
 
 		Document doc = new Document().fromByteArray(data);
-
-//		Log.hexDump(data);
 
 		assertEquals(doc.get("_id"), id);
 		assertEquals(doc.getObjectId("_id"), id);
@@ -129,15 +138,13 @@ public class DocumentNGTest
 		Document dstDoc = unmarshalledBin.get("doc");
 		Array dstArr = unmarshalledBin.get("arr");
 
-		Document unmarshalledJson = new Document().fromJson(json);
+		Document unmarshalledJson = new Document().fromJson(json, true);
 		Document dstDocJson = unmarshalledJson.get("doc");
 		Array dstArrJson = unmarshalledJson.get("arr");
 
-		Document unmarshalledText = new Document().fromJson(text);
+		Document unmarshalledText = new Document().fromJson(text, true);
 		Document dstDocText = unmarshalledText.get("doc");
 		Array dstArrText = unmarshalledText.get("arr");
-
-//		Log.hexDump(data);
 
 		assertEquals(unmarshalledBin, srcDoc);
 		assertEquals(unmarshalledJson, srcDoc);
@@ -244,8 +251,6 @@ public class DocumentNGTest
 		out1.writeTo(baos);
 		out2.writeTo(baos);
 
-//		Log.hexDump(baos.toByteArray());
-
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 		Document in1 = new Document().readFrom(bais);
 		Document in2 = new Document().readFrom(bais);
@@ -265,8 +270,6 @@ public class DocumentNGTest
 
 		byte[] data = baos.toByteArray();
 		data[10] ^= 2; // "name" => "ncme"
-
-//		Log.hexDump(data);
 
 		new Document().readFrom(new ByteArrayInputStream(data));
 	}
@@ -290,41 +293,13 @@ public class DocumentNGTest
 	}
 
 
-//	@Test(enabled = false)
-//	public void testChecksumQualityTest() throws IOException, ClassNotFoundException
-//	{
-//		Document person = _Person.createPerson(new Random());
-//		new Document().fromByteArray(person.toByteArray());
-//
-//		Random rnd = new Random();
-//		byte[] data = person.toByteArray();
-//
-//		int err = 0;
-//		for (int i = 0; i < 100_000; i++)
-//		{
-//			try
-//			{
-//				byte[] tmp = data.clone();
-//				tmp[rnd.nextInt(data.length)] ^= 1 << rnd.nextInt(8);
-//				new Document().fromByteArray(tmp);
-//			}
-//			catch (StreamException e)
-//			{
-//				err++;
-//			}
-//		}
-//
-//		System.out.println(err); // expected 99.99% errors detected
-//	}
-
-
 	@Test
 	public void testHashcode() throws IOException, ClassNotFoundException
 	{
-		assertEquals(Document.of("_id:1").hashCode(), -1731609100);
-		assertEquals(Document.of("_id:'1'").hashCode(), -382655104);
-		assertEquals(Document.of("_id:[1]").hashCode(), 43187162);
-		assertEquals(Document.of("_id:['1']").hashCode(), 1794624735);
+		assertEquals(Document.of("_id:1").hashCode(), -2019545584);
+		assertEquals(Document.of("_id:'1'").hashCode(), -1802300669);
+		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
+		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
 	}
 
 
@@ -339,8 +314,6 @@ public class DocumentNGTest
 		encoder.marshal(0);
 		encoder.writeInterleaved(a, b);
 
-//		Log.hexDump(baos.toByteArray());
-
 		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
 		decoder.unmarshal();
 		long v = decoder.readInterleaved();
@@ -348,40 +321,4 @@ public class DocumentNGTest
 		assertEquals((int)v, a);
 		assertEquals((int)(v >>> 32), b);
 	}
-
-
-//	@Test
-//	public void testPaths()
-//	{
-//		Document doc = new Document();
-//		doc.put("@a/b/c", "test");
-//		System.out.println(doc);
-//
-//		String text = doc.get("@a/b/c");
-//
-//		assertEquals(doc.toTypedJson(), "{'a':{'b':{'c':'test'}}}");
-//		assertEquals(text, "test");
-//
-//		doc.remove("@a/b/c");
-//		System.out.println(doc);
-//	}
-//
-//
-//	@Test
-//	public void testArrayPaths()
-//	{
-//		Document doc = new Document();
-//		doc.put("@a", "A");
-//		doc.put("@b/c", "B-C");
-//		doc.put("@d/e/0", "D-E-0");
-//		doc.put("@f/g/0/h", "F-G-0-H");
-//
-//		String text = doc.get("@f/g/0/h");
-//
-//		assertEquals(doc.toTypedJson(), "{'a':'A','b':{'c':'B-C'},'d':{'e':{'0':'D-E-0'}},'f':{'g':[{'h':'F-G-0-H'}]}}");
-//		assertEquals(text, "F-G-0-H");
-//
-//		doc.remove("@a/b/0/c");
-//		System.out.println(doc);
-//	}
 }

@@ -110,7 +110,8 @@ class BinaryDecoder implements AutoCloseable
 
 	byte[] readBytes(byte[] aBuffer) throws IOException
 	{
-		mChecksum.update(aBuffer, 0, mInputStream.read(aBuffer));
+		int len = mInputStream.read(aBuffer);
+		mChecksum.updateBytes(aBuffer, 0, len);
 		return aBuffer;
 	}
 

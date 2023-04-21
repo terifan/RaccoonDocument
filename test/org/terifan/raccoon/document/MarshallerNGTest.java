@@ -10,12 +10,9 @@ import org.testng.annotations.Test;
 public class MarshallerNGTest
 {
 	@Test
-	public void testMarshallerCompatible() throws IOException
+	public void testMarshallerToByteArrayCompatible() throws IOException
 	{
-		Array arr = Array.of(1,2,3);
-		Document doc = new Document()
-			.put("test", "hello world")
-			.put("arr", arr);
+		Document doc = Document.of("message:'hello world',child:{name:bob},numbers:[1,2,3]");
 
 		byte[] buf = doc.toByteArray();
 
@@ -38,10 +35,8 @@ public class MarshallerNGTest
 	@Test
 	public void testMarshalling() throws IOException
 	{
-		Array arr = Array.of(1,2,3);
-		Document doc = new Document()
-			.put("test", "hello world")
-			.put("arr", arr);
+		Document doc = Document.of("message:'hello world',child:{name:bob},numbers:[1,2,3]");
+		Array arr = doc.getArray("numbers");
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (Marshaller enc = new Marshaller(baos))
@@ -77,10 +72,8 @@ public class MarshallerNGTest
 	@Test(expectedExceptions = StreamException.class)
 	public void testChecksumError() throws IOException
 	{
-		Array arr = Array.of(1,2,3);
-		Document doc = new Document()
-			.put("test", "hello world")
-			.put("arr", arr);
+		Document doc = Document.of("message:'hello world',child:{name:bob},numbers:[1,2,3]");
+		Array arr = doc.getArray("numbers");
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (Marshaller enc = new Marshaller(baos))

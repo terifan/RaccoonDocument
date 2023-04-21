@@ -466,7 +466,7 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	}
 
 
-	public R find(String aPath)
+	public <T extends Object> T find(String aPath)
 	{
 		int i = aPath.indexOf('/');
 
@@ -477,7 +477,7 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 				return ((Document)this).get(aPath);
 			}
 
-			return ((Array)this).get(Integer.parseInt(aPath));
+			return ((Array)this).get(Integer.valueOf(aPath));
 		}
 
 		String path = aPath.substring(0, i);
@@ -490,10 +490,10 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		}
 		else
 		{
-			collection = ((Array)this).get(Integer.parseInt(path));
+			collection = ((Array)this).get(Integer.valueOf(path));
 		}
 
-		return (R)collection.find(remain);
+		return (T)collection.find(remain);
 	}
 
 
@@ -512,12 +512,12 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		}
 		else if (aValue instanceof CharSequence)
 		{
-			aChecksum.updateChars((CharSequence)aValue);
+			aChecksum.updateUTF8((CharSequence)aValue);
 		}
 		else if (aValue instanceof byte[])
 		{
 			byte[] buf = (byte[])aValue;
-			aChecksum.update(buf, 0, buf.length);
+			aChecksum.updateBytes(buf, 0, buf.length);
 		}
 		else
 		{
@@ -529,29 +529,6 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	public static boolean isSupportedType(Object aValue)
 	{
 		return SupportedTypes.identify(aValue) != null;
-
-//		Class type = aValue == null ? null : aValue.getClass();
-//
-//		return false
-//			|| type == Document.class
-//			|| type == Array.class
-//			|| type == String.class
-//			|| type == Integer.class
-//			|| type == Long.class
-//			|| type == Double.class
-//			|| type == Boolean.class
-//			|| type == Byte.class
-//			|| type == Short.class
-//			|| type == Float.class
-//			|| type == LocalDate.class
-//			|| type == LocalTime.class
-//			|| type == LocalDateTime.class
-//			|| type == OffsetDateTime.class
-//			|| type == UUID.class
-//			|| type == ObjectId.class
-//			|| type == BigDecimal.class
-//			|| type == byte[].class
-//			|| type == null;
 	}
 
 
@@ -567,7 +544,16 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 
 	public R fromJson(String aJson)
 	{
-		return (R)new JSONDecoder().unmarshal(aJson, this);
+		return fromJson(aJson, false);
+	}
+
+
+	/**
+	 * @param aRestoreByteShortValues if true low numeric values will be unmarshalled as either Byte or Short; [default] if false Integer.
+	 */
+	public R fromJson(String aJson, boolean aRestoreByteShortValues)
+	{
+		return (R)new JSONDecoder().setRestoreByteShortValues(aRestoreByteShortValues).unmarshal(aJson, this);
 	}
 
 

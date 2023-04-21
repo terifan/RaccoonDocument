@@ -5,89 +5,123 @@ import static java.lang.Integer.reverseBytes;
 
 class MurmurHash3
 {
-	private int h1;
-	private int buf;
-	private int len;
-	private int total;
+	private int mValue;
+	private int mBits;
+	private int mShift;
+	private int mTotal;
 
 
 	public MurmurHash3(int aSeed)
 	{
-		h1 = aSeed;
+		mValue = aSeed;
 	}
 
 
-	public void updateByte(int aByte)
+	public MurmurHash3 updateByte(int aValue)
 	{
-		buf |= aByte << (24 - len);
-		len += 8;
-		total++;
-		if (len == 32)
+		mBits |= aValue << (24 - mShift);
+		mShift += 8;
+		mTotal++;
+		if (mShift == 32)
 		{
-			impl(buf);
-			len = 0;
-			buf = 0;
+			updateImpl(mBits);
+			mShift = 0;
+			mBits = 0;
 		}
+		return this;
 	}
 
 
-	public void updateInt(int aInt)
+	public MurmurHash3 updateInt(int aValue)
 	{
-		total += 4;
-		impl(buf | (aInt >>> len));
-		buf = aInt << (32 - len);
+		updateImpl(mBits | (aValue >>> mShift));
+		mBits = aValue << (32 - mShift);
+		mTotal += 4;
+		return this;
 	}
 
 
-	public void update(byte[] aBuffer, int aOffset, int aLength)
+	public void updateBytes(byte[] aBuffer, int aOffset, int aLength)
 	{
-		for (int i = 0; i < aLength; i++)
+		int i = 0;
+		for (; i + 3 < aLength; i += 4)
+		{
+			int v = 0;
+			v |= ((0xff & aBuffer[aOffset++]) << 24);
+			v |= ((0xff & aBuffer[aOffset++]) << 16);
+			v |= ((0xff & aBuffer[aOffset++]) << 8);
+			v |= ((0xff & aBuffer[aOffset++]));
+			updateInt(v);
+		}
+		for (; i < aLength; i++)
 		{
 			updateByte(0xff & aBuffer[aOffset++]);
 		}
 	}
 
 
-	public void updateChars(CharSequence aChars)
+	public MurmurHash3 updateUTF8(CharSequence aData)
 	{
-		aChars.chars().forEach(c ->
+		for (int i = 0, len = aData.length(); i < len;)
 		{
-			if (c > 255)
+			int code = aData.charAt(i++);
+			if (code < 0x80)
 			{
-				updateByte(0xff & (c >> 8));
+				updateByte(code);
 			}
-			updateByte(0xff & c);
-		});
+			else if (code < 0x800)
+			{
+				int k = (0xC0 | (code >> 6)) | ((0x80 | (code & 0x3F)) << 8);
+				updateByte(0xff & (k));
+				updateByte(0xff & (k >>> 8));
+			}
+			else if (code < 0xD800 || code > 0xDFFF || i >= len)
+			{
+				int k = (0xE0 | (code >> 12)) | ((0x80 | ((code >> 6) & 0x3F)) << 8) | ((0x80 | (code & 0x3F)) << 16);
+				updateByte(0xff & (k));
+				updateByte(0xff & (k >>> 8));
+				updateByte(0xff & (k >>> 16));
+			}
+			else
+			{
+				int utf32 = aData.charAt(i++);
+				utf32 = ((code - 0xD7C0) << 10) + (utf32 & 0x3FF);
+				int k = (0xff & (0xF0 | (utf32 >> 18))) | ((0x80 | ((utf32 >> 12) & 0x3F))) << 8 | ((0x80 | ((utf32 >> 6) & 0x3F))) << 16 | (0x80 | (utf32 & 0x3F)) << 24;
+				updateInt(k);
+			}
+		}
+
+		return this;
 	}
 
 
-	private void impl(int aValue)
+	private void updateImpl(int aValue)
 	{
 		aValue = reverseBytes(aValue);
 		aValue *= 0xcc9e2d51;
 		aValue = (aValue << 15) | (aValue >>> 17);
 		aValue *= 0x1b873593;
 
-		h1 ^= aValue;
-		h1 = (h1 << 13) | (h1 >>> 19);
-		h1 = h1 * 5 + 0xe6546b64;
+		mValue ^= aValue;
+		mValue = (mValue << 13) | (mValue >>> 19);
+		mValue = mValue * 5 + 0xe6546b64;
 	}
 
 
 	public int getValue()
 	{
-		int o = h1;
+		int o = mValue;
 
-		if (len > 0)
+		if (mShift > 0)
 		{
-			int k1 = reverseBytes(buf);
+			int k1 = reverseBytes(mBits);
 			k1 *= 0xcc9e2d51;
 			k1 = (k1 << 15) | (k1 >>> 17);
 			k1 *= 0x1b873593;
 			o ^= k1;
 		}
 
-		o ^= total;
+		o ^= mTotal;
 
 		o ^= o >>> 16;
 		o *= 0x85ebca6b;
@@ -97,52 +131,4 @@ class MurmurHash3
 
 		return o;
 	}
-
-
-//	public static void main(String... args)
-//	{
-//		try
-//		{
-//			for (int test = 1; test < 20; test++)
-//			{
-//				Checksum chk = new Checksum();
-//
-//				byte[] buf = new byte[test];
-//
-//				int i = 0;
-//				for (int j = 0; j < test % 5; j++)
-//				{
-//					chk.updateByte(0xff & buf[i++]);
-//				}
-//
-//				for (; i + 3 < buf.length-7;)
-//				{
-//					int d = 0xff & buf[i++];
-//					int c = 0xff & buf[i++];
-//					int b = 0xff & buf[i++];
-//					int a = 0xff & buf[i++];
-//					chk.updateInt((d << 24) | (c << 16) | (b << 8) | (a << 0));
-//				}
-//
-//				if (i + 5 < buf.length)
-//				{
-//					chk.update(buf, i, 5);
-//					i += 5;
-//				}
-//
-//				for (; i < buf.length;)
-//				{
-//					chk.updateByte(0xff & buf[i++]);
-//				}
-//
-//				int hash32 = MurmurHash3.hash32(buf, 0);
-//
-//				System.out.println(chk.getValue() == hash32);
-//			}
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
 }

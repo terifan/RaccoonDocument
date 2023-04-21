@@ -159,6 +159,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		aBuffer[aPosition] = (byte)(aValue);
 	}
 
+
 //	public static void main(String... args)
 //	{
 //		try

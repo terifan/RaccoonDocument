@@ -137,14 +137,14 @@ public enum SupportedTypes
 		if (Long.class == cls) return LONG;
 		if (Float.class == cls) return FLOAT;
 		if (byte[].class == cls) return BINARY;
-		if (BigDecimal.class == cls) return DECIMAL;
+		if (Byte.class == cls) return BYTE;
+		if (Short.class == cls) return SHORT;
 		if (UUID.class == cls) return UUID;
+		if (BigDecimal.class == cls) return DECIMAL;
 		if (OffsetDateTime.class == cls) return OFFSETDATETIME;
 		if (LocalDateTime.class == cls) return DATETIME;
 		if (LocalDate.class == cls) return DATE;
 		if (LocalTime.class == cls) return TIME;
-		if (Byte.class == cls) return BYTE;
-		if (Short.class == cls) return SHORT;
 
 		return null;
 	}

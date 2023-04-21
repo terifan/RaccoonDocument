@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 
 public class Document extends KeyValueCollection<String, Document> implements Externalizable, Cloneable, Comparable<Document>
@@ -137,7 +136,7 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 
 		mValues.entrySet().forEach(entry ->
 		{
-			aChecksum.updateChars(entry.getKey());
+			aChecksum.updateUTF8(entry.getKey());
 			super.hashCode(aChecksum, entry.getValue());
 		});
 

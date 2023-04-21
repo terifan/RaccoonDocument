@@ -16,6 +16,14 @@ import java.util.UUID;
 class JSONDecoder
 {
 	private PushbackReader mReader;
+	private boolean mRestoreByteShortValues;
+
+
+	public JSONDecoder setRestoreByteShortValues(boolean aRestoreByteShortValues)
+	{
+		mRestoreByteShortValues = aRestoreByteShortValues;
+		return this;
+	}
 
 
 	public <T extends KeyValueCollection> T unmarshal(String aJSON, T aContainer)
@@ -274,13 +282,16 @@ class JSONDecoder
 		try
 		{
 			long v = Long.parseLong(in);
-			if (v >= Byte.MIN_VALUE && v <= Byte.MAX_VALUE)
+			if (mRestoreByteShortValues)
 			{
-				return (byte)v;
-			}
-			if (v >= Short.MIN_VALUE && v <= Short.MAX_VALUE)
-			{
-				return (short)v;
+				if (v >= Byte.MIN_VALUE && v <= Byte.MAX_VALUE)
+				{
+					return (byte)v;
+				}
+				if (v >= Short.MIN_VALUE && v <= Short.MAX_VALUE)
+				{
+					return (short)v;
+				}
 			}
 			if (v >= Integer.MIN_VALUE && v <= Integer.MAX_VALUE)
 			{

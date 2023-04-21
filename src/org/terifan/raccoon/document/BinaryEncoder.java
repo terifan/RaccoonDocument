@@ -63,7 +63,7 @@ class BinaryEncoder implements AutoCloseable
 	void writeBytes(byte[] aBuffer) throws IOException
 	{
 		mOutputStream.write(aBuffer);
-		mChecksum.update(aBuffer, 0, aBuffer.length);
+		mChecksum.updateBytes(aBuffer, 0, aBuffer.length);
 	}
 
 
