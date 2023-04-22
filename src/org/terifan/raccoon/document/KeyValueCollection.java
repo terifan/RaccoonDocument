@@ -511,11 +511,11 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 					}
 				}
 			}
+		}
 
-			if (collection == null)
-			{
-				throw new IllegalArgumentException();
-			}
+		if (collection == null)
+		{
+			throw new IllegalArgumentException("No value for path: " + aPath);
 		}
 
 		return (T)collection.find(remain);
@@ -712,6 +712,12 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		{
 			encoder.marshal(this);
 		}
+	}
+
+
+	public boolean isEmpty()
+	{
+		return size() == 0;
 	}
 
 
