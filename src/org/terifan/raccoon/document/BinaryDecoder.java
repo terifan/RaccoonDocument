@@ -299,6 +299,9 @@ class BinaryDecoder implements AutoCloseable
 	}
 
 
+	/**
+	 * Does not close the underlying stream.
+	 */
 	@Override
 	public void close() throws IOException
 	{

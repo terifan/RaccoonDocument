@@ -217,7 +217,7 @@ class BinaryEncoder implements AutoCloseable
 
 
 	/**
-	 * note: Will not close the underlying stream!
+	 * Does not close the underlying stream.
 	 */
 	@Override
 	public void close() throws IOException
