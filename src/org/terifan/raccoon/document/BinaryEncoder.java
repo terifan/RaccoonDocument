@@ -71,11 +71,12 @@ class BinaryEncoder implements AutoCloseable
 	{
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
+			String key = entry.getKey();
 			Object value = entry.getValue();
 			SupportedTypes type = SupportedTypes.identify(value);
 
-			writeToken(type, entry.getKey().length());
-			writeUTF(entry.getKey());
+			writeToken(type, key.length());
+			writeUTF(key);
 			writeValue(type, value);
 		}
 

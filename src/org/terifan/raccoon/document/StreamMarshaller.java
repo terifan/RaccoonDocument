@@ -6,13 +6,13 @@ import java.io.OutputStream;
 
 
 /**
- * Read or write values to the underlying stream. The SupportedTypes enum specifies the support types by the Marshaller.
+ * Read or write values to the underlying stream. The SupportedTypes enum specifies the support types by the StreamMarshaller.
  * <p/>
  * This class maintains a running checksum of data written and each token contain a 4 bit checksum value.
  * <p/>
  * <pre>
  * 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
- *		try (Marshaller enc = new Marshaller(baos))
+ *		try (StreamMarshaller enc = new StreamMarshaller(baos))
  *		{
  *			enc.write(4);
  *			enc.write("test");
@@ -20,7 +20,7 @@ import java.io.OutputStream;
  *			enc.write(new Document().put("name", "John Doe"));
  *		}
  *
- * 		try (Marshaller dec = new Marshaller(new ByteArrayInputStream(baos.toByteArray())))
+ * 		try (StreamMarshaller dec = new StreamMarshaller(new ByteArrayInputStream(baos.toByteArray())))
  *		{
  *			int i = dec.read();
  *			String s = dec.read();
@@ -29,7 +29,7 @@ import java.io.OutputStream;
  *		}
  * </pre>
  */
-public class Marshaller implements AutoCloseable
+public class StreamMarshaller implements AutoCloseable
 {
 	private OutputStream mOutputStream;
 	private InputStream mInputStream;
@@ -37,14 +37,14 @@ public class Marshaller implements AutoCloseable
 	private BinaryDecoder mDecoder;
 
 
-	public Marshaller(OutputStream aOutputStream)
+	public StreamMarshaller(OutputStream aOutputStream)
 	{
 		mOutputStream = aOutputStream;
 		mEncoder = new BinaryEncoder(aOutputStream);
 	}
 
 
-	public Marshaller(InputStream aInputStream)
+	public StreamMarshaller(InputStream aInputStream)
 	{
 		mInputStream = aInputStream;
 		mDecoder = new BinaryDecoder(aInputStream);
@@ -61,7 +61,7 @@ public class Marshaller implements AutoCloseable
 	}
 
 
-	public Marshaller write(Object aObject) throws IOException
+	public StreamMarshaller write(Object aObject) throws IOException
 	{
 		if (mEncoder == null)
 		{
@@ -75,7 +75,7 @@ public class Marshaller implements AutoCloseable
 	/**
 	 * The terminator token is optional and can be written to the stream to ensure a final checksum verification.
 	 */
-	public Marshaller writeTerminator() throws IOException
+	public StreamMarshaller writeTerminator() throws IOException
 	{
 		if (mEncoder == null)
 		{
@@ -89,7 +89,7 @@ public class Marshaller implements AutoCloseable
 	/**
 	 * Read the next token and throw an IOException if not a terminator.
 	 */
-	public Marshaller expectTerminator() throws IOException
+	public StreamMarshaller expectTerminator() throws IOException
 	{
 		if (mDecoder == null)
 		{

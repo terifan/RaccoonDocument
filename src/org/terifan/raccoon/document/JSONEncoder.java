@@ -198,7 +198,7 @@ class JSONEncoder
 
 	private void marshalValue(Object aValue)
 	{
-		if (aValue instanceof String)
+		if (aValue instanceof String || aValue instanceof Character)
 		{
 			print(mQuote + escapeString(aValue.toString()) + mQuote);
 		}

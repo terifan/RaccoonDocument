@@ -1,7 +1,7 @@
 package org.terifan.raccoon.document;
 
 
-class ___MurmurHash3
+class _MurmurHash3
 {
 	public static int hash32(byte[] aData, int aOffset, int aLength, int aSeed)
 	{

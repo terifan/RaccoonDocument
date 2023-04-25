@@ -97,6 +97,10 @@ public enum SupportedTypes
 	DECIMAL(19,
 		(aEncoder, aValue) -> aEncoder.writeString(aValue.toString()),
 		aDecoder -> new BigDecimal(aDecoder.readString())
+	),
+	CHAR(20,
+		(aEncoder, aValue) -> aEncoder.writeVarint((Character)aValue),
+		aDecoder -> (char)aDecoder.readVarint()
 	);
 
 	Encoder encoder;
@@ -164,11 +168,21 @@ public enum SupportedTypes
 		if (Byte.class == cls) return BYTE;
 		if (Short.class == cls) return SHORT;
 		if (UUID.class == cls) return UUID;
+		if (Character.class == cls) return CHAR;
 		if (BigDecimal.class == cls) return DECIMAL;
 		if (OffsetDateTime.class == cls) return OFFSETDATETIME;
 		if (LocalDateTime.class == cls) return DATETIME;
 		if (LocalDate.class == cls) return DATE;
 		if (LocalTime.class == cls) return TIME;
+
+		if (Integer.TYPE == cls) return INT;
+		if (Boolean.TYPE == cls) return BOOLEAN;
+		if (Double.TYPE == cls) return DOUBLE;
+		if (Long.TYPE == cls) return LONG;
+		if (Float.TYPE == cls) return FLOAT;
+		if (Byte.TYPE == cls) return BYTE;
+		if (Short.TYPE == cls) return SHORT;
+		if (Character.TYPE == cls) return CHAR;
 
 		return null;
 	}

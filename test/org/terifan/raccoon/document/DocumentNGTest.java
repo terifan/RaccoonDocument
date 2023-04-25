@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
+import java.net.Socket;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.util.Random;
 import java.util.UUID;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
@@ -333,5 +335,27 @@ public class DocumentNGTest
 
 		assertEquals((int)v, a);
 		assertEquals((int)(v >>> 32), b);
+	}
+
+
+	@Test
+	public void testMarshall() throws IOException, ClassNotFoundException
+	{
+		byte[] data = _Person.createPerson(new Random(1)).toByteArray();
+		System.out.println(data.length);
+
+		_Log.hexDump(data);
+
+//		Document doc = new Document();
+//		Array arr = new Array();
+//
+//		for (int i = 0; i < 20; i++)
+//		{
+//			doc.put("" + i, "test");
+//			arr.add("test");
+//		}
+//
+//		System.out.println(doc.toByteArray().length);
+//		System.out.println(arr.toByteArray().length);
 	}
 }

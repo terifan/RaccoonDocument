@@ -43,7 +43,7 @@ public class MurmurHash3NGTest
 					chk.updateByte(0xff & buf[i++]);
 				}
 
-				int hash32 = ___MurmurHash3.hash32(buf, 0, buf.length, 0);
+				int hash32 = _MurmurHash3.hash32(buf, 0, buf.length, 0);
 
 				assertEquals(chk.getValue(), hash32);
 			}
@@ -57,7 +57,7 @@ public class MurmurHash3NGTest
 		MurmurHash3 chk = new MurmurHash3(0);
 		chk.updateUTF8("testing лкмн");
 
-		int hash32 = ___MurmurHash3.hash32("testing лкмн", 0);
+		int hash32 = _MurmurHash3.hash32("testing лкмн", 0);
 
 		assertEquals(chk.getValue(), hash32);
 	}

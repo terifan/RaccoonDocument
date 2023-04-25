@@ -7,7 +7,7 @@ import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 
 
-public class MarshallerNGTest
+public class StreamMarshallerNGTest
 {
 	@Test
 	public void testMarshallerToByteArrayCompatible() throws IOException
@@ -17,14 +17,14 @@ public class MarshallerNGTest
 		byte[] buf = doc.toByteArray();
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (Marshaller m = new Marshaller(baos))
+		try (StreamMarshaller m = new StreamMarshaller(baos))
 		{
 			m.write(doc);
 		}
 
 		assertEquals(buf, baos.toByteArray());
 
-		try (Marshaller m = new Marshaller(new ByteArrayInputStream(buf)))
+		try (StreamMarshaller m = new StreamMarshaller(new ByteArrayInputStream(buf)))
 		{
 			Document d = m.read();
 			assertEquals(d, doc);
@@ -39,7 +39,7 @@ public class MarshallerNGTest
 		Array arr = doc.getArray("numbers");
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (Marshaller enc = new Marshaller(baos))
+		try (StreamMarshaller enc = new StreamMarshaller(baos))
 		{
 			enc.write(4);
 			enc.write("test");
@@ -51,7 +51,7 @@ public class MarshallerNGTest
 
 		ByteArrayInputStream in = new ByteArrayInputStream(baos.toByteArray());
 
-		Marshaller dec = new Marshaller(in);
+		StreamMarshaller dec = new StreamMarshaller(in);
 		int i = dec.read();
 		String s = dec.read();
 		Array a = dec.read();
@@ -76,7 +76,7 @@ public class MarshallerNGTest
 		Array arr = doc.getArray("numbers");
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (Marshaller enc = new Marshaller(baos))
+		try (StreamMarshaller enc = new StreamMarshaller(baos))
 		{
 			enc.write(4);
 			enc.write("test");
@@ -88,7 +88,7 @@ public class MarshallerNGTest
 		byte[] data = baos.toByteArray();
 		data[7] ^= 1;
 
-		try (Marshaller dec = new Marshaller(new ByteArrayInputStream(data)))
+		try (StreamMarshaller dec = new StreamMarshaller(new ByteArrayInputStream(data)))
 		{
 			int i = dec.read();
 			String s = dec.read();
