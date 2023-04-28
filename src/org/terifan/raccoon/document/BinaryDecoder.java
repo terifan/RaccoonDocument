@@ -131,15 +131,7 @@ class BinaryDecoder implements AutoCloseable
 				break;
 			}
 
-			String key;
-			if ((token.value & 1) != 0)
-			{
-				key = "" + token.value / 2;
-			}
-			else
-			{
-				key = readUTF(token.value / 2);
-			}
+			String key = readUTF(token.value);
 
 			aDocument.putImpl(key, readValue(token.type));
 		}
