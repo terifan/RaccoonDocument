@@ -1,11 +1,32 @@
 package org.terifan.raccoon.document;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 
 public class ObjectMarshaller
 {
 	public static Document toDocument(Object aInstance)
+	{
+		if (aInstance instanceof List)
+		{
+			Array array = new Array();
+			((List)aInstance).forEach(o->array.add(impl(o)));
+
+			Document root = new Document();
+			root.put("class", aInstance.getClass().getCanonicalName());
+			root.put("elements", array);
+
+			return root;
+		}
+		else
+		{
+			return impl(aInstance);
+		}
+	}
+
+
+	private static Document impl(Object aInstance)
 	{
 		Document root = new Document();
 		Document current = root;
