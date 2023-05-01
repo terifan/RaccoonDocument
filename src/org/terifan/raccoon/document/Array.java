@@ -63,6 +63,12 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	}
 
 
+	public boolean contains(Object aValue)
+	{
+		return mValues.contains(aValue);
+	}
+
+
 	/**
 	 * Add the item to this Array. If the value provided is an array, list or stream an Array is created.
 	 *
@@ -416,5 +422,18 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 			values[i] = getLong(i);
 		}
 		return values;
+	}
+
+
+	public Array removeValue(Object aValue)
+	{
+		for (int i = 0; i < size(); i++)
+		{
+			if (get(i).equals(aValue))
+			{
+				remove(i);
+			}
+		}
+		return this;
 	}
 }

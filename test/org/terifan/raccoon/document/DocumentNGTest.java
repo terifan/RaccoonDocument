@@ -358,4 +358,13 @@ public class DocumentNGTest
 //		System.out.println(doc.toByteArray().length);
 //		System.out.println(arr.toByteArray().length);
 	}
+
+
+	@Test
+	public void testReduce()
+	{
+		Document d = Document.of("{a:[1],b:[],c:[{}],d:[{x:1},[null],{}],e:null}");
+		assertEquals(d.toJson(), "{\"a\":[1],\"b\":[],\"c\":[{}],\"d\":[{\"x\":1},[null],{}],\"e\":null}");
+		assertEquals(d.reduce().toJson(), "{\"a\":[1],\"d\":[{\"x\":1}]}");
+	}
 }

@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Objects;
@@ -718,6 +719,42 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	public boolean isEmpty()
 	{
 		return size() == 0;
+	}
+
+
+	/**
+	 * Recursively visits all child elements removing empty Documents or Arrays, or null values.
+	 *
+	 * @return this Document
+	 */
+	public R reduce()
+	{
+		ArrayList<K> keySet = new ArrayList<>();
+		for (K key : keySet())
+		{
+			keySet.add(key);
+		}
+
+		for (int i = size(); --i >= 0;)
+		{
+			K key = keySet.get(i);
+			Object value = get(key);
+			if (value == null)
+			{
+				remove(key);
+			}
+			else if (value instanceof KeyValueCollection)
+			{
+				KeyValueCollection coll = (KeyValueCollection)value;
+				coll.reduce();
+				if (coll.isEmpty())
+				{
+					remove(key);
+				}
+			}
+		}
+
+		return (R)this;
 	}
 
 
