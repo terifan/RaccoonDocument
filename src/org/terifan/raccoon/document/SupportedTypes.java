@@ -48,8 +48,8 @@ public enum SupportedTypes
 		aDecoder -> null
 	),
 	BYTE(9,
-		(aEncoder, aValue) -> aEncoder.writeVarint(0xff & (Byte)aValue),
-		aDecoder -> (byte)aDecoder.readVarint()
+		(aEncoder, aValue) -> aEncoder.writeByte(0xff & (Byte)aValue),
+		aDecoder -> (byte)aDecoder.readByte()
 	),
 	SHORT(10,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Short)aValue),
@@ -101,6 +101,31 @@ public enum SupportedTypes
 	CHAR(20,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Character)aValue),
 		aDecoder -> (char)aDecoder.readVarint()
+	),
+	/** fixed size encoding of a Short value */
+	FIXEDSHORT(21,
+		(aEncoder, aValue) -> aEncoder.writeShort((Short)aValue),
+		aDecoder -> (short)aDecoder.readShort()
+	),
+	/** fixed size encoding of a Integer value */
+	FIXEDINT(22,
+		(aEncoder, aValue) -> aEncoder.writeInt((Integer)aValue),
+		aDecoder -> (int)aDecoder.readInt()
+	),
+	/** fixed size encoding of a Long value */
+	FIXEDLONG(23,
+		(aEncoder, aValue) -> aEncoder.writeLong((Long)aValue),
+		aDecoder -> aDecoder.readLong()
+	),
+	/** fixed size encoding of a Float value */
+	FIXEDFLOAT(24,
+		(aEncoder, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
+		aDecoder -> Float.intBitsToFloat((int)aDecoder.readInt())
+	),
+	/** fixed size encoding of a Double value */
+	FIXEDDOUBLE(25,
+		(aEncoder, aValue) -> aEncoder.writeLong(Double.doubleToLongBits((Double)aValue)),
+		aDecoder -> Double.longBitsToDouble(aDecoder.readLong())
 	);
 
 	Encoder encoder;
@@ -185,6 +210,13 @@ public enum SupportedTypes
 		if (Character.TYPE == cls) return CHAR;
 
 		return null;
+	}
+
+
+	@FunctionalInterface
+	static interface VariableSize
+	{
+		boolean test(Object aValue);
 	}
 
 

@@ -96,7 +96,7 @@ class BinaryDecoder implements AutoCloseable
 	}
 
 
-	private int readByte() throws IOException
+	int readByte() throws IOException
 	{
 		int c = mInputStream.read();
 		if (c == -1)
@@ -105,6 +105,24 @@ class BinaryDecoder implements AutoCloseable
 		}
 		mChecksum.updateByte(c);
 		return c;
+	}
+
+
+	short readShort() throws IOException
+	{
+		return (short)((readByte() << 8) | readByte());
+	}
+
+
+	int readInt() throws IOException
+	{
+		return (readByte() << 24) | (readByte() << 16) | (readByte() << 8) | readByte();
+	}
+
+
+	long readLong() throws IOException
+	{
+		return ((long)readInt() << 32) | readInt();
 	}
 
 

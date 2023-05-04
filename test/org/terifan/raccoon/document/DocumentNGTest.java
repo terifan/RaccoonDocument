@@ -12,6 +12,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.Random;
 import java.util.UUID;
+import java.util.zip.DeflaterOutputStream;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 
@@ -99,11 +100,15 @@ public class DocumentNGTest
 	@Test
 	public void testAllTypes()
 	{
-		Byte _byte = Byte.MAX_VALUE;
-		Short _short = Short.MAX_VALUE;
-		Integer _int = Integer.MAX_VALUE;
+		Byte _byte0 = Byte.MIN_VALUE;
+		Byte _byte1 = Byte.MAX_VALUE;
+		Short _short0 = Short.MIN_VALUE;
+		Short _short1 = Short.MAX_VALUE;
+		Integer _int0 = Integer.MIN_VALUE;
+		Integer _int1 = Integer.MAX_VALUE;
+		Long _long0 = Long.MIN_VALUE;
+		Long _long1 = Long.MAX_VALUE;
 		Float _float = 3.14f;
-		Long _long = Long.MAX_VALUE;
 		Double _double = Math.PI;
 		Boolean _bool = true;
 		Object _null = null;
@@ -114,15 +119,19 @@ public class DocumentNGTest
 		LocalDate _ld = LocalDate.now();
 		LocalTime _lt = LocalTime.now();
 		LocalDateTime _ldt = LocalDateTime.now();
-		Array _arr = Array.of((byte)1,(byte)2,(byte)3); // JSON decoder decodes values to smallest possible representation
-		Document _doc = new Document().put("docu","ment");
+		Array _arr = Array.of((byte)1, (byte)2, (byte)3); // JSON decoder decodes values to smallest possible representation
+		Document _doc = new Document().put("docu", "ment");
 		BigDecimal _bd = new BigDecimal("31.31646131940661321981");
 
 		Document _allTypesDoc = new Document()
-			.put("byte", _byte)
-			.put("short", _short)
-			.put("int", _int)
-			.put("long", _long)
+			.put("byte0", _byte0)
+			.put("byte1", _byte1)
+			.put("short0", _short0)
+			.put("short1", _short1)
+			.put("int0", _int0)
+			.put("int1", _int1)
+			.put("long0", _long0)
+			.put("long1", _long1)
 			.put("float", _float)
 			.put("double", _double)
 			.put("bool", _bool)
@@ -164,45 +173,53 @@ public class DocumentNGTest
 		assertEquals(unmarshalledJson, srcDoc);
 		assertEquals(unmarshalledText, srcDoc);
 
-		checkTypes(dstDoc,     _byte, _short, _int, _long, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
-		checkTypes(dstArr,     _byte, _short, _int, _long, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
-		checkTypes(dstDocJson, _byte, _short, _int, _long, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
-		checkTypes(dstArrJson, _byte, _short, _int, _long, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
-		checkTypes(dstDocText, _byte, _short, _int, _long, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
-		checkTypes(dstArrText, _byte, _short, _int, _long, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
+		checkTypes(dstDoc, _byte0, _short0, _int0, _long0, _byte1, _short1, _int1, _long1, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
+		checkTypes(dstArr, _byte0, _short0, _int0, _long0, _byte1, _short1, _int1, _long1, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
+		checkTypes(dstDocJson, _byte0, _short0, _int0, _long0, _byte1, _short1, _int1, _long1, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
+		checkTypes(dstArrJson, _byte0, _short0, _int0, _long0, _byte1, _short1, _int1, _long1, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
+		checkTypes(dstDocText, _byte0, _short0, _int0, _long0, _byte1, _short1, _int1, _long1, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
+		checkTypes(dstArrText, _byte0, _short0, _int0, _long0, _byte1, _short1, _int1, _long1, _float, _double, _bool, _null, _string, _bytes, _uuid, _odt, _ld, _lt, _ldt, _arr, _doc, _bd);
 	}
 
 
-	private void checkTypes(Array aDstArr, Byte a_byte, Short a_short, Integer a_int, Long a_long, Float a_float, Double a_double, Boolean a_bool, Object a_null, String a_string, byte[] a_bytes, UUID a_uuid, OffsetDateTime a_odt, LocalDate a_ld, LocalTime a_lt, LocalDateTime a_ldt, Array a_arr, Document a_doc, BigDecimal a_bd)
+	private void checkTypes(Array aDstArr, Byte a_byte0, Short a_short0, Integer a_int0, Long a_long0, Byte a_byte1, Short a_short1, Integer a_int1, Long a_long1, Float a_float, Double a_double, Boolean a_bool, Object a_null, String a_string, byte[] a_bytes, UUID a_uuid, OffsetDateTime a_odt, LocalDate a_ld, LocalTime a_lt, LocalDateTime a_ldt, Array a_arr, Document a_doc, BigDecimal a_bd)
 	{
-		assertEquals(aDstArr.getByte(0), a_byte);
-		assertEquals(aDstArr.getShort(1), a_short);
-		assertEquals(aDstArr.getInt(2), a_int);
-		assertEquals(aDstArr.getLong(3), a_long);
-		assertEquals(aDstArr.getFloat(4), a_float);
-		assertEquals(aDstArr.getDouble(5), a_double);
-		assertEquals(aDstArr.getBoolean(6), a_bool);
-		assertEquals(aDstArr.get(7), a_null);
-		assertEquals(aDstArr.isNull(7), true);
-		assertEquals(aDstArr.getString(8), a_string);
-		assertEquals(aDstArr.getBinary(9), a_bytes);
-		assertEquals(aDstArr.getUUID(10), a_uuid);
-		assertEquals(aDstArr.getOffsetDateTime(11), a_odt);
-		assertEquals(aDstArr.getDate(12), a_ld);
-		assertEquals(aDstArr.getTime(13), a_lt);
-		assertEquals(aDstArr.getDateTime(14), a_ldt);
-		assertEquals(aDstArr.getArray(15), a_arr);
-		assertEquals(aDstArr.getDocument(16), a_doc);
-		assertEquals(aDstArr.getDecimal(17), a_bd);
+		assertEquals(aDstArr.getByte(0), a_byte0);
+		assertEquals(aDstArr.getByte(1), a_byte1);
+		assertEquals(aDstArr.getShort(2), a_short0);
+		assertEquals(aDstArr.getShort(3), a_short1);
+		assertEquals(aDstArr.getInt(4), a_int0);
+		assertEquals(aDstArr.getInt(5), a_int1);
+		assertEquals(aDstArr.getLong(6), a_long0);
+		assertEquals(aDstArr.getLong(7), a_long1);
+		assertEquals(aDstArr.getFloat(8), a_float);
+		assertEquals(aDstArr.getDouble(9), a_double);
+		assertEquals(aDstArr.getBoolean(10), a_bool);
+		assertEquals(aDstArr.get(11), a_null);
+		assertEquals(aDstArr.isNull(11), true);
+		assertEquals(aDstArr.getString(12), a_string);
+		assertEquals(aDstArr.getBinary(13), a_bytes);
+		assertEquals(aDstArr.getUUID(14), a_uuid);
+		assertEquals(aDstArr.getOffsetDateTime(15), a_odt);
+		assertEquals(aDstArr.getDate(16), a_ld);
+		assertEquals(aDstArr.getTime(17), a_lt);
+		assertEquals(aDstArr.getDateTime(18), a_ldt);
+		assertEquals(aDstArr.getArray(19), a_arr);
+		assertEquals(aDstArr.getDocument(20), a_doc);
+		assertEquals(aDstArr.getDecimal(21), a_bd);
 	}
 
 
-	private void checkTypes(Document aDstDoc, Byte a_byte, Short a_short, Integer a_int, Long a_long, Float a_float, Double a_double, Boolean a_bool, Object a_null, String a_string, byte[] a_bytes, UUID a_uuid, OffsetDateTime a_odt, LocalDate a_ld, LocalTime a_lt, LocalDateTime a_ldt, Array a_arr, Document a_doc, BigDecimal a_bd)
+	private void checkTypes(Document aDstDoc, Byte a_byte0, Short a_short0, Integer a_int0, Long a_long0, Byte a_byte1, Short a_short1, Integer a_int1, Long a_long1, Float a_float, Double a_double, Boolean a_bool, Object a_null, String a_string, byte[] a_bytes, UUID a_uuid, OffsetDateTime a_odt, LocalDate a_ld, LocalTime a_lt, LocalDateTime a_ldt, Array a_arr, Document a_doc, BigDecimal a_bd)
 	{
-		assertEquals(aDstDoc.getByte("byte"), a_byte);
-		assertEquals(aDstDoc.getShort("short"), a_short);
-		assertEquals(aDstDoc.getInt("int"), a_int);
-		assertEquals(aDstDoc.getLong("long"), a_long);
+		assertEquals(aDstDoc.getByte("byte0"), a_byte0);
+		assertEquals(aDstDoc.getByte("byte1"), a_byte1);
+		assertEquals(aDstDoc.getShort("short0"), a_short0);
+		assertEquals(aDstDoc.getShort("short1"), a_short1);
+		assertEquals(aDstDoc.getInt("int0"), a_int0);
+		assertEquals(aDstDoc.getInt("int1"), a_int1);
+		assertEquals(aDstDoc.getLong("long0"), a_long0);
+		assertEquals(aDstDoc.getLong("long1"), a_long1);
 		assertEquals(aDstDoc.getFloat("float"), a_float);
 		assertEquals(aDstDoc.getDouble("double"), a_double);
 		assertEquals(aDstDoc.getBoolean("bool"), a_bool);
@@ -343,19 +360,87 @@ public class DocumentNGTest
 		byte[] data = _Person.createPerson(new Random(1)).toByteArray();
 		System.out.println(data.length);
 
-		_Log.hexDump(data);
+//		_Log.hexDump(data);
+	}
 
-//		Document doc = new Document();
-//		Array arr = new Array();
-//
-//		for (int i = 0; i < 20; i++)
-//		{
-//			doc.put("" + i, "test");
-//			arr.add("test");
-//		}
-//
-//		System.out.println(doc.toByteArray().length);
-//		System.out.println(arr.toByteArray().length);
+
+	@Test(enabled = false)
+	public void testMarshallCompressionRatio() throws IOException, ClassNotFoundException
+	{
+		for (int i = 1; i < 10; i++)
+		{
+			Array array = new Array();
+			for (int j = 0; j < i; j++)
+			{
+				array.add(_Person.createPerson(new Random(j)));
+			}
+
+			byte[] data = array.toByteArray();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			try (DeflaterOutputStream dos = new DeflaterOutputStream(baos))
+			{
+				dos.write(data);
+			}
+
+			System.out.println(data.length + "\t" + baos.size() + "\t" + (100 - baos.size() * 100 / data.length) + "%");
+		}
+	}
+
+
+	@Test(enabled = false)
+	public void testMarshallArrayNumbers() throws IOException, ClassNotFoundException
+	{
+		Random rnd = new Random(1);
+
+		Array array = new Array();
+		for (int i = 0; i < 100; i++)
+		{
+			array.add((byte)rnd.nextInt());
+		}
+		for (int i = 0; i < 100; i++)
+		{
+			array.add((short)rnd.nextInt());
+		}
+		for (int i = 0; i < 100; i++)
+		{
+			array.add(rnd.nextInt());
+		}
+		for (int i = 0; i < 100; i++)
+		{
+			array.add(rnd.nextLong());
+		}
+		for (int i = 0; i < 100; i++)
+		{
+			array.add(rnd.nextFloat());
+		}
+		for (int i = 0; i < 100; i++)
+		{
+			array.add(rnd.nextDouble());
+		}
+
+		byte[] data = array.toByteArray();
+//		System.out.println(data.length);
+//		_Log.hexDump(data);
+
+		Array a = new Array().fromByteArray(data);
+	}
+
+
+	@Test(enabled = false)
+	public void testMarshallDocumentNumbers() throws IOException, ClassNotFoundException
+	{
+		Document doc = new Document();
+		doc.put("a", (short)14);
+		doc.put("b", (int)765464647);
+		doc.put("c", (long)7646464147844586464L);
+		doc.put("d", (float)7);
+		doc.put("e", (double)7);
+
+		byte[] data = doc.toByteArray();
+//		System.out.println(data.length);
+//		_Log.hexDump(data);
+
+		Document a = new Document().fromByteArray(data);
 	}
 
 

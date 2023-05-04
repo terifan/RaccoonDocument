@@ -16,7 +16,6 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
@@ -190,25 +189,6 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 			return null;
 		}
 		return v.toString();
-	}
-
-
-	public Date getMillis(K aKey)
-	{
-		Object v = getImpl(aKey);
-		if (v == null)
-		{
-			return null;
-		}
-		if (v instanceof Date)
-		{
-			return (Date)v;
-		}
-		if (v instanceof Long)
-		{
-			return new Date((Long)v);
-		}
-		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a Date");
 	}
 
 
