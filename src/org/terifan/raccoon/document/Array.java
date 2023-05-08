@@ -365,7 +365,7 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	}
 
 
-	public <T> Iterable<T> iterator(Class<T> aClass)
+	public <T> Iterable<T> iterable(Class<T> aClass)
 	{
 		return new Iterable<T>()
 		{
@@ -403,7 +403,7 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	}
 
 
-	public int[] toInts()
+	public int[] asInts()
 	{
 		int[] values = new int[size()];
 		for (int i = 0; i < size(); i++)
@@ -414,7 +414,7 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	}
 
 
-	public long[] toLongs()
+	public long[] asLongs()
 	{
 		long[] values = new long[size()];
 		for (int i = 0; i < size(); i++)

@@ -38,7 +38,7 @@ class BinaryDecoder implements AutoCloseable
 		}
 		else
 		{
-			if (token.type == SupportedTypes.ARRAY)
+			if (token.type == SupportedTypes.DOCUMENT)
 			{
 				throw new StreamException("Attempt to unmarshal an Array when binary stream contains a Document.");
 			}
