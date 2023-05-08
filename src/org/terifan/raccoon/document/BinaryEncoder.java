@@ -64,32 +64,32 @@ class BinaryEncoder implements AutoCloseable
 			Object value = entry.getValue();
 			SupportedTypes type = SupportedTypes.identify(value);
 
-			if (mUseFixedPrimitives && (type == SupportedTypes.SHORT || type == SupportedTypes.INT || type == SupportedTypes.LONG || type == SupportedTypes.FLOAT || type == SupportedTypes.DOUBLE))
-			{
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				BinaryEncoder encoder = new BinaryEncoder(baos);
-				type.encoder.encode(encoder, value);
-				if (type == SupportedTypes.SHORT && baos.size() >= 2)
-				{
-					type = SupportedTypes.FIXEDSHORT;
-				}
-				if (type == SupportedTypes.INT && baos.size() >= 4)
-				{
-					type = SupportedTypes.FIXEDINT;
-				}
-				if (type == SupportedTypes.LONG && baos.size() >= 8)
-				{
-					type = SupportedTypes.FIXEDLONG;
-				}
-				if (type == SupportedTypes.FLOAT && baos.size() >= 4)
-				{
-					type = SupportedTypes.FIXEDFLOAT;
-				}
-				if (type == SupportedTypes.DOUBLE && baos.size() >= 8)
-				{
-					type = SupportedTypes.FIXEDDOUBLE;
-				}
-			}
+//			if (mUseFixedPrimitives && (type == SupportedTypes.SHORT || type == SupportedTypes.INT || type == SupportedTypes.LONG || type == SupportedTypes.FLOAT || type == SupportedTypes.DOUBLE))
+//			{
+//				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//				BinaryEncoder encoder = new BinaryEncoder(baos);
+//				type.encoder.encode(encoder, value);
+//				if (type == SupportedTypes.SHORT && baos.size() >= 2)
+//				{
+//					type = SupportedTypes.FIXEDSHORT;
+//				}
+//				if (type == SupportedTypes.INT && baos.size() >= 4)
+//				{
+//					type = SupportedTypes.FIXEDINT;
+//				}
+//				if (type == SupportedTypes.LONG && baos.size() >= 8)
+//				{
+//					type = SupportedTypes.FIXEDLONG;
+//				}
+//				if (type == SupportedTypes.FLOAT && baos.size() >= 4)
+//				{
+//					type = SupportedTypes.FIXEDFLOAT;
+//				}
+//				if (type == SupportedTypes.DOUBLE && baos.size() >= 8)
+//				{
+//					type = SupportedTypes.FIXEDDOUBLE;
+//				}
+//			}
 
 			writeToken(type, key.length());
 			writeUTF(key);
@@ -119,35 +119,35 @@ class BinaryEncoder implements AutoCloseable
 				type = nextType;
 			}
 
-			if (mUseFixedPrimitives && (type == SupportedTypes.SHORT || type == SupportedTypes.INT || type == SupportedTypes.LONG || type == SupportedTypes.FLOAT || type == SupportedTypes.DOUBLE))
-			{
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				BinaryEncoder encoder = new BinaryEncoder(baos);
-				for (int i = 0; i < runLen; i++)
-				{
-					type.encoder.encode(encoder, aArray.get(offset + i));
-				}
-				if (type == SupportedTypes.SHORT && baos.size() >= 2 * runLen)
-				{
-					type = SupportedTypes.FIXEDSHORT;
-				}
-				if (type == SupportedTypes.INT && baos.size() >= 4 * runLen)
-				{
-					type = SupportedTypes.FIXEDINT;
-				}
-				if (type == SupportedTypes.LONG && baos.size() >= 8 * runLen)
-				{
-					type = SupportedTypes.FIXEDLONG;
-				}
-				if (type == SupportedTypes.FLOAT && baos.size() >= 4 * runLen)
-				{
-					type = SupportedTypes.FIXEDFLOAT;
-				}
-				if (type == SupportedTypes.DOUBLE && baos.size() >= 8 * runLen)
-				{
-					type = SupportedTypes.FIXEDDOUBLE;
-				}
-			}
+//			if (mUseFixedPrimitives && (type == SupportedTypes.SHORT || type == SupportedTypes.INT || type == SupportedTypes.LONG || type == SupportedTypes.FLOAT || type == SupportedTypes.DOUBLE))
+//			{
+//				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//				BinaryEncoder encoder = new BinaryEncoder(baos);
+//				for (int i = 0; i < runLen; i++)
+//				{
+//					type.encoder.encode(encoder, aArray.get(offset + i));
+//				}
+//				if (type == SupportedTypes.SHORT && baos.size() >= 2 * runLen)
+//				{
+//					type = SupportedTypes.FIXEDSHORT;
+//				}
+//				if (type == SupportedTypes.INT && baos.size() >= 4 * runLen)
+//				{
+//					type = SupportedTypes.FIXEDINT;
+//				}
+//				if (type == SupportedTypes.LONG && baos.size() >= 8 * runLen)
+//				{
+//					type = SupportedTypes.FIXEDLONG;
+//				}
+//				if (type == SupportedTypes.FLOAT && baos.size() >= 4 * runLen)
+//				{
+//					type = SupportedTypes.FIXEDFLOAT;
+//				}
+//				if (type == SupportedTypes.DOUBLE && baos.size() >= 8 * runLen)
+//				{
+//					type = SupportedTypes.FIXEDDOUBLE;
+//				}
+//			}
 
 			writeToken(type, runLen);
 
@@ -207,7 +207,7 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	void writeLong(long aValue) throws IOException
+	BinaryEncoder writeLong(long aValue) throws IOException
 	{
 		writeBuffer[0] = (byte)(aValue >>> 56);
 		writeBuffer[1] = (byte)(aValue >>> 48);
@@ -218,6 +218,7 @@ class BinaryEncoder implements AutoCloseable
 		writeBuffer[6] = (byte)(aValue >>> 8);
 		writeBuffer[7] = (byte)(aValue >>> 0);
 		writeBytes(writeBuffer, 0, 8);
+		return this;
 	}
 
 

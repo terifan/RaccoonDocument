@@ -70,8 +70,8 @@ public enum SupportedTypes
 	),
 	/** type: java.util.UUID */
 	UUID(14,
-		(aEncoder, aValue) -> aEncoder.writeVarint(((UUID)aValue).getMostSignificantBits()).writeVarint(((UUID)aValue).getLeastSignificantBits()),
-		aDecoder -> new java.util.UUID(aDecoder.readVarint(), aDecoder.readVarint())
+		(aEncoder, aValue) -> aEncoder.writeLong(((UUID)aValue).getMostSignificantBits()).writeLong(((UUID)aValue).getLeastSignificantBits()),
+		aDecoder -> new java.util.UUID(aDecoder.readLong(), aDecoder.readLong())
 	),
 	/** type: java.time.LocalDateTime */
 	DATETIME(15,
