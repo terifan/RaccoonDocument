@@ -1,5 +1,6 @@
 package org.terifan.raccoon.document;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import static org.terifan.raccoon.document.BinaryEncoder.VERSION;
@@ -9,6 +10,7 @@ class BinaryDecoder implements AutoCloseable
 {
 	private MurmurHash3 mChecksum;
 	private InputStream mInputStream;
+    private final byte[] readBuffer = new byte[8];
 
 
 	BinaryDecoder(InputStream aInputStream)
@@ -19,25 +21,15 @@ class BinaryDecoder implements AutoCloseable
 
 	void unmarshal(KeyValueCollection aContainer) throws IOException
 	{
-		if (mChecksum == null)
-		{
-			mChecksum = new MurmurHash3(VERSION);
-		}
-
-		Token token = readToken();
-
-		if (token.value != BinaryEncoder.VERSION)
-		{
-			throw new StreamException("Unsupported stream encoding version: " + token.value);
-		}
+		Token token = readFirstToken();
 
 		if (aContainer instanceof Document)
 		{
 			if (token.type == SupportedTypes.ARRAY)
 			{
-				throw new StreamException("Attempt to unmarshal a Document failed; found an Array in the binary stream.");
+				throw new StreamException("Attempt to unmarshal a Document when binary stream contains an Array.");
 			}
-			else if (token.type != SupportedTypes.DOCUMENT)
+			if (token.type != SupportedTypes.DOCUMENT)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
@@ -46,11 +38,11 @@ class BinaryDecoder implements AutoCloseable
 		}
 		else
 		{
-			if (token.type == SupportedTypes.DOCUMENT)
+			if (token.type == SupportedTypes.ARRAY)
 			{
-				throw new StreamException("Attempt to unmarshal an Array failed; found a Document in the binary stream.");
+				throw new StreamException("Attempt to unmarshal an Array when binary stream contains a Document.");
 			}
-			else if (token.type != SupportedTypes.ARRAY)
+			if (token.type != SupportedTypes.ARRAY)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
@@ -62,25 +54,7 @@ class BinaryDecoder implements AutoCloseable
 
 	Object unmarshal() throws IOException
 	{
-		boolean first = mChecksum == null;
-		if (first)
-		{
-			mChecksum = new MurmurHash3(VERSION);
-		}
-
-		Token token = readToken();
-
-		if (first)
-		{
-			if (token.value != VERSION)
-			{
-				throw new StreamException("Unsupported stream encoding version: " + token.value);
-			}
-		}
-		else if (token.value != token.checksum)
-		{
-			throw new StreamException("Checksum error in data stream");
-		}
+		Token token = readFirstToken();
 
 		switch (token.type)
 		{
@@ -93,6 +67,32 @@ class BinaryDecoder implements AutoCloseable
 			default:
 				return readValue(token.type);
 		}
+	}
+
+
+	private Token readFirstToken() throws IOException, StreamException
+	{
+		Token token;
+
+		if (mChecksum == null)
+		{
+			mChecksum = new MurmurHash3(VERSION);
+			token = readToken();
+			if (token.value != VERSION)
+			{
+				throw new StreamException("Unsupported stream encoding version: " + token.value);
+			}
+		}
+		else
+		{
+			token = readToken();
+			if (token.value != token.checksum)
+			{
+				throw new StreamException("Checksum error in data stream");
+			}
+		}
+
+		return token;
 	}
 
 
@@ -122,7 +122,15 @@ class BinaryDecoder implements AutoCloseable
 
 	long readLong() throws IOException
 	{
-		return ((long)readInt() << 32) | readInt();
+		readBytes(readBuffer, 0, 8);
+        return (((long)(readBuffer[0] & 0xff) << 56) +
+                ((long)(readBuffer[1] & 0xff) << 48) +
+                ((long)(readBuffer[2] & 0xff) << 40) +
+                ((long)(readBuffer[3] & 0xff) << 32) +
+                ((long)(readBuffer[4] & 0xff) << 24) +
+                ((readBuffer[5] & 0xff) << 16) +
+                ((readBuffer[6] & 0xff) <<  8) +
+                ((readBuffer[7] & 0xff) <<  0));
 	}
 
 
@@ -130,6 +138,18 @@ class BinaryDecoder implements AutoCloseable
 	{
 		int len = mInputStream.read(aBuffer);
 		mChecksum.updateBytes(aBuffer, 0, len);
+		return aBuffer;
+	}
+
+
+	byte[] readBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
+	{
+		int len = mInputStream.read(aBuffer, aOffset, aLength);
+		mChecksum.updateBytes(aBuffer, aOffset, aLength);
+		if (len != aLength)
+		{
+			throw new IOException("Error reading from underlying stream.");
+		}
 		return aBuffer;
 	}
 

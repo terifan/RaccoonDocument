@@ -13,6 +13,7 @@ class BinaryEncoder implements AutoCloseable
 	private MurmurHash3 mChecksum;
 	private OutputStream mOutputStream;
 	private boolean mUseFixedPrimitives = true;
+	private final byte[] writeBuffer = new byte[8];
 
 
 	public BinaryEncoder(OutputStream aOutputStream)
@@ -68,11 +69,26 @@ class BinaryEncoder implements AutoCloseable
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				BinaryEncoder encoder = new BinaryEncoder(baos);
 				type.encoder.encode(encoder, value);
-				if (type == SupportedTypes.SHORT && baos.size() >= 2) type = SupportedTypes.FIXEDSHORT;
-				if (type == SupportedTypes.INT && baos.size() >= 4) type = SupportedTypes.FIXEDINT;
-				if (type == SupportedTypes.LONG && baos.size() >= 8) type = SupportedTypes.FIXEDLONG;
-				if (type == SupportedTypes.FLOAT && baos.size() >= 4) type = SupportedTypes.FIXEDFLOAT;
-				if (type == SupportedTypes.DOUBLE && baos.size() >= 8) type = SupportedTypes.FIXEDDOUBLE;
+				if (type == SupportedTypes.SHORT && baos.size() >= 2)
+				{
+					type = SupportedTypes.FIXEDSHORT;
+				}
+				if (type == SupportedTypes.INT && baos.size() >= 4)
+				{
+					type = SupportedTypes.FIXEDINT;
+				}
+				if (type == SupportedTypes.LONG && baos.size() >= 8)
+				{
+					type = SupportedTypes.FIXEDLONG;
+				}
+				if (type == SupportedTypes.FLOAT && baos.size() >= 4)
+				{
+					type = SupportedTypes.FIXEDFLOAT;
+				}
+				if (type == SupportedTypes.DOUBLE && baos.size() >= 8)
+				{
+					type = SupportedTypes.FIXEDDOUBLE;
+				}
 			}
 
 			writeToken(type, key.length());
@@ -96,7 +112,7 @@ class BinaryEncoder implements AutoCloseable
 			for (int i = offset; i < elementCount; i++, runLen++)
 			{
 				SupportedTypes nextType = SupportedTypes.identify(aArray.get(i));
-				if (type != null && type != nextType)
+				if (type != nextType && type != null)
 				{
 					break;
 				}
@@ -111,11 +127,26 @@ class BinaryEncoder implements AutoCloseable
 				{
 					type.encoder.encode(encoder, aArray.get(offset + i));
 				}
-				if (type == SupportedTypes.SHORT && baos.size() >= 2 * runLen) type = SupportedTypes.FIXEDSHORT;
-				if (type == SupportedTypes.INT && baos.size() >= 4 * runLen) type = SupportedTypes.FIXEDINT;
-				if (type == SupportedTypes.LONG && baos.size() >= 8 * runLen) type = SupportedTypes.FIXEDLONG;
-				if (type == SupportedTypes.FLOAT && baos.size() >= 4 * runLen) type = SupportedTypes.FIXEDFLOAT;
-				if (type == SupportedTypes.DOUBLE && baos.size() >= 8 * runLen) type = SupportedTypes.FIXEDDOUBLE;
+				if (type == SupportedTypes.SHORT && baos.size() >= 2 * runLen)
+				{
+					type = SupportedTypes.FIXEDSHORT;
+				}
+				if (type == SupportedTypes.INT && baos.size() >= 4 * runLen)
+				{
+					type = SupportedTypes.FIXEDINT;
+				}
+				if (type == SupportedTypes.LONG && baos.size() >= 8 * runLen)
+				{
+					type = SupportedTypes.FIXEDLONG;
+				}
+				if (type == SupportedTypes.FLOAT && baos.size() >= 4 * runLen)
+				{
+					type = SupportedTypes.FIXEDFLOAT;
+				}
+				if (type == SupportedTypes.DOUBLE && baos.size() >= 8 * runLen)
+				{
+					type = SupportedTypes.FIXEDDOUBLE;
+				}
 			}
 
 			writeToken(type, runLen);
@@ -160,31 +191,46 @@ class BinaryEncoder implements AutoCloseable
 
 	void writeShort(short aValue) throws IOException
 	{
-		writeByte(0xff & (aValue >>> 8));
-		writeByte(0xff & aValue);
+		writeBuffer[0] = (byte)(aValue >>> 8);
+		writeBuffer[1] = (byte)(aValue >>> 0);
+		writeBytes(writeBuffer, 0, 2);
 	}
 
 
 	void writeInt(int aValue) throws IOException
 	{
-		writeByte(0xff & (aValue >>> 24));
-		writeByte(0xff & (aValue >>> 16));
-		writeByte(0xff & (aValue >>> 8));
-		writeByte(0xff & aValue);
+		writeBuffer[0] = (byte)(aValue >>> 24);
+		writeBuffer[1] = (byte)(aValue >>> 16);
+		writeBuffer[2] = (byte)(aValue >>> 8);
+		writeBuffer[3] = (byte)(aValue >>> 0);
+		writeBytes(writeBuffer, 0, 4);
 	}
 
 
 	void writeLong(long aValue) throws IOException
 	{
-		writeInt((int)(aValue >>> 32));
-		writeInt((int)(aValue));
+		writeBuffer[0] = (byte)(aValue >>> 56);
+		writeBuffer[1] = (byte)(aValue >>> 48);
+		writeBuffer[2] = (byte)(aValue >>> 40);
+		writeBuffer[3] = (byte)(aValue >>> 32);
+		writeBuffer[4] = (byte)(aValue >>> 24);
+		writeBuffer[5] = (byte)(aValue >>> 16);
+		writeBuffer[6] = (byte)(aValue >>> 8);
+		writeBuffer[7] = (byte)(aValue >>> 0);
+		writeBytes(writeBuffer, 0, 8);
 	}
 
 
 	void writeBytes(byte[] aBuffer) throws IOException
 	{
-		mOutputStream.write(aBuffer);
-		mChecksum.updateBytes(aBuffer, 0, aBuffer.length);
+		writeBytes(aBuffer, 0, aBuffer.length);
+	}
+
+
+	void writeBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
+	{
+		mOutputStream.write(aBuffer, aOffset, aLength);
+		mChecksum.updateBytes(aBuffer, aOffset, aLength);
 	}
 
 

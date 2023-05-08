@@ -97,7 +97,7 @@ public class DocumentNGTest
 	}
 
 
-	@Test
+	@Test(invocationCount = 1000_000, skipFailedInvocations = true)
 	public void testAllTypes()
 	{
 		Byte _byte0 = Byte.MIN_VALUE;
@@ -121,7 +121,7 @@ public class DocumentNGTest
 		LocalDateTime _ldt = LocalDateTime.now();
 		Array _arr = Array.of((byte)1, (byte)2, (byte)3); // JSON decoder decodes values to smallest possible representation
 		Document _doc = new Document().put("docu", "ment");
-		BigDecimal _bd = new BigDecimal("31.31646131940661321981");
+		BigDecimal _bd = new BigDecimal("32196131943131.31646133219846131496311946313219841940661321981");
 
 		Document _allTypesDoc = new Document()
 			.put("byte0", _byte0)
@@ -145,13 +145,15 @@ public class DocumentNGTest
 			.put("ldt", _ldt)
 			.put("arr", _arr)
 			.put("doc", _doc)
-			.put("bd", _bd);
+			.put("bd", _bd)
+			;
 
 		Array _allTypesArr = Array.of(_allTypesDoc.values());
 
 		Document srcDoc = new Document()
 			.put("doc", _allTypesDoc)
-			.put("arr", _allTypesArr);
+			.put("arr", _allTypesArr)
+			;
 
 		byte[] data = srcDoc.toByteArray();
 		String json = srcDoc.toJson();
@@ -450,5 +452,40 @@ public class DocumentNGTest
 		Document d = Document.of("{a:[1],b:[],c:[{}],d:[{x:1},[null],{}],e:null}");
 		assertEquals(d.toJson(), "{\"a\":[1],\"b\":[],\"c\":[{}],\"d\":[{\"x\":1},[null],{}],\"e\":null}");
 		assertEquals(d.reduce().toJson(), "{\"a\":[1],\"d\":[{\"x\":1}]}");
+	}
+
+
+	@Test
+	public void testSize() throws IOException
+	{
+		Random rnd = new Random(1);
+		Document doc = _Person.createPerson(rnd);
+
+		System.out.println("          json: " + doc.toJson().length());
+		System.out.println("    typed-json: " + doc.toTypedJson().length());
+		System.out.println("           bin: " + doc.toByteArray().length);
+
+		ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
+		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos2))
+		{
+			dos.write(doc.toJson().getBytes("utf-8"));
+		}
+		System.out.println("      json-zip: " + baos2.size());
+
+		ByteArrayOutputStream baos3 = new ByteArrayOutputStream();
+		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos3))
+		{
+			dos.write(doc.toTypedJson().getBytes("utf-8"));
+		}
+		System.out.println("typed-json-zip: " + baos3.size());
+
+		ByteArrayOutputStream baos4 = new ByteArrayOutputStream();
+		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos4))
+		{
+			dos.write(doc.toByteArray());
+		}
+		System.out.println("       bin-zip: " + baos4.size());
+
+//		_Log.hexDump(doc.toByteArray());
 	}
 }
