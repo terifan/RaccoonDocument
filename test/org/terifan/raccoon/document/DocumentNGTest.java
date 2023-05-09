@@ -396,7 +396,7 @@ public class DocumentNGTest
 	public void testMarshall() throws IOException, ClassNotFoundException
 	{
 		byte[] data = _Person.createPerson(new Random(1)).toByteArray();
-		System.out.println(data.length);
+//		System.out.println(data.length);
 
 //		_Log.hexDump(data);
 	}

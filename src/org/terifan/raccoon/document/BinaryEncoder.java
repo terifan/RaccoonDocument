@@ -79,6 +79,7 @@ class BinaryEncoder implements AutoCloseable
 		{
 			SupportedTypes type = null;
 			int runLen = 0;
+//			int esimatedLen = 0;
 
 			for (int i = offset; i < elementCount; i++, runLen++)
 			{
@@ -90,19 +91,7 @@ class BinaryEncoder implements AutoCloseable
 				}
 				type = nextType;
 
-//				if (type == SupportedTypes.SHORT)
-//				{
-//				}
-//				if (type == SupportedTypes.INT)
-//				{
-//				}
-//				if (type == SupportedTypes.LONG)
-//				{
-//				}
-//				if (type == SupportedTypes.FLOAT)
-//				{
-//				}
-//				if (type == SupportedTypes.DOUBLE)
+//				if (type == SupportedTypes.SHORT || type == SupportedTypes.INT || type == SupportedTypes.LONG)
 //				{
 //				}
 			}
