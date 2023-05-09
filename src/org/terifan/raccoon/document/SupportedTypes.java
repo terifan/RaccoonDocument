@@ -40,8 +40,8 @@ public enum SupportedTypes
 		aDecoder -> aDecoder.readVarint() == 1
 	),
 	STRING(7,
-		(aEncoder, aValue) -> aEncoder.writeString(aValue.toString()),
-		aDecoder -> aDecoder.readString()
+		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(aValue.toString().length()).writeUTF(aValue.toString()),
+		aDecoder -> aDecoder.readUTF((int)aDecoder.readUnsignedVarint())
 	),
 	NULL(8,
 		(aEncoder, aValue) -> {},
@@ -65,8 +65,8 @@ public enum SupportedTypes
 	),
 	/** type: byte[] */
 	BINARY(13,
-		(aEncoder, aValue) -> aEncoder.writeBuffer((byte[])aValue),
-		aDecoder -> aDecoder.readBuffer()
+		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(((byte[])aValue).length).writeBytes((byte[])aValue),
+		aDecoder -> aDecoder.readBytes(new byte[(int)aDecoder.readUnsignedVarint()])
 	),
 	/** type: java.util.UUID */
 	UUID(14,

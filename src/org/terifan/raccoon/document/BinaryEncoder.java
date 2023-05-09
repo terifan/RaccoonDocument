@@ -11,7 +11,7 @@ class BinaryEncoder implements AutoCloseable
 
 	private MurmurHash3 mChecksum;
 	private OutputStream mOutputStream;
-	private final byte[] writeBuffer = new byte[8];
+	private final byte[] mWriteBuffer = new byte[8];
 
 
 	public BinaryEncoder(OutputStream aOutputStream)
@@ -138,35 +138,35 @@ class BinaryEncoder implements AutoCloseable
 
 	BinaryEncoder writeShort(short aValue) throws IOException
 	{
-		writeBuffer[0] = (byte)(aValue >>> 8);
-		writeBuffer[1] = (byte)(aValue >>> 0);
-		writeBytes(writeBuffer, 0, 2);
+		mWriteBuffer[0] = (byte)(aValue >>> 8);
+		mWriteBuffer[1] = (byte)(aValue >>> 0);
+		writeBytes(mWriteBuffer, 0, 2);
 		return this;
 	}
 
 
 	BinaryEncoder writeInt(int aValue) throws IOException
 	{
-		writeBuffer[0] = (byte)(aValue >>> 24);
-		writeBuffer[1] = (byte)(aValue >>> 16);
-		writeBuffer[2] = (byte)(aValue >>> 8);
-		writeBuffer[3] = (byte)(aValue >>> 0);
-		writeBytes(writeBuffer, 0, 4);
+		mWriteBuffer[0] = (byte)(aValue >>> 24);
+		mWriteBuffer[1] = (byte)(aValue >>> 16);
+		mWriteBuffer[2] = (byte)(aValue >>> 8);
+		mWriteBuffer[3] = (byte)(aValue >>> 0);
+		writeBytes(mWriteBuffer, 0, 4);
 		return this;
 	}
 
 
 	BinaryEncoder writeLong(long aValue) throws IOException
 	{
-		writeBuffer[0] = (byte)(aValue >>> 56);
-		writeBuffer[1] = (byte)(aValue >>> 48);
-		writeBuffer[2] = (byte)(aValue >>> 40);
-		writeBuffer[3] = (byte)(aValue >>> 32);
-		writeBuffer[4] = (byte)(aValue >>> 24);
-		writeBuffer[5] = (byte)(aValue >>> 16);
-		writeBuffer[6] = (byte)(aValue >>> 8);
-		writeBuffer[7] = (byte)(aValue >>> 0);
-		writeBytes(writeBuffer, 0, 8);
+		mWriteBuffer[0] = (byte)(aValue >>> 56);
+		mWriteBuffer[1] = (byte)(aValue >>> 48);
+		mWriteBuffer[2] = (byte)(aValue >>> 40);
+		mWriteBuffer[3] = (byte)(aValue >>> 32);
+		mWriteBuffer[4] = (byte)(aValue >>> 24);
+		mWriteBuffer[5] = (byte)(aValue >>> 16);
+		mWriteBuffer[6] = (byte)(aValue >>> 8);
+		mWriteBuffer[7] = (byte)(aValue >>> 0);
+		writeBytes(mWriteBuffer, 0, 8);
 		return this;
 	}
 
@@ -181,22 +181,6 @@ class BinaryEncoder implements AutoCloseable
 	{
 		mOutputStream.write(aBuffer, aOffset, aLength);
 		mChecksum.updateBytes(aBuffer, aOffset, aLength);
-	}
-
-
-	BinaryEncoder writeString(String aValue) throws IOException
-	{
-		writeUnsignedVarint(aValue.length());
-		writeUTF(aValue);
-		return this;
-	}
-
-
-	BinaryEncoder writeBuffer(byte[] aBuffer) throws IOException
-	{
-		writeUnsignedVarint(aBuffer.length);
-		writeBytes(aBuffer);
-		return this;
 	}
 
 
@@ -238,7 +222,7 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	private void writeUTF(String aInput) throws IOException
+	BinaryEncoder writeUTF(String aInput) throws IOException
 	{
 		for (int i = 0, len = aInput.length(); i < len; i++)
 		{
@@ -259,6 +243,7 @@ class BinaryEncoder implements AutoCloseable
 				writeByte(0x80 | ((c) & 0x3F));
 			}
 		}
+		return this;
 	}
 
 

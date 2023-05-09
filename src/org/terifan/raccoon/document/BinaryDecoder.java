@@ -1,6 +1,5 @@
 package org.terifan.raccoon.document;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import static org.terifan.raccoon.document.BinaryEncoder.VERSION;
@@ -10,7 +9,7 @@ class BinaryDecoder implements AutoCloseable
 {
 	private MurmurHash3 mChecksum;
 	private InputStream mInputStream;
-    private final byte[] readBuffer = new byte[8];
+    private final byte[] mReadBuffer = new byte[8];
 
 
 	BinaryDecoder(InputStream aInputStream)
@@ -116,25 +115,25 @@ class BinaryDecoder implements AutoCloseable
 
 	int readInt() throws IOException
 	{
-		readBytes(readBuffer, 0, 4);
-        return ((readBuffer[0] & 0xff) << 24) +
-               ((readBuffer[1] & 0xff) << 16) +
-               ((readBuffer[2] & 0xff) <<  8) +
-               ((readBuffer[3] & 0xff) <<  0);
+		readBytes(mReadBuffer, 0, 4);
+        return ((mReadBuffer[0] & 0xff) << 24) +
+               ((mReadBuffer[1] & 0xff) << 16) +
+               ((mReadBuffer[2] & 0xff) <<  8) +
+               ((mReadBuffer[3] & 0xff) <<  0);
 	}
 
 
 	long readLong() throws IOException
 	{
-		readBytes(readBuffer, 0, 8);
-        return (((long)(readBuffer[0] & 0xff) << 56) +
-                ((long)(readBuffer[1] & 0xff) << 48) +
-                ((long)(readBuffer[2] & 0xff) << 40) +
-                ((long)(readBuffer[3] & 0xff) << 32) +
-                ((long)(readBuffer[4] & 0xff) << 24) +
-                ((readBuffer[5] & 0xff) << 16) +
-                ((readBuffer[6] & 0xff) <<  8) +
-                ((readBuffer[7] & 0xff) <<  0));
+		readBytes(mReadBuffer, 0, 8);
+        return (((long)(mReadBuffer[0] & 0xff) << 56) +
+                ((long)(mReadBuffer[1] & 0xff) << 48) +
+                ((long)(mReadBuffer[2] & 0xff) << 40) +
+                ((long)(mReadBuffer[3] & 0xff) << 32) +
+                ((long)(mReadBuffer[4] & 0xff) << 24) +
+                ((mReadBuffer[5] & 0xff) << 16) +
+                ((mReadBuffer[6] & 0xff) <<  8) +
+                ((mReadBuffer[7] & 0xff) <<  0));
 	}
 
 
@@ -241,18 +240,6 @@ class BinaryDecoder implements AutoCloseable
 	}
 
 
-	String readString() throws IOException
-	{
-		return readUTF((int)readUnsignedVarint());
-	}
-
-
-	byte[] readBuffer() throws IOException
-	{
-		return readBytes(new byte[(int)readUnsignedVarint()]);
-	}
-
-
 	long readVarint() throws IOException
 	{
 		for (long n = 0, result = 0; n < 64; n += 7)
@@ -285,7 +272,7 @@ class BinaryDecoder implements AutoCloseable
 	}
 
 
-	private String readUTF(int aLength) throws IOException
+	String readUTF(int aLength) throws IOException
 	{
 		if (aLength < 0)
 		{

@@ -396,9 +396,27 @@ public class DocumentNGTest
 	public void testMarshall() throws IOException, ClassNotFoundException
 	{
 		byte[] data = _Person.createPerson(new Random(1)).toByteArray();
-//		System.out.println(data.length);
+		System.out.println(data.length);
 
 //		_Log.hexDump(data);
+
+		Document d = new Document().fromByteArray(data);
+	}
+
+
+	@Test
+	public void testMarshall2() throws IOException, ClassNotFoundException
+	{
+		byte[] data = Document.of("a:1,b:{c:2},d:[3,{e:4}]").toByteArray();
+
+		System.out.println(data.length);
+
+		_Log.hexDump(data);
+
+		Document d = new Document().fromByteArray(data);
+
+		System.out.println(d);
+
 	}
 
 
@@ -542,6 +560,6 @@ public class DocumentNGTest
 		}
 		System.out.println("       bin-zip: " + baos4.size());
 
-//		_Log.hexDump(doc.toByteArray());
+		_Log.hexDump(doc.toByteArray());
 	}
 }
