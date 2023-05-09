@@ -1,6 +1,5 @@
 package org.terifan.raccoon.document;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map.Entry;
@@ -12,7 +11,6 @@ class BinaryEncoder implements AutoCloseable
 
 	private MurmurHash3 mChecksum;
 	private OutputStream mOutputStream;
-	private boolean mUseFixedPrimitives = true;
 	private final byte[] writeBuffer = new byte[8];
 
 
@@ -64,33 +62,6 @@ class BinaryEncoder implements AutoCloseable
 			Object value = entry.getValue();
 			SupportedTypes type = SupportedTypes.identify(value);
 
-//			if (mUseFixedPrimitives && (type == SupportedTypes.SHORT || type == SupportedTypes.INT || type == SupportedTypes.LONG || type == SupportedTypes.FLOAT || type == SupportedTypes.DOUBLE))
-//			{
-//				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//				BinaryEncoder encoder = new BinaryEncoder(baos);
-//				type.encoder.encode(encoder, value);
-//				if (type == SupportedTypes.SHORT && baos.size() >= 2)
-//				{
-//					type = SupportedTypes.FIXEDSHORT;
-//				}
-//				if (type == SupportedTypes.INT && baos.size() >= 4)
-//				{
-//					type = SupportedTypes.FIXEDINT;
-//				}
-//				if (type == SupportedTypes.LONG && baos.size() >= 8)
-//				{
-//					type = SupportedTypes.FIXEDLONG;
-//				}
-//				if (type == SupportedTypes.FLOAT && baos.size() >= 4)
-//				{
-//					type = SupportedTypes.FIXEDFLOAT;
-//				}
-//				if (type == SupportedTypes.DOUBLE && baos.size() >= 8)
-//				{
-//					type = SupportedTypes.FIXEDDOUBLE;
-//				}
-//			}
-
 			writeToken(type, key.length());
 			writeUTF(key);
 			writeValue(type, value);
@@ -111,43 +82,30 @@ class BinaryEncoder implements AutoCloseable
 
 			for (int i = offset; i < elementCount; i++, runLen++)
 			{
-				SupportedTypes nextType = SupportedTypes.identify(aArray.get(i));
+				Object v = aArray.get(i);
+				SupportedTypes nextType = SupportedTypes.identify(v);
 				if (type != nextType && type != null)
 				{
 					break;
 				}
 				type = nextType;
-			}
 
-//			if (mUseFixedPrimitives && (type == SupportedTypes.SHORT || type == SupportedTypes.INT || type == SupportedTypes.LONG || type == SupportedTypes.FLOAT || type == SupportedTypes.DOUBLE))
-//			{
-//				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//				BinaryEncoder encoder = new BinaryEncoder(baos);
-//				for (int i = 0; i < runLen; i++)
+//				if (type == SupportedTypes.SHORT)
 //				{
-//					type.encoder.encode(encoder, aArray.get(offset + i));
 //				}
-//				if (type == SupportedTypes.SHORT && baos.size() >= 2 * runLen)
+//				if (type == SupportedTypes.INT)
 //				{
-//					type = SupportedTypes.FIXEDSHORT;
 //				}
-//				if (type == SupportedTypes.INT && baos.size() >= 4 * runLen)
+//				if (type == SupportedTypes.LONG)
 //				{
-//					type = SupportedTypes.FIXEDINT;
 //				}
-//				if (type == SupportedTypes.LONG && baos.size() >= 8 * runLen)
+//				if (type == SupportedTypes.FLOAT)
 //				{
-//					type = SupportedTypes.FIXEDLONG;
 //				}
-//				if (type == SupportedTypes.FLOAT && baos.size() >= 4 * runLen)
+//				if (type == SupportedTypes.DOUBLE)
 //				{
-//					type = SupportedTypes.FIXEDFLOAT;
 //				}
-//				if (type == SupportedTypes.DOUBLE && baos.size() >= 8 * runLen)
-//				{
-//					type = SupportedTypes.FIXEDDOUBLE;
-//				}
-//			}
+			}
 
 			writeToken(type, runLen);
 
@@ -189,21 +147,23 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	void writeShort(short aValue) throws IOException
+	BinaryEncoder writeShort(short aValue) throws IOException
 	{
 		writeBuffer[0] = (byte)(aValue >>> 8);
 		writeBuffer[1] = (byte)(aValue >>> 0);
 		writeBytes(writeBuffer, 0, 2);
+		return this;
 	}
 
 
-	void writeInt(int aValue) throws IOException
+	BinaryEncoder writeInt(int aValue) throws IOException
 	{
 		writeBuffer[0] = (byte)(aValue >>> 24);
 		writeBuffer[1] = (byte)(aValue >>> 16);
 		writeBuffer[2] = (byte)(aValue >>> 8);
 		writeBuffer[3] = (byte)(aValue >>> 0);
 		writeBytes(writeBuffer, 0, 4);
+		return this;
 	}
 
 

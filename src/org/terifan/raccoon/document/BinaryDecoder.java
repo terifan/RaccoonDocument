@@ -116,7 +116,11 @@ class BinaryDecoder implements AutoCloseable
 
 	int readInt() throws IOException
 	{
-		return (readByte() << 24) | (readByte() << 16) | (readByte() << 8) | readByte();
+		readBytes(readBuffer, 0, 4);
+        return ((readBuffer[0] & 0xff) << 24) +
+               ((readBuffer[1] & 0xff) << 16) +
+               ((readBuffer[2] & 0xff) <<  8) +
+               ((readBuffer[3] & 0xff) <<  0);
 	}
 
 

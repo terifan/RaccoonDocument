@@ -1,5 +1,6 @@
 package org.terifan.raccoon.document;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.DateTimeException;
@@ -75,57 +76,32 @@ public enum SupportedTypes
 	),
 	/** type: java.time.LocalDateTime */
 	DATETIME(15,
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(localDateToNumber(((LocalDateTime)aValue).toLocalDate())).writeUnsignedVarint(localTimeToNumber(((LocalDateTime)aValue).toLocalTime())),
-		aDecoder -> LocalDateTime.of(numberToLocalDate((int)aDecoder.readUnsignedVarint()), numberToLocalTime(aDecoder.readUnsignedVarint()))
+		(aEncoder, aValue) -> aEncoder.writeInt(localDateToNumber(((LocalDateTime)aValue).toLocalDate())).writeLong(localTimeToNumber(((LocalDateTime)aValue).toLocalTime())),
+		aDecoder -> LocalDateTime.of(numberToLocalDate((int)aDecoder.readInt()), numberToLocalTime(aDecoder.readLong()))
 	),
 	/** type: java.time.LocalDate */
 	DATE(16,
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(localDateToNumber((LocalDate)aValue)),
-		aDecoder -> numberToLocalDate((int)aDecoder.readUnsignedVarint())
+		(aEncoder, aValue) -> aEncoder.writeInt(localDateToNumber((LocalDate)aValue)),
+		aDecoder -> numberToLocalDate(aDecoder.readInt())
 	),
 	/** type: java.time.LocalTime */
 	TIME(17,
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(localTimeToNumber((LocalTime)aValue)),
-		aDecoder -> numberToLocalTime(aDecoder.readUnsignedVarint())
+		(aEncoder, aValue) -> aEncoder.writeLong(localTimeToNumber((LocalTime)aValue)),
+		aDecoder -> numberToLocalTime(aDecoder.readLong())
 	),
 	/** type: java.time.OffsetDateTime */
 	OFFSETDATETIME(18,
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(localDateToNumber(((OffsetDateTime)aValue).toLocalDate())).writeUnsignedVarint(localTimeToNumber(((OffsetDateTime)aValue).toLocalTime())).writeVarint(((OffsetDateTime)aValue).getOffset().getTotalSeconds()),
-		aDecoder -> OffsetDateTime.of(numberToLocalDate((int)aDecoder.readUnsignedVarint()), numberToLocalTime(aDecoder.readUnsignedVarint()), ZoneOffset.ofTotalSeconds((int)aDecoder.readVarint()))
+		(aEncoder, aValue) -> aEncoder.writeInt(localDateToNumber(((OffsetDateTime)aValue).toLocalDate())).writeLong(localTimeToNumber(((OffsetDateTime)aValue).toLocalTime())).writeVarint(((OffsetDateTime)aValue).getOffset().getTotalSeconds()),
+		aDecoder -> OffsetDateTime.of(numberToLocalDate((int)aDecoder.readInt()), numberToLocalTime(aDecoder.readLong()), ZoneOffset.ofTotalSeconds((int)aDecoder.readVarint()))
 	),
 	/** type: java.lang.BigDecimal */
 	DECIMAL(19,
-		(aEncoder, aValue) -> aEncoder.writeString(aValue.toString()),
-		aDecoder -> new BigDecimal(aDecoder.readString())
+		(aEncoder, aValue) -> writeDecimal(aEncoder, aValue),
+		aDecoder -> readDecimal(aDecoder)
 	),
 	CHAR(20,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Character)aValue),
 		aDecoder -> (char)aDecoder.readVarint()
-	),
-	/** fixed size encoding of a Short value */
-	FIXEDSHORT(21,
-		(aEncoder, aValue) -> aEncoder.writeShort((Short)aValue),
-		aDecoder -> (short)aDecoder.readShort()
-	),
-	/** fixed size encoding of a Integer value */
-	FIXEDINT(22,
-		(aEncoder, aValue) -> aEncoder.writeInt((Integer)aValue),
-		aDecoder -> (int)aDecoder.readInt()
-	),
-	/** fixed size encoding of a Long value */
-	FIXEDLONG(23,
-		(aEncoder, aValue) -> aEncoder.writeLong((Long)aValue),
-		aDecoder -> aDecoder.readLong()
-	),
-	/** fixed size encoding of a Float value */
-	FIXEDFLOAT(24,
-		(aEncoder, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
-		aDecoder -> Float.intBitsToFloat((int)aDecoder.readInt())
-	),
-	/** fixed size encoding of a Double value */
-	FIXEDDOUBLE(25,
-		(aEncoder, aValue) -> aEncoder.writeLong(Double.doubleToLongBits((Double)aValue)),
-		aDecoder -> Double.longBitsToDouble(aDecoder.readLong())
 	);
 
 	Encoder encoder;
@@ -149,30 +125,6 @@ public enum SupportedTypes
 
 	public static SupportedTypes identify(Object aValue)
 	{
-//		return switch (aValue)
-//		{
-//			case null -> NULL;
-//			case Document o -> DOCUMENT;
-//			case Array o -> ARRAY;
-//			case ObjectId o -> OBJECTID;
-//			case String o -> STRING;
-//			case Integer o -> INT;
-//			case Boolean o -> BOOLEAN;
-//			case Double o -> DOUBLE;
-//			case Long o -> LONG;
-//			case Float o -> FLOAT;
-//			case byte[] o -> BINARY;
-//			case Byte o -> BYTE;
-//			case Short o -> SHORT;
-//			case UUID o -> UUID;
-//			case BigDecimal o -> DECIMAL;
-//			case OffsetDateTime o -> OFFSETDATETIME;
-//			case LocalDateTime o -> DATETIME;
-//			case LocalDate o -> DATE;
-//			case LocalTime o -> TIME;
-//			default -> null;
-//		}
-
 		if (aValue == null)
 		{
 			return NULL;
@@ -184,30 +136,21 @@ public enum SupportedTypes
 		if (Array.class == cls) return ARRAY;
 		if (ObjectId.class == cls) return OBJECTID;
 		if (String.class == cls) return STRING;
-		if (Integer.class == cls) return INT;
-		if (Boolean.class == cls) return BOOLEAN;
-		if (Double.class == cls) return DOUBLE;
-		if (Long.class == cls) return LONG;
-		if (Float.class == cls) return FLOAT;
 		if (byte[].class == cls) return BINARY;
-		if (Byte.class == cls) return BYTE;
-		if (Short.class == cls) return SHORT;
+		if (Integer.class == cls || Integer.TYPE == cls) return INT;
+		if (Boolean.class == cls || Boolean.TYPE == cls) return BOOLEAN;
+		if (Double.class == cls || Double.TYPE == cls) return DOUBLE;
+		if (Long.class == cls || Long.TYPE == cls) return LONG;
+		if (Float.class == cls || Float.TYPE == cls) return FLOAT;
+		if (Byte.class == cls || Byte.TYPE == cls) return BYTE;
+		if (Short.class == cls || Short.TYPE == cls) return SHORT;
+		if (Character.class == cls || Character.TYPE == cls) return CHAR;
 		if (UUID.class == cls) return UUID;
-		if (Character.class == cls) return CHAR;
 		if (BigDecimal.class == cls) return DECIMAL;
 		if (OffsetDateTime.class == cls) return OFFSETDATETIME;
 		if (LocalDateTime.class == cls) return DATETIME;
 		if (LocalDate.class == cls) return DATE;
 		if (LocalTime.class == cls) return TIME;
-
-		if (Integer.TYPE == cls) return INT;
-		if (Boolean.TYPE == cls) return BOOLEAN;
-		if (Double.TYPE == cls) return DOUBLE;
-		if (Long.TYPE == cls) return LONG;
-		if (Float.TYPE == cls) return FLOAT;
-		if (Byte.TYPE == cls) return BYTE;
-		if (Short.TYPE == cls) return SHORT;
-		if (Character.TYPE == cls) return CHAR;
 
 		return null;
 	}
@@ -231,6 +174,45 @@ public enum SupportedTypes
 	static interface Decoder
 	{
 		Object decode(BinaryDecoder aDecoder) throws IOException;
+	}
+
+
+	private static BinaryEncoder writeDecimal(BinaryEncoder aEncoder, Object aValue) throws IOException
+	{
+		String s = aValue.toString();
+		aEncoder.writeUnsignedVarint(s.length());
+		for (int k = 0; k < s.length() - 1;)
+		{
+			int a = s.charAt(k++) - '.';
+			int b = s.charAt(k++) - '.';
+			aEncoder.writeByte((a << 4) + b);
+		}
+		if ((s.length() & 1) == 1)
+		{
+			int a = s.charAt(s.length() - 1) - '.';
+			aEncoder.writeByte(a << 4);
+		}
+		return aEncoder;
+	}
+
+
+	private static BigDecimal readDecimal(BinaryDecoder aDecoder) throws IOException
+	{
+		StringBuilder s = new StringBuilder();
+		for (long i = aDecoder.readUnsignedVarint(); i > 0;)
+		{
+			int v = aDecoder.readByte();
+			int a = '.' + (v >>> 4);
+			s.append((char)a);
+			i--;
+			if (i > 0)
+			{
+				int b = '.' + (15 & v);
+				s.append((char)b);
+				i--;
+			}
+		}
+		return new BigDecimal(s.toString());
 	}
 
 

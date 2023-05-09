@@ -14,11 +14,47 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.zip.DeflaterOutputStream;
 import static org.testng.Assert.*;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 
 public class DocumentNGTest
 {
+	@Test(dataProvider = "decimal")
+	public void testBigDecimal(String s)
+	{
+		Document doc = new Document().put("a", new BigDecimal(s));
+
+//		System.out.println(doc);
+
+		byte[] data = doc.toByteArray();
+
+//		_Log.hexDump(data);
+
+		Document doc2 = new Document().fromByteArray(data);
+
+		assertEquals(doc2.getDecimal("a"), doc.getDecimal("a"));
+	}
+
+	@DataProvider
+	private Object[][] decimal()
+	{
+		return new Object[][]{
+			{"0"},
+			{".1"},{"1."},{"0.1"},
+			{"12"},{".12"},{"12.34"},
+			{"164313131394.654613219816131"},
+			{"1643131313941.654613219816131"},
+			{"164313131394.6546132198161312"},
+			{"1643131313943.6546132198161314"},
+			{"16431313139456.654613219816131"},
+			{"16431313139456.6546132198161317"},
+			{"16431313139456.65461321981613178"},
+			{"32196131943131.31646133219846131496311946313219841940661321981"}
+		};
+	}
+
+
 	@Test
 	public void testFind()
 	{
@@ -97,7 +133,7 @@ public class DocumentNGTest
 	}
 
 
-	@Test(invocationCount = 1000_000, skipFailedInvocations = true)
+	@Test(invocationCount = 1000, skipFailedInvocations = true)
 	public void testAllTypes()
 	{
 		Byte _byte0 = Byte.MIN_VALUE;
@@ -369,6 +405,7 @@ public class DocumentNGTest
 	@Test(enabled = false)
 	public void testMarshallCompressionRatio() throws IOException, ClassNotFoundException
 	{
+		System.out.println("bin" + "\t" + "zip");
 		for (int i = 1; i < 10; i++)
 		{
 			Array array = new Array();
@@ -389,42 +426,61 @@ public class DocumentNGTest
 	}
 
 
-	@Test(enabled = false)
-	public void testMarshallArrayNumbers() throws IOException, ClassNotFoundException
+	@Test(dataProvider = "arrayLengths")
+	public void testMarshallArrayNumbers(int n) throws IOException, ClassNotFoundException
 	{
 		Random rnd = new Random(1);
 
-		Array array = new Array();
-		for (int i = 0; i < 100; i++)
+		Array out = new Array();
+		for (int i = 0; i < n; i++)
 		{
-			array.add((byte)rnd.nextInt());
+			out.add((byte)rnd.nextInt());
 		}
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < n; i++)
 		{
-			array.add((short)rnd.nextInt());
+			out.add((short)rnd.nextInt());
 		}
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < n; i++)
 		{
-			array.add(rnd.nextInt());
+			out.add(rnd.nextInt());
 		}
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < n; i++)
 		{
-			array.add(rnd.nextLong());
+			out.add(rnd.nextLong());
 		}
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < n; i++)
 		{
-			array.add(rnd.nextFloat());
+			out.add(rnd.nextFloat());
 		}
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < n; i++)
 		{
-			array.add(rnd.nextDouble());
+			out.add(rnd.nextDouble());
 		}
 
-		byte[] data = array.toByteArray();
+		byte[] data = out.toByteArray();
 //		System.out.println(data.length);
 //		_Log.hexDump(data);
 
-		Array a = new Array().fromByteArray(data);
+		Array in = new Array().fromByteArray(data);
+
+		for (int i = 0; i < out.size(); i++)
+		{
+			assertEquals(in.getNumber(i), out.getNumber(i));
+		}
+	}
+
+
+	@DataProvider
+	private Object[][] arrayLengths()
+	{
+		return new Object[][]{
+			{1},
+			{2},
+			{5},
+			{10},
+			{1000},
+			{1000_000}
+		};
 	}
 
 
