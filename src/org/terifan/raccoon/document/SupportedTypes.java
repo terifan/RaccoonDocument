@@ -131,6 +131,14 @@ public enum SupportedTypes
 	VARDOUBLE(26,
 		(aEncoder, aValue) -> aEncoder.writeVarint(Long.reverseBytes(Double.doubleToLongBits((Double)aValue))),
 		aDecoder -> Double.longBitsToDouble(Long.reverseBytes(aDecoder.readVarint()))
+	),
+	REF(27,
+		(aEncoder, aValue) -> {},
+		aDecoder -> null
+	),
+	REFVALUE(28,
+		(aEncoder, aValue) -> {},
+		aDecoder -> null
 	);
 
 

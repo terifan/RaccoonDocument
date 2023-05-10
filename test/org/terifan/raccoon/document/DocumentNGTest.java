@@ -398,7 +398,7 @@ public class DocumentNGTest
 		byte[] data = _Person.createPerson(new Random(1)).toByteArray();
 		System.out.println(data.length);
 
-//		_Log.hexDump(data);
+		_Log.hexDump(data);
 
 		Document d = new Document().fromByteArray(data);
 	}
