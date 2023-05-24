@@ -71,15 +71,14 @@ public class DocumentNGTest
 
 
 	@Test
-	public void testInsert()
+	public void testAppend()
 	{
 		Document doc = new Document();
+		doc.append("key", Document.of("v:1"));
+		doc.append("key", Document.of("v:2"));
+		doc.append("key", Document.of("v:3"));
 
-		doc.append("key", Document.of("value:1"));
-		doc.append("key", Document.of("value:2"));
-		doc.append("key", Document.of("value:3"));
-
-		assertEquals(doc.toString().length(), 86);
+		assertEquals(doc.toJson(), "{\"key\":[{\"v\":1},{\"v\":2},{\"v\":3}]}");
 	}
 
 
