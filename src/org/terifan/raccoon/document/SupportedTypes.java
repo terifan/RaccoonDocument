@@ -95,7 +95,7 @@ public enum SupportedTypes
 	),
 	/** type: java.lang.BigDecimal */
 	DECIMAL(19,
-		(aEncoder, aValue) -> writeDecimal(aEncoder, aValue),
+		(aEncoder, aValue) -> writeDecimal(aEncoder, (BigDecimal)aValue),
 		aDecoder -> readDecimal(aDecoder)
 	),
 	CHAR(20,
@@ -215,19 +215,31 @@ public enum SupportedTypes
 	}
 
 
-	private static BinaryEncoder writeDecimal(BinaryEncoder aEncoder, Object aValue) throws IOException
+	/* Encodes two digits/symbols into a single byte:
+	 *
+	 *  +   43
+	 *  ,   44
+	 *  -   45
+	 *  .   46
+	 *  0-9 48-57
+	 *  e   58
+	*/
+	private static BinaryEncoder writeDecimal(BinaryEncoder aEncoder, BigDecimal aValue) throws IOException
 	{
-		String s = aValue.toString();
-		aEncoder.writeUnsignedVarint(s.length());
-		for (int k = 0; k < s.length() - 1;)
+		char[] s = aValue.toString().toCharArray();
+		aEncoder.writeUnsignedVarint(s.length);
+		for (int k = 0; k < s.length - 1;)
 		{
-			int a = s.charAt(k++) - '.';
-			int b = s.charAt(k++) - '.';
+			int a = s[k++];
+			int b = s[k++];
+			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
+			b = (b == 'e' || b == 'E' ? ':' : b) - '+';
 			aEncoder.writeByte((a << 4) + b);
 		}
-		if ((s.length() & 1) == 1)
+		if ((s.length & 1) == 1)
 		{
-			int a = s.charAt(s.length() - 1) - '.';
+			int a = s[s.length - 1];
+			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
 			aEncoder.writeByte(a << 4);
 		}
 		return aEncoder;
@@ -236,21 +248,21 @@ public enum SupportedTypes
 
 	private static BigDecimal readDecimal(BinaryDecoder aDecoder) throws IOException
 	{
-		StringBuilder s = new StringBuilder();
-		for (long i = aDecoder.readUnsignedVarint(); i > 0;)
+		char[] s = new char[(int)aDecoder.readUnsignedVarint()];
+		for (int i = 0; i < s.length;)
 		{
 			int v = aDecoder.readByte();
-			int a = '.' + (v >>> 4);
-			s.append((char)a);
-			i--;
-			if (i > 0)
+			int a = '+' + (v >>> 4);
+			if (a == ':') a = 'E';
+			s[i++] = (char)a;
+			if (i < s.length)
 			{
-				int b = '.' + (15 & v);
-				s.append((char)b);
-				i--;
+				int b = '+' + (15 & v);
+				if (b == ':') b = 'E';
+				s[i++] = (char)b;
 			}
 		}
-		return new BigDecimal(s.toString());
+		return new BigDecimal(s);
 	}
 
 
