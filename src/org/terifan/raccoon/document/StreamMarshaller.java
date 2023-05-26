@@ -51,6 +51,16 @@ public class StreamMarshaller implements AutoCloseable
 	}
 
 
+	public <T extends Object> T read(Class aType) throws IOException
+	{
+		if (mDecoder == null)
+		{
+			throw new IllegalStateException("This Marshaller is either closed or not created for reading a stream.");
+		}
+		return (T)mDecoder.unmarshal(aType);
+	}
+
+
 	public <T extends Object> T read() throws IOException
 	{
 		if (mDecoder == null)

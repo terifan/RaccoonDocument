@@ -69,6 +69,31 @@ class BinaryDecoder implements AutoCloseable
 	}
 
 
+	Object unmarshal(Class aType) throws IOException
+	{
+		try
+		{
+			Token token = readFirstToken();
+
+			switch (token.type)
+			{
+				case DOCUMENT:
+					return readDocument((Document)aType.newInstance());
+				case ARRAY:
+					return readArray((Array)aType.newInstance());
+				case TERMINATOR:
+					return token.type;
+				default:
+					return readValue(token.type);
+			}
+		}
+		catch (IllegalAccessException | InstantiationException e)
+		{
+			throw new IOException(e);
+		}
+	}
+
+
 	private Token readFirstToken() throws IOException, StreamException
 	{
 		Token token;

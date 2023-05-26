@@ -171,7 +171,7 @@ public enum SupportedTypes
 		Class<? extends Object> cls = aValue.getClass();
 
 		if (Document.class == cls || Document.class.isAssignableFrom(cls)) return DOCUMENT;
-		if (Array.class == cls) return ARRAY;
+		if (Array.class == cls || Array.class.isAssignableFrom(cls)) return ARRAY;
 		if (ObjectId.class == cls) return OBJECTID;
 		if (String.class == cls) return STRING;
 		if (byte[].class == cls) return BINARY;

@@ -129,6 +129,10 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	@Override
 	Array putImpl(Integer aIndex, Object aValue)
 	{
+		while (aIndex > mValues.size())
+		{
+			mValues.add(null);
+		}
 		if (aIndex == mValues.size())
 		{
 			mValues.add(aValue);
