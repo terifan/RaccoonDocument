@@ -3,6 +3,7 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -14,12 +15,19 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 {
 	private final static long serialVersionUID = 1L;
 
+	private final static Comparator<String> COMPARATOR = (p, q) ->
+	{
+		boolean P = !p.isEmpty() && p.charAt(0) == '_';
+		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
+		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
+	};
+
 	private final TreeMap<String, Object> mValues;
 
 
 	public Document()
 	{
-		mValues = new TreeMap<>();
+		mValues = new TreeMap<>(COMPARATOR);
 	}
 
 

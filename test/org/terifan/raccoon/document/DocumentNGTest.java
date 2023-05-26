@@ -417,12 +417,14 @@ public class DocumentNGTest
 	@Test
 	public void testMarshall() throws IOException, ClassNotFoundException
 	{
-		byte[] data = _Person.createPerson(new Random(1)).toByteArray();
+		byte[] data = _Person.createPerson(new Random(1)).put("A","test").toByteArray();
 		System.out.println(data.length);
 
 		_Log.hexDump(data);
 
 		Document d = new Document().fromByteArray(data);
+
+		System.out.println(d.keySet());
 	}
 
 
