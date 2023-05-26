@@ -345,7 +345,17 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	{
 		for (int i = 0, sz = Math.min(size(), aOther.size()); i < sz; i++)
 		{
-			int v = ((Comparable)get(i)).compareTo(aOther.get(i));
+			Object o = aOther.get(i);
+			Comparable t = get(i);
+			if (t == null)
+			{
+				if (o == null)
+				{
+					continue;
+				}
+				return -1;
+			}
+			int v = t.compareTo(o);
 			if (v != 0)
 			{
 				return v;
