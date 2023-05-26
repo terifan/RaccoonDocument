@@ -102,7 +102,7 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		{
 			return ((Number)v).byteValue();
 		}
-		throw new IllegalArgumentException("Value of key " + aKey + " cannot be cast on a Byte");
+		throw new IllegalArgumentException("Value of key " + aKey + " cannot be cast on a Byte: " + v.getClass());
 	}
 
 

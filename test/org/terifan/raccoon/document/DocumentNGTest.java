@@ -183,7 +183,30 @@ public class DocumentNGTest
 			.put("bd", _bd)
 			;
 
-		Array _allTypesArr = Array.of(_allTypesDoc.values());
+		Array _allTypesArr = Array.of(
+			_byte0,
+			_byte1,
+			_short0,
+			_short1,
+			_int0,
+			_int1,
+			_long0,
+			_long1,
+			_float,
+			_double,
+			_bool,
+			_null,
+			_string,
+			_bytes,
+			_uuid,
+			_odt,
+			_ld,
+			_lt,
+			_ldt,
+			_arr,
+			_doc,
+			_bd
+		);
 
 		Document srcDoc = new Document()
 			.put("doc", _allTypesDoc)

@@ -4,9 +4,9 @@ import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
 
@@ -14,12 +14,12 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 {
 	private final static long serialVersionUID = 1L;
 
-	private final LinkedHashMap<String, Object> mValues;
+	private final TreeMap<String, Object> mValues;
 
 
 	public Document()
 	{
-		mValues = new LinkedHashMap<>();
+		mValues = new TreeMap<>();
 	}
 
 
@@ -221,7 +221,7 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 		ArrayList<String> thisKeys = new ArrayList<>(keySet());
 		ArrayList<String> otherKeys = new ArrayList<>(aOther.keySet());
 
-		for (String key : thisKeys.toArray(new String[0]))
+		for (String key : thisKeys.toArray(String[]::new))
 		{
 			Object a = get(key);
 			Object b = aOther.get(key);
