@@ -82,10 +82,10 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 	}
 
 
-	public Document putAll(Document aSource)
+	public <T> T putAll(Document aSource)
 	{
 		aSource.entrySet().forEach(entry -> mValues.put(entry.getKey(), entry.getValue()));
-		return this;
+		return (T)this;
 	}
 
 
