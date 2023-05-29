@@ -50,7 +50,8 @@ public class DocumentNGTest
 			{"16431313139456.654613219816131"},
 			{"16431313139456.6546132198161317"},
 			{"16431313139456.65461321981613178"},
-			{"32196131943131.31646133219846131496311946313219841940661321981"}
+			{"32196131943131.31646133219846131496311946313219841940661321981"},
+			{"-1.5e+35"}
 		};
 	}
 
@@ -418,7 +419,6 @@ public class DocumentNGTest
 	public void testMarshall() throws IOException, ClassNotFoundException
 	{
 		byte[] data = _Person.createPerson(new Random(1)).put("A","test").toByteArray();
-		System.out.println(data.length);
 
 		_Log.hexDump(data);
 
