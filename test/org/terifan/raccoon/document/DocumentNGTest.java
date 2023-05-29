@@ -467,13 +467,11 @@ public class DocumentNGTest
 //	@Test
 //	public void testMarshall() throws IOException, ClassNotFoundException
 //	{
-//		byte[] data = _Person.createPerson(new Random(1)).put("A","test").toByteArray();
+//		String d = "$or:[{$and:[{ratings:1},{name:{$regex:'n.*'}}]},{$and:[{ratings:2},{name:{$regex:'w.*'}}]}]";
 //
-//		_Log.hexDump(data);
+//		Document doc = new Document().of(d);
 //
-//		Document d = new Document().fromByteArray(data);
-//
-//		System.out.println(d.keySet());
+//		System.out.println(doc);
 //	}
 
 

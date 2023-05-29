@@ -359,6 +359,12 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 				}
 				return -1;
 			}
+
+			if (!t.getClass().isAssignableFrom(o.getClass()))
+			{
+				return (t.getClass().getSimpleName() + ":" + t.toString()).compareTo(o.getClass().getSimpleName() + ":" + o.toString());
+			}
+
 			int v = t.compareTo(o);
 			if (v != 0)
 			{
