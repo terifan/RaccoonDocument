@@ -59,15 +59,64 @@ public class DocumentNGTest
 	@Test
 	public void testFind()
 	{
-		Document doc = Document.of("a:{b:{c:[{d:1},{e:2},{f:3}]}}");
+		Document doc = Document.of("a:{b:{c:[{d:1},{e:2},{f:3},{g:bob,h:4}]}}");
+		Array arr = Array.of(Document.of("g:bob,h:5"), Document.of("g:eve,h:6"));
 
-		int d = doc.find("a/b/c/0/d");
-		int e = doc.find("a/b/c/1/e");
-		int f = doc.find("a/b/c/2/f");
+		int d = doc.findFirst("a/b/c/0/d");
+		int e = doc.findFirst("a/b/c/1/e");
+		int f = doc.findFirst("a/b/c/2/f");
+		int h = doc.findFirst("a/b/c/[g=bob]/h");
+		int i = arr.findFirst("[g=bob]/h");
 
 		assertEquals(d, 1);
 		assertEquals(e, 2);
 		assertEquals(f, 3);
+		assertEquals(h, 4);
+		assertEquals(i, 5);
+	}
+
+
+	@Test
+	public void testFindMany()
+	{
+		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary}]");
+
+		Array m = doc.findMany("people/[gender=m]/name");
+		Array f = doc.findMany("people/[gender=f]/name");
+
+		assertEquals(m.toJson(), "[\"bob\",\"adam\"]");
+		assertEquals(f.toJson(), "[\"eve\",\"liv\",\"mary\"]");
+	}
+
+
+	@Test
+	public void testFindMany2()
+	{
+		Document doc = Document.of("numbers:[1,2,3]");
+		Array f = doc.findMany("numbers/*");
+		assertEquals(f.toJson(), "[1,2,3]");
+	}
+
+
+	@Test
+	public void testFindMany3()
+	{
+		Document doc = Document.of("maps:[{a:1,b:{x:4}},{a:2,b:{x:5}},{a:3,b:{x:6}}]");
+
+		assertEquals(doc.findMany("maps").toJson(), "[[{\"a\":1,\"b\":{\"x\":4}},{\"a\":2,\"b\":{\"x\":5}},{\"a\":3,\"b\":{\"x\":6}}]]");
+		assertEquals(doc.findMany("maps/*").toJson(), "[{\"a\":1,\"b\":{\"x\":4}},{\"a\":2,\"b\":{\"x\":5}},{\"a\":3,\"b\":{\"x\":6}}]");
+		assertEquals(doc.findMany("maps/a").toJson(), "[1,2,3]");
+		assertEquals(doc.findMany("maps/b").toJson(), "[{\"x\":4},{\"x\":5},{\"x\":6}]");
+		assertEquals(doc.findMany("maps/b/x").toJson(), "[4,5,6]");
+	}
+
+
+	@Test
+	public void testFindMany4()
+	{
+		Document doc = Document.of("maps:[{a:[0,{b:4}]},{a:[0,{b:5}]},{a:[0,{b:6}]}]");
+
+		assertEquals(doc.findMany("maps/a/1/b").toJson(), "[4,5,6]");
 	}
 
 
@@ -415,33 +464,33 @@ public class DocumentNGTest
 	}
 
 
-	@Test
-	public void testMarshall() throws IOException, ClassNotFoundException
-	{
-		byte[] data = _Person.createPerson(new Random(1)).put("A","test").toByteArray();
+//	@Test
+//	public void testMarshall() throws IOException, ClassNotFoundException
+//	{
+//		byte[] data = _Person.createPerson(new Random(1)).put("A","test").toByteArray();
+//
+//		_Log.hexDump(data);
+//
+//		Document d = new Document().fromByteArray(data);
+//
+//		System.out.println(d.keySet());
+//	}
 
-		_Log.hexDump(data);
 
-		Document d = new Document().fromByteArray(data);
-
-		System.out.println(d.keySet());
-	}
-
-
-	@Test
-	public void testMarshall2() throws IOException, ClassNotFoundException
-	{
-		byte[] data = Document.of("a:1,b:{c:2},d:[3,{e:4}]").toByteArray();
-
-		System.out.println(data.length);
-
-		_Log.hexDump(data);
-
-		Document d = new Document().fromByteArray(data);
-
-		System.out.println(d);
-
-	}
+//	@Test
+//	public void testMarshall2() throws IOException, ClassNotFoundException
+//	{
+//		byte[] data = Document.of("a:1,b:{c:2},d:[3,{e:4}]").toByteArray();
+//
+//		System.out.println(data.length);
+//
+//		_Log.hexDump(data);
+//
+//		Document d = new Document().fromByteArray(data);
+//
+//		System.out.println(d);
+//
+//	}
 
 
 	@Test(enabled = false)

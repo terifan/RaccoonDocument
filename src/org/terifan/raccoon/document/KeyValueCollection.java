@@ -447,59 +447,154 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	}
 
 
-	public <T extends Object> T find(String aPath)
+	/**
+	 * find("name")
+	 * find("7")
+	 * find("name/7")
+	 * find("people/7/name")
+	 * find("people/[name=bob]/age")
+	 */
+	public <T extends Object> T findFirst(String aPath)
 	{
 		int i = aPath.indexOf('/');
 
 		if (i == -1)
 		{
-			if (this instanceof Document)
+			if (aPath.matches("[0-9]*"))
 			{
-				return ((Document)this).get(aPath);
+				return ((Array)this).get(Integer.valueOf(aPath));
 			}
+			return ((Document)this).get(aPath);
+		}
+		if (i == 0)
+		{
+			return findFirst(aPath.substring(1));
+		}
 
-			return ((Array)this).get(Integer.valueOf(aPath));
+		if (aPath.startsWith("[") && aPath.contains("]") && aPath.contains("="))
+		{
+			String key = aPath.substring(1, aPath.indexOf('='));
+			String value = aPath.substring(aPath.indexOf('=') + 1, aPath.indexOf(']'));
+			for (Object o : (Array)this)
+			{
+				if (o instanceof Document)
+				{
+					Document doc = (Document)o;
+					if (value.equals(doc.get(key)))
+					{
+						T result = doc.findFirst(aPath.substring(aPath.indexOf(']') + 1));
+						if (result != null)
+						{
+							return (T)result;
+						}
+					}
+				}
+			}
+			return null;
 		}
 
 		String path = aPath.substring(0, i);
 		String remain = aPath.substring(i + 1);
 
-		KeyValueCollection collection = null;
-		if (this instanceof Document)
+		KeyValueCollection tmp;
+		if (path.matches("[0-9]*"))
 		{
-			collection = ((Document)this).get(path);
+			tmp = ((Array)this).get(Integer.valueOf(path));
 		}
 		else
 		{
-			if (path.matches("[0-9]{1,}"))
+			tmp = ((Document)this).get(path);
+		}
+		return (T)tmp.findFirst(remain);
+	}
+
+
+	public Array findMany(String aPath)
+	{
+		Array result = new Array();
+		findMany(aPath, result);
+		return result;
+	}
+
+
+	protected <T> void findMany(String aPath, Array aResult)
+	{
+		int i = aPath.indexOf('/');
+
+		if (aPath.equals("*"))
+		{
+			if (this instanceof Array)
 			{
-				collection = ((Array)this).get(Integer.valueOf(path));
+				aResult.addAll((Array)this);
 			}
-			else if (path.startsWith("[") && path.endsWith("]") && path.contains("="))
+			else
 			{
-				String key = path.substring(1, path.indexOf("="));
-				String value = path.substring(path.indexOf("=") + 1, path.length() - 1);
-				Array arr = (Array)this;
-				for (Object o : arr)
+				aResult.addAll(((Document)this).values());
+			}
+			return;
+		}
+		if (i == -1)
+		{
+			if (aPath.matches("[0-9]*"))
+			{
+				aResult.add(((Array)this).get(Integer.valueOf(aPath)));
+			}
+			else if (this instanceof Array)
+			{
+				((Array)this).forEach(p -> aResult.add(((Document)p).get(aPath)));
+			}
+			else
+			{
+				aResult.add(((Document)this).get(aPath));
+			}
+			return;
+		}
+		if (i == 0)
+		{
+			findMany(aPath.substring(1), aResult);
+			return;
+		}
+
+		if (aPath.startsWith("[") && aPath.contains("]") && aPath.contains("="))
+		{
+			String key = aPath.substring(1, aPath.indexOf('='));
+			String value = aPath.substring(aPath.indexOf('=') + 1, aPath.indexOf(']'));
+			for (Object o : (Array)this)
+			{
+				if (o instanceof Document)
 				{
-					if (o instanceof Document)
+					Document doc = (Document)o;
+					if (value.equals(doc.get(key)))
 					{
-						Document doc = (Document)o;
-						if (value.equals(doc.get(key)))
-						{
-							collection = doc;
-						}
+						doc.findMany(aPath.substring(aPath.indexOf(']') + 1), aResult);
 					}
 				}
 			}
+			return;
 		}
 
-		if (collection == null)
+		String path = aPath.substring(0, i);
+		String remain = aPath.substring(i + 1);
+
+		if (this instanceof Array)
 		{
-			throw new IllegalArgumentException("No value for path: " + aPath);
+			if (path.matches("[0-9]*"))
+			{
+				((KeyValueCollection)((Array)this).get(Integer.valueOf(path))).findMany(remain, aResult);
+			}
+			else
+			{
+				((Array)this).forEach(p -> ((KeyValueCollection)((Document)p).get(path)).findMany(remain, aResult));
+			}
 		}
-
-		return (T)collection.find(remain);
+		else
+		{
+			KeyValueCollection collection = (KeyValueCollection)((Document)this).get(path);
+			if (collection != null)
+			{
+				collection.findMany(remain, aResult);
+			}
+		}
 	}
 
 
