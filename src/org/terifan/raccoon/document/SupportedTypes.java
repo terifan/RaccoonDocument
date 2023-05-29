@@ -250,7 +250,14 @@ public enum SupportedTypes
 				i--;
 			}
 		}
-		return new BigDecimal(s.toString());
+		try
+		{
+			return new BigDecimal(s.toString());
+		}
+		catch (Exception e)
+		{
+			throw new IllegalStateException("input: \"" + s + "\"", e);
+		}
 	}
 
 
