@@ -7,9 +7,9 @@ import static org.terifan.raccoon.document.BinaryEncoder.VERSION;
 
 class BinaryDecoder implements AutoCloseable
 {
+	private final byte[] mReadBuffer = new byte[8];
 	private MurmurHash3 mChecksum;
 	private InputStream mInputStream;
-    private final byte[] mReadBuffer = new byte[8];
 
 
 	BinaryDecoder(InputStream aInputStream)
@@ -141,24 +141,24 @@ class BinaryDecoder implements AutoCloseable
 	int readInt() throws IOException
 	{
 		readBytes(mReadBuffer, 0, 4);
-        return ((mReadBuffer[0] & 0xff) << 24) +
-               ((mReadBuffer[1] & 0xff) << 16) +
-               ((mReadBuffer[2] & 0xff) <<  8) +
-               ((mReadBuffer[3] & 0xff) <<  0);
+		return ((mReadBuffer[0] & 0xff) << 24)
+			+ ((mReadBuffer[1] & 0xff) << 16)
+			+ ((mReadBuffer[2] & 0xff) << 8)
+			+ ((mReadBuffer[3] & 0xff) << 0);
 	}
 
 
 	long readLong() throws IOException
 	{
 		readBytes(mReadBuffer, 0, 8);
-        return (((long)(mReadBuffer[0] & 0xff) << 56) +
-                ((long)(mReadBuffer[1] & 0xff) << 48) +
-                ((long)(mReadBuffer[2] & 0xff) << 40) +
-                ((long)(mReadBuffer[3] & 0xff) << 32) +
-                ((long)(mReadBuffer[4] & 0xff) << 24) +
-                ((mReadBuffer[5] & 0xff) << 16) +
-                ((mReadBuffer[6] & 0xff) <<  8) +
-                ((mReadBuffer[7] & 0xff) <<  0));
+		return (((long)(mReadBuffer[0] & 0xff) << 56)
+			+ ((long)(mReadBuffer[1] & 0xff) << 48)
+			+ ((long)(mReadBuffer[2] & 0xff) << 40)
+			+ ((long)(mReadBuffer[3] & 0xff) << 32)
+			+ ((long)(mReadBuffer[4] & 0xff) << 24)
+			+ ((mReadBuffer[5] & 0xff) << 16)
+			+ ((mReadBuffer[6] & 0xff) << 8)
+			+ ((mReadBuffer[7] & 0xff) << 0));
 	}
 
 
@@ -200,7 +200,7 @@ class BinaryDecoder implements AutoCloseable
 			String key = readUTF(token.value);
 
 			aDocument.putImpl(key, readValue(token.type));
-		}
+				}
 
 		return aDocument;
 	}
@@ -224,8 +224,8 @@ class BinaryDecoder implements AutoCloseable
 			for (int i = 0; i < token.value; i++)
 			{
 				aArray.add(readValue(token.type));
-			}
-		}
+					}
+				}
 
 		return aArray;
 	}

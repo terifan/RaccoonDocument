@@ -15,8 +15,15 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 {
 	private final static long serialVersionUID = 1L;
 
-	private final static Comparator<String> COMPARATOR = (p, q) ->
+	/**
+	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal order.
+	 * E.g. order of keys: [_id, _alpha, 0, A, a]
+	 */
+	final static Comparator<String> COMPARATOR = (p, q) ->
 	{
+		boolean S = "_id".equals(p);
+		boolean T = "_id".equals(q);
+		if (S || T) return S && !T ? -1 : T && !S ? 1 : 0;
 		boolean P = !p.isEmpty() && p.charAt(0) == '_';
 		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
 		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);

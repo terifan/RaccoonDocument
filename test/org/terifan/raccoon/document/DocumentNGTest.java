@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.Random;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.zip.DeflaterOutputStream;
 import static org.testng.Assert.*;
@@ -597,6 +598,19 @@ public class DocumentNGTest
 		Document d = Document.of("{a:[1],b:[],c:[{}],d:[{x:1},[null],{}],e:null}");
 		assertEquals(d.toJson(), "{\"a\":[1],\"b\":[],\"c\":[{}],\"d\":[{\"x\":1},[null],{}],\"e\":null}");
 		assertEquals(d.reduce().toJson(), "{\"a\":[1],\"d\":[{\"x\":1}]}");
+	}
+
+
+	@Test
+	public void testKeyComparator() throws IOException
+	{
+		TreeSet<String> set = new TreeSet<>(Document.COMPARATOR);
+		set.add("A");
+		set.add("_a");
+		set.add("a");
+		set.add("0");
+		set.add("_id");
+		assertEquals(set.toString(), "[_id, _a, 0, A, a]");
 	}
 
 
