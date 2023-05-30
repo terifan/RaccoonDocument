@@ -678,8 +678,9 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	 */
 	public R fromByteArray(byte[] aBinaryData)
 	{
-		try (BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(aBinaryData)))
+		try
 		{
+			BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(aBinaryData));
 			decoder.unmarshal(this);
 		}
 		catch (IOException e)
@@ -713,10 +714,8 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	 */
 	public R readFrom(InputStream aInputStream) throws IOException
 	{
-		try (BinaryDecoder decoder = new BinaryDecoder(aInputStream))
-		{
-			decoder.unmarshal(this);
-		}
+		BinaryDecoder decoder = new BinaryDecoder(aInputStream);
+		decoder.unmarshal(this);
 		return (R)this;
 	}
 
@@ -755,10 +754,8 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 			}
 		};
 
-		try (BinaryDecoder decoder = new BinaryDecoder(in))
-		{
-			decoder.unmarshal(this);
-		}
+		BinaryDecoder decoder = new BinaryDecoder(in);
+		decoder.unmarshal(this);
 	}
 
 

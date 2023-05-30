@@ -211,7 +211,7 @@ public enum SupportedTypes
 	@FunctionalInterface
 	static interface Decoder
 	{
-		Object decode(BinaryDecoder aDecoder) throws IOException;
+		Object decode(BinaryInput aDecoder) throws IOException;
 	}
 
 
@@ -246,7 +246,7 @@ public enum SupportedTypes
 	}
 
 
-	private static BigDecimal readDecimal(BinaryDecoder aDecoder) throws IOException
+	private static BigDecimal readDecimal(BinaryInput aDecoder) throws IOException
 	{
 		char[] s = new char[(int)aDecoder.readUnsignedVarint()];
 		for (int i = 0; i < s.length;)
