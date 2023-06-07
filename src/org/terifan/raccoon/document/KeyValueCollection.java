@@ -19,6 +19,7 @@ import java.util.Base64;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 
@@ -512,24 +513,37 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 	public Array findMany(String aPath)
 	{
 		Array result = new Array();
-		findMany(aPath, result);
+		findMany(aPath, result, false);
 		return result;
 	}
 
 
-	protected <T> void findMany(String aPath, Array aResult)
+	public Array findMany(String aPath, boolean aValuesOnly)
+	{
+		Array result = new Array();
+		findMany(aPath, result, aValuesOnly);
+		return result;
+	}
+
+
+	protected <T> void findMany(String aPath, Array aResult, boolean aValuesOnly)
 	{
 		int i = aPath.indexOf('/');
 
 		if (aPath.equals("*"))
 		{
+			Iterable it;
 			if (this instanceof Array)
 			{
-				aResult.addAll((Array)this);
+				it = (Array)this;
 			}
 			else
 			{
-				aResult.addAll(((Document)this).values());
+				it = ((Document)this).values();
+			}
+			for (Object v : it)
+			{
+				optionalAdd(aResult, aValuesOnly, v);
 			}
 			return;
 		}
@@ -537,21 +551,26 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		{
 			if (aPath.matches("[0-9]*"))
 			{
-				aResult.add(((Array)this).get(Integer.valueOf(aPath)));
+				optionalAdd(aResult, aValuesOnly, ((Array)this).get(Integer.valueOf(aPath)));
 			}
 			else if (this instanceof Array)
 			{
-				((Array)this).forEach(p -> aResult.add(((Document)p).get(aPath)));
+				((Array)this).forEach(p -> {
+					if (p instanceof Document)
+					{
+						optionalAdd(aResult, aValuesOnly, ((Document)p).get(aPath));
+					}
+				});
 			}
 			else
 			{
-				aResult.add(((Document)this).get(aPath));
+				optionalAdd(aResult, aValuesOnly, ((Document)this).get(aPath));
 			}
 			return;
 		}
 		if (i == 0)
 		{
-			findMany(aPath.substring(1), aResult);
+			findMany(aPath.substring(1), aResult, aValuesOnly);
 			return;
 		}
 
@@ -566,7 +585,7 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 					Document doc = (Document)o;
 					if (value.equals(doc.get(key)))
 					{
-						doc.findMany(aPath.substring(aPath.indexOf(']') + 1), aResult);
+						doc.findMany(aPath.substring(aPath.indexOf(']') + 1), aResult, aValuesOnly);
 					}
 				}
 			}
@@ -580,11 +599,11 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		{
 			if (path.matches("[0-9]*"))
 			{
-				((KeyValueCollection)((Array)this).get(Integer.valueOf(path))).findMany(remain, aResult);
+				((KeyValueCollection)((Array)this).get(Integer.valueOf(path))).findMany(remain, aResult, aValuesOnly);
 			}
 			else
 			{
-				((Array)this).forEach(p -> ((KeyValueCollection)((Document)p).get(path)).findMany(remain, aResult));
+				((Array)this).forEach(p -> ((KeyValueCollection)((Document)p).get(path)).findMany(remain, aResult, aValuesOnly));
 			}
 		}
 		else
@@ -592,8 +611,17 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 			KeyValueCollection collection = (KeyValueCollection)((Document)this).get(path);
 			if (collection != null)
 			{
-				collection.findMany(remain, aResult);
+				collection.findMany(remain, aResult, aValuesOnly);
 			}
+		}
+	}
+
+
+	private void optionalAdd(Array aResult, boolean aValuesOnly, Object v)
+	{
+		if (!aValuesOnly || !(v instanceof KeyValueCollection))
+		{
+			aResult.add(v);
 		}
 	}
 

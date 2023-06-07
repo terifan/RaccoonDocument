@@ -80,7 +80,7 @@ public class DocumentNGTest
 	@Test
 	public void testFindMany()
 	{
-		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary}]");
+		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
 
 		Array m = doc.findMany("people/[gender=m]/name");
 		Array f = doc.findMany("people/[gender=f]/name");
@@ -91,11 +91,21 @@ public class DocumentNGTest
 
 
 	@Test
-	public void testFindMany2()
+	public void testFindManyValues()
 	{
-		Document doc = Document.of("numbers:[1,2,3]");
-		Array f = doc.findMany("numbers/*");
-		assertEquals(f.toJson(), "[1,2,3]");
+		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
+
+		assertEquals(doc.findMany("people/gender", true).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\"]");
+	}
+
+
+	@Test
+	public void testFindManyArray()
+	{
+		Document doc = Document.of("people:[{language:[se,en]},{language:[en,fr,dk]},{language:[de,en]},{language:[fr,pl]}]");
+
+		assertEquals(doc.findMany("people/language").toJson(), "[[\"se\",\"en\"],[\"en\",\"fr\",\"dk\"],[\"de\",\"en\"],[\"fr\",\"pl\"]]");
+		assertEquals(doc.findMany("people/language/*").toJson(), "[\"se\",\"en\",\"en\",\"fr\",\"dk\",\"de\",\"en\",\"fr\",\"pl\"]");
 	}
 
 
@@ -118,6 +128,15 @@ public class DocumentNGTest
 		Document doc = Document.of("maps:[{a:[0,{b:4}]},{a:[0,{b:5}]},{a:[0,{b:6}]}]");
 
 		assertEquals(doc.findMany("maps/a/1/b").toJson(), "[4,5,6]");
+	}
+
+
+	@Test
+	public void testOf()
+	{
+		Document doc = Document.of("personal/details/language/*:1,personal/firstName:1,personal/ratings/2:1");
+
+		System.out.println(doc);
 	}
 
 
