@@ -620,17 +620,17 @@ public class DocumentNGTest
 	}
 
 
-	@Test
-	public void testKeyComparator() throws IOException
-	{
-		TreeSet<String> set = new TreeSet<>(Document.COMPARATOR);
-		set.add("A");
-		set.add("_a");
-		set.add("a");
-		set.add("0");
-		set.add("_id");
-		assertEquals(set.toString(), "[_id, _a, 0, A, a]");
-	}
+//	@Test
+//	public void testKeyComparator() throws IOException
+//	{
+//		TreeSet<String> set = new TreeSet<>(Document.COMPARATOR);
+//		set.add("A");
+//		set.add("_a");
+//		set.add("a");
+//		set.add("0");
+//		set.add("_id");
+//		assertEquals(set.toString(), "[_id, _a, 0, A, a]");
+//	}
 
 
 	@Test

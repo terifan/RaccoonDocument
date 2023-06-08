@@ -3,11 +3,10 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
 
@@ -15,26 +14,27 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 {
 	private final static long serialVersionUID = 1L;
 
-	/**
-	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal order.
-	 * E.g. order of keys: [_id, _alpha, 0, A, a]
-	 */
-	final static Comparator<String> COMPARATOR = (p, q) ->
-	{
-		boolean S = "_id".equals(p);
-		boolean T = "_id".equals(q);
-		if (S || T) return S && !T ? -1 : T && !S ? 1 : 0;
-		boolean P = !p.isEmpty() && p.charAt(0) == '_';
-		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
-		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
-	};
+//	/**
+//	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal order.
+//	 * E.g. order of keys: [_id, _alpha, 0, A, a]
+//	 */
+//	final static Comparator<String> COMPARATOR = (p, q) ->
+//	{
+//		boolean S = "_id".equals(p);
+//		boolean T = "_id".equals(q);
+//		if (S || T) return S && !T ? -1 : T && !S ? 1 : 0;
+//		boolean P = !p.isEmpty() && p.charAt(0) == '_';
+//		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
+//		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
+//	};
 
-	private final TreeMap<String, Object> mValues;
+	private final LinkedHashMap<String, Object> mValues;
 
 
 	public Document()
 	{
-		mValues = new TreeMap<>(COMPARATOR);
+//		mValues = new LinkedHashMap<>(COMPARATOR);
+		mValues = new LinkedHashMap<>();
 	}
 
 
@@ -120,9 +120,9 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 
 
 	@Override
-	public Set<String> keySet()
+	public ArrayList<String> keySet()
 	{
-		return mValues.keySet();
+		return new ArrayList<>(mValues.keySet());
 	}
 
 
