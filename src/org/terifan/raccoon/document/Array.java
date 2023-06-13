@@ -3,6 +3,7 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -115,11 +116,41 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	 *
 	 * @return this Array
 	 */
+	public Array addAll(Object aValue)
+	{
+		if (aValue.getClass().isArray())
+		{
+			for (int i = 0; i < java.lang.reflect.Array.getLength(aValue); i++)
+			{
+				addAll(java.lang.reflect.Array.get(aValue, i));
+			}
+		}
+		else if (aValue instanceof Iterable)
+		{
+			for (Object o : (Iterable)aValue)
+			{
+				addAll(o);
+			}
+		}
+		else
+		{
+			add(aValue);
+		}
+
+		return this;
+	}
+
+
+	/**
+	 * Add each item provided, same as calling the <code>add</code> method for each item.
+	 *
+	 * @return this Array
+	 */
 	public Array addAll(Object... aValue)
 	{
 		for (Object o : aValue)
 		{
-			add(o);
+			addAll(o);
 		}
 
 		return this;
