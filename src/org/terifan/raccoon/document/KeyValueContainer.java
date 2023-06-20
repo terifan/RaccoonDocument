@@ -22,12 +22,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 
-abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
+abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 {
 	private final static long serialVersionUID = 1L;
 
 
-	KeyValueCollection()
+	KeyValueContainer()
 	{
 	}
 
@@ -496,7 +496,7 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		String path = aPath.substring(0, i);
 		String remain = aPath.substring(i + 1);
 
-		KeyValueCollection tmp;
+		KeyValueContainer tmp;
 		if (path.matches("[0-9]*"))
 		{
 			tmp = ((Array)this).get(Integer.valueOf(path));
@@ -598,16 +598,16 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 		{
 			if (path.matches("[0-9]*"))
 			{
-				((KeyValueCollection)((Array)this).get(Integer.valueOf(path))).findMany(remain, aResult, aValuesOnly);
+				((KeyValueContainer)((Array)this).get(Integer.valueOf(path))).findMany(remain, aResult, aValuesOnly);
 			}
 			else
 			{
-				((Array)this).forEach(p -> ((KeyValueCollection)((Document)p).get(path)).findMany(remain, aResult, aValuesOnly));
+				((Array)this).forEach(p -> ((KeyValueContainer)((Document)p).get(path)).findMany(remain, aResult, aValuesOnly));
 			}
 		}
 		else
 		{
-			KeyValueCollection collection = (KeyValueCollection)((Document)this).get(path);
+			KeyValueContainer collection = (KeyValueContainer)((Document)this).get(path);
 			if (collection != null)
 			{
 				collection.findMany(remain, aResult, aValuesOnly);
@@ -618,7 +618,7 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 
 	private void optionalAdd(Array aResult, boolean aValuesOnly, Object v)
 	{
-		if (!aValuesOnly || !(v instanceof KeyValueCollection))
+		if (!aValuesOnly || !(v instanceof KeyValueContainer))
 		{
 			aResult.add(v);
 		}
@@ -634,9 +634,9 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 
 	void hashCode(MurmurHash3 aChecksum, Object aValue)
 	{
-		if (aValue instanceof KeyValueCollection)
+		if (aValue instanceof KeyValueContainer)
 		{
-			((KeyValueCollection)aValue).hashCode(aChecksum);
+			((KeyValueContainer)aValue).hashCode(aChecksum);
 		}
 		else if (aValue instanceof CharSequence)
 		{
@@ -842,9 +842,9 @@ abstract class KeyValueCollection<K, R> implements Externalizable, Serializable
 			{
 				remove(key);
 			}
-			else if (value instanceof KeyValueCollection)
+			else if (value instanceof KeyValueContainer)
 			{
-				KeyValueCollection coll = (KeyValueCollection)value;
+				KeyValueContainer coll = (KeyValueContainer)value;
 				coll.reduce();
 				if (coll.isEmpty())
 				{

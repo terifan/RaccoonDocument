@@ -21,7 +21,7 @@ class JSONEncoder
 	private int mIndent;
 
 
-	public String marshal(KeyValueCollection aContainer, boolean aCompact, boolean aTyped, boolean aApostrophes)
+	public String marshal(KeyValueContainer aContainer, boolean aCompact, boolean aTyped, boolean aApostrophes)
 	{
 		mBuffer = new StringBuilder();
 		mNewLine = false;
@@ -30,13 +30,17 @@ class JSONEncoder
 		mFirst = true;
 		mQuote = aApostrophes ? '\'' : '\"';
 
-		if (aContainer instanceof Document)
+		if (aContainer instanceof Document v)
 		{
-			marshalDocument((Document)aContainer, true);
+			marshalDocument(v, true);
+		}
+		else if (aContainer instanceof Array v)
+		{
+			marshalArray(v);
 		}
 		else
 		{
-			marshalArray((Array)aContainer);
+			throw new IllegalArgumentException();
 		}
 
 		return mBuffer.toString();
@@ -119,7 +123,7 @@ class JSONEncoder
 
 		for (int i = 0; shortArray && i < aArray.size(); i++)
 		{
-			shortArray = !(aArray.get(i) instanceof Array) && !(aArray.get(i) instanceof Document) && !(aArray.get(i) instanceof String);
+			shortArray = !(aArray.get(i) instanceof KeyValueContainer) && !(aArray.get(i) instanceof String);
 		}
 
 		if (special)
@@ -181,13 +185,13 @@ class JSONEncoder
 
 	private void marshal(Object aValue)
 	{
-		if (aValue instanceof Document)
+		if (aValue instanceof Document v)
 		{
-			marshalDocument((Document)aValue);
+			marshalDocument(v);
 		}
-		else if (aValue instanceof Array)
+		else if (aValue instanceof Array v)
 		{
-			marshalArray((Array)aValue);
+			marshalArray(v);
 		}
 		else
 		{
@@ -198,9 +202,13 @@ class JSONEncoder
 
 	private void marshalValue(Object aValue)
 	{
-		if (aValue instanceof String || aValue instanceof Character)
+		if (aValue instanceof String v)
 		{
-			print(mQuote + escapeString(aValue.toString()) + mQuote);
+			print(mQuote + escapeString(v) + mQuote);
+		}
+		else if (aValue instanceof Character v)
+		{
+			print(mQuote + escapeChar(v) + mQuote);
 		}
 		else if (aValue == null)
 		{
@@ -218,9 +226,9 @@ class JSONEncoder
 		{
 			if (!mTyped)
 			{
-				if (aValue instanceof byte[])
+				if (aValue instanceof byte[] v)
 				{
-					print(mQuote + marshalBinary((byte[])aValue) + mQuote);
+					print(mQuote + marshalBinary(v) + mQuote);
 				}
 				else
 				{
@@ -233,33 +241,33 @@ class JSONEncoder
 				{
 					print("ObjectId(" + escapeString(aValue.toString()) + ")");
 				}
-				else if (aValue instanceof byte[])
+				else if (aValue instanceof byte[] v)
 				{
-					print("Base64(" + marshalBinary((byte[])aValue) + ")");
+					print("Base64(" + marshalBinary(v) + ")");
 				}
-				else if (aValue instanceof UUID)
+				else if (aValue instanceof UUID v)
 				{
-					print("UUID(" + aValue + ")");
+					print("UUID(" + v + ")");
 				}
-				else if (aValue instanceof BigDecimal)
+				else if (aValue instanceof BigDecimal v)
 				{
-					print("Decimal(" + aValue + ")");
+					print("Decimal(" + v + ")");
 				}
-				else if (aValue instanceof LocalDateTime)
+				else if (aValue instanceof LocalDateTime v)
 				{
-					print("DateTime(" + aValue + ")");
+					print("DateTime(" + v + ")");
 				}
-				else if (aValue instanceof OffsetDateTime)
+				else if (aValue instanceof OffsetDateTime v)
 				{
-					print("DateTime(" + aValue + ")");
+					print("DateTime(" + v + ")");
 				}
-				else if (aValue instanceof LocalDate)
+				else if (aValue instanceof LocalDate v)
 				{
-					print("Date(" + aValue + ")");
+					print("Date(" + v + ")");
 				}
-				else if (aValue instanceof LocalTime)
+				else if (aValue instanceof LocalTime v)
 				{
-					print("Time(" + aValue + ")");
+					print("Time(" + v + ")");
 				}
 				else
 				{
@@ -289,43 +297,37 @@ class JSONEncoder
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0, len = aString.length(); i < len; i++)
 		{
-			char c = aString.charAt(i);
-			switch (c)
-			{
-				case '\"':
-					sb.append("\\\"");
-					break;
-				case '\\':
-					sb.append("\\\\");
-					break;
-				case '\n':
-					sb.append("\\n");
-					break;
-				case '\r':
-					sb.append("\\r");
-					break;
-				case '\t':
-					sb.append("\\t");
-					break;
-				case '\b':
-					sb.append("\\b");
-					break;
-				case '\f':
-					sb.append("\\f");
-					break;
-				default:
-					if (c >= ' ')
-					{
-						sb.append(c);
-					}
-					else
-					{
-						sb.append(String.format("\\u%04X", (int)c));
-					}
-					break;
-			}
+			sb.append(escapeChar(aString.charAt(i)));
 		}
 		return sb.toString();
+	}
+
+
+	private String escapeChar(char c)
+	{
+		switch (c)
+		{
+			case '\"':
+				return "\\\"";
+			case '\\':
+				return "\\\\";
+			case '\n':
+				return "\\n";
+			case '\r':
+				return "\\r";
+			case '\t':
+				return "\\t";
+			case '\b':
+				return "\\b";
+			case '\f':
+				return "\\f";
+			default:
+				if (c >= ' ')
+				{
+					return Character.toString(c);
+				}
+				return String.format("\\u%04X", (int)c);
+		}
 	}
 
 

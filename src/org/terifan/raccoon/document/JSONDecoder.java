@@ -26,11 +26,11 @@ class JSONDecoder
 	}
 
 
-	public <T extends KeyValueCollection> T unmarshal(String aJSON, T aContainer)
+	public <T extends KeyValueContainer> T unmarshal(String aJSON, T aContainer)
 	{
 		try
 		{
-			if (aContainer instanceof Document)
+			if (aContainer instanceof Document v)
 			{
 				if (!aJSON.startsWith("{"))
 				{
@@ -40,9 +40,9 @@ class JSONDecoder
 				mReader = new PushbackReader(new StringReader(aJSON), 1);
 				mReader.read();
 
-				return (T)readDocument((Document)aContainer);
+				return (T)readDocument(v);
 			}
-			else
+			else if (aContainer instanceof Array v)
 			{
 				if (!aJSON.startsWith("["))
 				{
@@ -52,7 +52,11 @@ class JSONDecoder
 				mReader = new PushbackReader(new StringReader(aJSON), 1);
 				mReader.read();
 
-				return (T)readArray((Array)aContainer);
+				return (T)readArray(v);
+			}
+			else
+			{
+				throw new IllegalArgumentException();
 			}
 		}
 		catch (IOException e)

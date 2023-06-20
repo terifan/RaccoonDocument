@@ -1,15 +1,8 @@
 package org.terifan.raccoon.document;
 
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import org.terifan.raccoon.document.BinaryIterator.Value;
 
 
@@ -20,11 +13,13 @@ public class StreamComparator
 		Object inA = new BinaryDecoder(aInputStreamA).unmarshal();
 		Object inB = new BinaryDecoder(aInputStreamB).unmarshal();
 
-		if (inA instanceof Document)
+		if (inA instanceof Document v1 && inB instanceof Document v2)
 		{
-			Comparable a = (Document)inA;
-			Comparable b = (Document)inB;
-			return a.compareTo(b);
+			return v1.compareTo(v2);
+		}
+		if (inA instanceof Array v1 && inB instanceof Array v2)
+		{
+			return v1.compareTo(v2);
 		}
 
 		return ((Array)inA).compareTo((Array)inB);

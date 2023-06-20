@@ -8,10 +8,10 @@ public class ObjectMarshaller
 {
 	public static Document toDocument(Object aInstance)
 	{
-		if (aInstance instanceof List)
+		if (aInstance instanceof List v)
 		{
 			Array array = new Array();
-			((List)aInstance).forEach(o->array.add(impl(o)));
+			v.forEach(o->array.add(impl(o)));
 
 			Document root = new Document();
 			root.put("class", aInstance.getClass().getCanonicalName());

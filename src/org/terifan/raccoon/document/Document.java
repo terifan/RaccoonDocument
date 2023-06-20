@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 
-public class Document extends KeyValueCollection<String, Document> implements Externalizable, Cloneable, Comparable<Document>
+public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>
 {
 	private final static long serialVersionUID = 1L;
 
@@ -162,9 +162,9 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 	@Override
 	public boolean equals(Object aOther)
 	{
-		if (aOther instanceof Document)
+		if (aOther instanceof Document v)
 		{
-			return toJson().equals(((Document)aOther).toJson());
+			return toJson().equals(v.toJson());
 		}
 
 		return false;
@@ -194,11 +194,17 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 			Object value = get(key);
 			Object otherValue = aOther.get(key);
 
-			if ((value instanceof KeyValueCollection) && (otherValue instanceof KeyValueCollection))
+			if ((value instanceof Array v1) && (otherValue instanceof Array v2))
 			{
-				if (!((KeyValueCollection)value).same(otherValue))
+				if (!v1.same(v2))
 				{
-//					System.out.println("Value of key '" + key + "' missmatch: found: " + otherValue + ", expected: " + value);
+					return false;
+				}
+			}
+			else if ((value instanceof Document v1) && (otherValue instanceof Document v2))
+			{
+				if (!v1.same(v2))
+				{
 					return false;
 				}
 			}
@@ -278,9 +284,9 @@ public class Document extends KeyValueCollection<String, Document> implements Ex
 	public Document append(String aKey, Object aValue)
 	{
 		Object existing = get(aKey);
-		if (existing instanceof Array)
+		if (existing instanceof Array v)
 		{
-			((Array)existing).add(aValue);
+			v.add(aValue);
 		}
 		else if (existing != null)
 		{

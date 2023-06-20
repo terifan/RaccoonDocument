@@ -3,12 +3,11 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 
-public class Array extends KeyValueCollection<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>
+public class Array extends KeyValueContainer<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>
 {
 	private final static long serialVersionUID = 1L;
 
@@ -90,16 +89,16 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 			}
 			mValues.add(arr);
 		}
-		else if (aValue instanceof Iterable)
+		else if (aValue instanceof Iterable v)
 		{
 			Array arr = new Array();
-			((Iterable)aValue).forEach(mValues::add);
+			v.forEach(mValues::add);
 			mValues.add(arr);
 		}
-		else if (aValue instanceof Stream)
+		else if (aValue instanceof Stream v)
 		{
 			Array arr = new Array();
-			((Stream)aValue).forEach(mValues::add);
+			v.forEach(mValues::add);
 			mValues.add(arr);
 		}
 		else
@@ -125,9 +124,9 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 				addAll(java.lang.reflect.Array.get(aValue, i));
 			}
 		}
-		else if (aValue instanceof Iterable)
+		else if (aValue instanceof Iterable v)
 		{
-			for (Object o : (Iterable)aValue)
+			for (Object o : v)
 			{
 				addAll(o);
 			}
@@ -256,9 +255,9 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 	@Override
 	public boolean equals(Object aOther)
 	{
-		if (aOther instanceof Array)
+		if (aOther instanceof Array v)
 		{
-			return mValues.equals(((Array)aOther).mValues);
+			return mValues.equals(v.mValues);
 		}
 
 		return false;
@@ -286,9 +285,16 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 			Object value = getImpl(i);
 			Object otherValue = aOther.getImpl(i);
 
-			if ((value instanceof KeyValueCollection) && (otherValue instanceof KeyValueCollection))
+			if ((value instanceof Array v1) && (otherValue instanceof Array v2))
 			{
-				if (!((KeyValueCollection)value).same((KeyValueCollection)otherValue))
+				if (!v1.same(v2))
+				{
+					return false;
+				}
+			}
+			else if ((value instanceof Document v1) && (otherValue instanceof Document v2))
+			{
+				if (!v1.same(v2))
 				{
 					return false;
 				}
@@ -335,13 +341,13 @@ public class Array extends KeyValueCollection<Integer, Array> implements Iterabl
 					}
 				}
 			}
-			else if (value instanceof Iterable)
+			else if (value instanceof Iterable v)
 			{
-				((Iterable)value).forEach(array::add);
+				v.forEach(array::add);
 			}
-			else if (value instanceof Stream)
+			else if (value instanceof Stream v)
 			{
-				((Stream)value).forEach(array::add);
+				v.forEach(array::add);
 			}
 			else
 			{

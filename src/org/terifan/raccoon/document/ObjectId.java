@@ -121,10 +121,9 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	@Override
 	public boolean equals(Object aOther)
 	{
-		if (aOther instanceof ObjectId)
+		if (aOther instanceof ObjectId v)
 		{
-			ObjectId other = (ObjectId)aOther;
-			return (mTime == other.mTime && mSession == other.mSession && mSequence == other.mSequence);
+			return (mTime == v.mTime && mSession == v.mSession && mSequence == v.mSequence);
 		}
 		return false;
 	}

@@ -31,11 +31,11 @@ class BinaryDecoder extends BinaryInput
 	}
 
 
-	void unmarshal(KeyValueCollection aContainer) throws IOException
+	void unmarshal(KeyValueContainer aContainer) throws IOException
 	{
-		Token token = readToken();
+		BinaryInput.Token token = readToken();
 
-		if (aContainer instanceof Document)
+		if (aContainer instanceof Document v)
 		{
 			if (token.type == SupportedTypes.ARRAY)
 			{
@@ -46,9 +46,9 @@ class BinaryDecoder extends BinaryInput
 				throw new StreamException("Stream corrupted.");
 			}
 
-			readDocument((Document)aContainer);
+			readDocument(v);
 		}
-		else
+		else if (aContainer instanceof Array v)
 		{
 			if (token.type == SupportedTypes.DOCUMENT)
 			{
@@ -59,14 +59,18 @@ class BinaryDecoder extends BinaryInput
 				throw new StreamException("Stream corrupted.");
 			}
 
-			readArray((Array)aContainer);
+			readArray(v);
+		}
+		else
+		{
+			throw new StreamException("Stream corrupted.");
 		}
 	}
 
 
 	Object unmarshal() throws IOException
 	{
-		Token token = readToken();
+		BinaryInput.Token token = readToken();
 
 		switch (token.type)
 		{
@@ -86,7 +90,7 @@ class BinaryDecoder extends BinaryInput
 	{
 		try
 		{
-			Token token = readToken();
+			BinaryInput.Token token = readToken();
 
 			switch (token.type)
 			{
