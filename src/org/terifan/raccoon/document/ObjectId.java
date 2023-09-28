@@ -3,9 +3,6 @@ package org.terifan.raccoon.document;
 import java.io.Serializable;
 import static java.lang.Integer.parseUnsignedInt;
 import java.security.SecureRandom;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ObjectId implements Serializable, Comparable<ObjectId>
 {
 	private final static long serialVersionUID = 1;
+	private final static Instance STATIC_INSTANCE = new Instance(0);
 
 	public final static int LENGTH = 12;
 
@@ -101,13 +99,14 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	public static class Key
+	public static class Instance
 	{
 		final char[][] encoder = new char[24][32];
 		final int[][] decoder = new int[24][128];
+		final int[][] tab = new int[3][256];
 
 
-		public Key(long aSeed)
+		public Instance(long aSeed)
 		{
 			Random rnd = new Random(aSeed);
 			for (int k = 0; k < 24; k++)
@@ -123,81 +122,85 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 					}
 				}
 			}
+
+			for (int j = 0; j < 3; j++)
+			{
+				for (int i = 0; i < 256; i++)
+				{
+					tab[j][i] = rnd.nextInt();
+				}
+			}
 		}
 	}
 
 
-	public String toArmoredString(Key aKey)
+	public String toArmoredString()
 	{
-		int now = encodeTime();
+		return toArmoredString(STATIC_INSTANCE);
+	}
 
+
+	public String toArmoredString(Instance aInstance)
+	{
 		char[] buf = new char[24];
-		encode(aKey, buf, 0, ((long)mTime << 8) + (0xff & (now >> 16)));
-		encode(aKey, buf, 1, ((long)mSession << 8) + (0xff & (now >> 8)));
-		encode(aKey, buf, 2, ((long)mSequence << 8) + (0xff & (now >> 0)));
+		encode(aInstance, buf, 0, mTime);
+		encode(aInstance, buf, 1, mSession);
+		encode(aInstance, buf, 2, mSequence);
 		return new String(buf);
 	}
 
 
-	public static ObjectId fromArmoredString(Key aKey, String aName)
+	public static ObjectId fromArmoredString(String aName)
 	{
-		long a = decode(aKey, aName, 0);
-		long b = decode(aKey, aName, 1);
-		long c = decode(aKey, aName, 2);
-
-		LocalDateTime now = decodeTime((int)(((0xff & a) << 16) + ((0xff & b) << 8) + (0xff & c)));
-//		System.out.println(now);
-
-		return new ObjectId((int)(a >> 8), (int)(b >> 8), (int)(c >> 8));
+		return fromArmoredString(STATIC_INSTANCE, aName);
 	}
 
 
-	protected int encodeTime()
+	public static ObjectId fromArmoredString(Instance aInstance, String aName)
 	{
-		LocalDateTime dateTime = LocalDateTime.now();
-		return (dateTime.getYear() % 30) * 367 * 24 * 60 + dateTime.getDayOfYear() * 24 * 60 + dateTime.getHour() * 60 + dateTime.getMinute();
-	}
-
-
-	protected static LocalDateTime decodeTime(int aNow)
-	{
-		int ye = aNow / 367 / 24 / 60;
-		int da = (aNow / 24 / 60) % 367;
-		int ho = (aNow / 60) % 24;
-		int mi = aNow % 60;
-		int currentYear = LocalDate.now().getYear();
-		ye += 30 * (currentYear / 30);
-		if (ye > currentYear)
+		try
 		{
-			ye -= 30;
+			int a = decode(aInstance, aName, 0);
+			int b = decode(aInstance, aName, 1);
+			int c = decode(aInstance, aName, 2);
+
+			return new ObjectId(a, b, c);
 		}
-		return LocalDateTime.of(LocalDate.ofYearDay(ye, da), LocalTime.of(ho, mi));
+		catch (IllegalArgumentException e)
+		{
+			return null;
+		}
 	}
 
 
-	private void encode(Key aKey, char[] aBuffer, int aIndex, long aValue)
+	private void encode(Instance aInstance, char[] aBuffer, int aIndex, long aValue)
 	{
-		for (int i = 35, j = 8 * aIndex; i >= 0; i-=5, j++)
+		int z = new Random().nextInt(256);
+		aValue = ((aInstance.tab[aIndex][z] ^ aValue) << 8) | z;
+
+		for (int i = 35, j = 8 * aIndex; i >= 0; i -= 5, j++)
 		{
 			int symbol = (int)(31 & (aValue >>> i));
-			aBuffer[j] = aKey.encoder[j][symbol];
+			aBuffer[j] = aInstance.encoder[j][symbol];
 		}
 	}
 
 
-	private static long decode(Key aKey, String aName, int aIndex)
+	private static int decode(Instance aInstance, String aName, int aIndex)
 	{
 		long value = 0;
-		for (int i = 35, j = 8 * aIndex; i >= 0; i-=5, j++)
+		for (int i = 35, j = 8 * aIndex; i >= 0; i -= 5, j++)
 		{
-			int symbol = aKey.decoder[j][aName.charAt(j)];
+			int symbol = aInstance.decoder[j][aName.charAt(j)];
 			if (symbol == -1)
 			{
 				throw new IllegalArgumentException();
 			}
 			value |= ((long)symbol) << i;
 		}
-		return value;
+
+		int z = (int)(value & 0xff);
+		return (int)((value >>> 8) ^ aInstance.tab[aIndex][z]);
 	}
 
 
@@ -288,12 +291,13 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 //			}
 //			System.out.println(System.currentTimeMillis() - t);
 
+			Instance instance = new Instance(System.currentTimeMillis());
 			for (int i = 0; i < 100; i++)
 			{
 				ObjectId in = ObjectId.randomId();
-				String encoded = in.toArmoredString(new Key(3));
-				ObjectId out = ObjectId.fromArmoredString(new Key(3), encoded);
-				System.out.printf("%s  %s  %s  %s%n", encoded, in, out, out.equals(in));
+				String encoded = in.toArmoredString(instance);
+				ObjectId out = ObjectId.fromArmoredString(instance, encoded);
+				System.out.printf("%s  %s  %s  %s%n", encoded, in, out == null ? "-".repeat(24) : out, in.equals(out));
 			}
 		}
 		catch (Throwable e)
