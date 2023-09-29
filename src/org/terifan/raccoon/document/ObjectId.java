@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ObjectId implements Serializable, Comparable<ObjectId>
 {
 	private final static long serialVersionUID = 1;
-	private final static Instance STATIC_INSTANCE = new Instance(0);
 
 	public final static int LENGTH = 12;
 
@@ -35,16 +34,18 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	private final int mSequence;
 
 
+	// lazy initialization
 	private static class Holder
 	{
 		final static SecureRandom PRNG = new SecureRandom();
 		final static int SESSION = PRNG.nextInt();
 		final static AtomicInteger SEQUENCE = new AtomicInteger(PRNG.nextInt());
 		final static char[] BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
-		final static long[] SHIFT =
+		final static long[] POW62 =
 		{
 			1, 62, 3844, 238328, 14776336, 916132832, 56800235584L, 3521614606208L
 		};
+		final static Key DEFAULT_KEY = new Key(new byte[32]);
 	}
 
 
@@ -103,39 +104,51 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	public static class Instance
+	/**
+	 * Key used for protecting an ObjectId.
+	 */
+	public static class Key
 	{
-		final char[][] encoder = new char[24][62];
-		final int[][] decoder = new int[24][128];
+		final char[][] toBase62 = new char[18][62];
+		final int[][] fromBase62 = new int[18][128];
 		final int[][] tweak = new int[2][3];
+		final int[][] chk = new int[3][13];
 
 
-		public Instance(long aSecret)
+		/**
+		 *
+		 * @param aSecretKey a 256-bit random value (eight ints) used to initialize the key.
+		 */
+		public Key(byte[] aSecretKey)
 		{
-			Random rnd = new Random(aSecret);
-			for (int i = 0; i < 2; i++)
+			Random rnd = new Random(((long)getInt32(aSecretKey, 0) << 32) + getInt32(aSecretKey, 4));
+			for (int i = 0, k = 0; i < 2; i++)
 			{
-				for (int j = 0; j < 3; j++)
+				for (int j = 0; j < 3; j++, k++)
 				{
-					tweak[i][j] = rnd.nextInt();
+					tweak[i][j] = rnd.nextInt() ^ getInt32(aSecretKey, 8 + k * 4);
 				}
 			}
-			for (int k = 0; k < 24; k++)
+			for (int k = 0; k < 18; k++)
 			{
-				Arrays.fill(decoder[k], -1);
-				int[] order = order(62, rnd);
+				Arrays.fill(fromBase62[k], -1);
+				int[] order = shuffle(62, rnd);
 				for (int i = 0; i < 62;)
 				{
 					int j = order[i];
-					decoder[k][Holder.BASE62[j]] = i;
-					encoder[k][i++] = Holder.BASE62[j];
+					fromBase62[k][Holder.BASE62[j]] = i;
+					toBase62[k][i++] = Holder.BASE62[j];
 				}
+			}
+			for (int i = 0; i < 3; i++)
+			{
+				chk[i] = shuffle(13, rnd);
 			}
 		}
 	}
 
 
-	private static int[] order(int aLength, Random aRandom)
+	private static int[] shuffle(int aLength, Random aRandom)
 	{
 		int[] order = new int[aLength];
 		for (int i = 0; i < aLength; i++)
@@ -153,80 +166,101 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	public String toArmoredString()
+	/**
+	 * Return an armoured String representation of this ObjectId using the default zero key.
+	 */
+	public String toArmouredString()
 	{
-		return toArmoredString(STATIC_INSTANCE);
+		return toArmouredString(Holder.DEFAULT_KEY);
 	}
 
 
-	public static ObjectId fromArmoredString(String aName)
+	/**
+	 * @return a decoded ObjectId using the default zero key or null if the decoding failed.
+	 */
+	public static ObjectId fromArmouredString(String aName)
 	{
-		return fromArmoredString(STATIC_INSTANCE, aName);
+		return fromArmouredString(Holder.DEFAULT_KEY, aName);
 	}
 
 
-	public String toArmoredString(Instance aInstance)
+	/**
+	 * @return the ObjectId as an encrypted 18 character Base62 encoded String. The encoded String also contains a checksum.
+	 */
+	public String toArmouredString(Key aKey)
 	{
 		int a = mTime;
 		int b = mSession;
 		int c = mSequence;
 
-		a ^= aInstance.tweak[0][0];
-		b ^= aInstance.tweak[0][1];
-		c ^= aInstance.tweak[0][2];
-		for (int i = 0; i < 3; i++)
+		a ^= aKey.tweak[0][0];
+		b ^= aKey.tweak[0][1];
+		c ^= aKey.tweak[0][2];
+		for (int i = 0; i < 6; i++)
 		{
 			c -= Integer.rotateLeft(a, 9) ^ Integer.rotateRight(b, 7);
 			b -= Integer.rotateLeft(c, 13) ^ Integer.rotateRight(a, 25);
 			a -= Integer.rotateLeft(b, 5) ^ Integer.rotateRight(c, 10);
 		}
-		a ^= aInstance.tweak[1][0];
-		b ^= aInstance.tweak[1][1];
-		c ^= aInstance.tweak[1][2];
+		a ^= aKey.tweak[1][0];
+		b ^= aKey.tweak[1][1];
+		c ^= aKey.tweak[1][2];
 
-		long chk = 0xffffffffL & ((long)a + (long)b + (long)c);
-		long A = (a & 0xffffffffL) * 13 + (chk % 13);
-		long B = (b & 0xffffffffL) * 13 + (chk / 13 % 13);
-		long C = (c & 0xffffffffL) * 13 + (chk / 13 / 13 % 13);
+		long chk = Math.abs(a * 5712613008489222801L + b * 25214903917L + c * 281474976710655L);
+		int c0 = aKey.chk[0][(int)(chk % 13)];
+		int c1 = aKey.chk[1][(int)(chk / 13 % 13)];
+		int c2 = aKey.chk[2][(int)(chk / 13 / 13 % 13)];
+		long A = (a & 0xffffffffL) * 13 + c0;
+		long B = (b & 0xffffffffL) * 13 + c1;
+		long C = (c & 0xffffffffL) * 13 + c2;
 
 		StringBuilder buf = new StringBuilder();
-		encode(aInstance, buf, A, 0, 6);
-		encode(aInstance, buf, B, 6, 6);
-		encode(aInstance, buf, C, 12, 6);
+		encodeBase62(aKey, buf, A, 0, 6);
+		encodeBase62(aKey, buf, B, 6, 6);
+		encodeBase62(aKey, buf, C, 12, 6);
 		return buf.toString();
 	}
 
 
-	public static ObjectId fromArmoredString(Instance aInstance, String aName)
+	/**
+	 *
+	 * @param aKey the Key used to armour the ObjectId
+	 * @param aName the encoded representation of an ObjectId
+	 * @return the decoded ObjectId or null if decoding was unsuccessful
+	 */
+	public static ObjectId fromArmouredString(Key aKey, String aName)
 	{
 		try
 		{
-			long A = decode(aInstance, aName, 0, 6);
-			long B = decode(aInstance, aName, 6, 6);
-			long C = decode(aInstance, aName, 12, 6);
+			long A = decodeBase62(aKey, aName, 0, 6);
+			long B = decodeBase62(aKey, aName, 6, 6);
+			long C = decodeBase62(aKey, aName, 12, 6);
 
 			int a = (int)(A / 13);
 			int b = (int)(B / 13);
 			int c = (int)(C / 13);
 
-			long chk = 0xffffffffL & ((long)a + (long)b + (long)c);
-			if (A % 13 != chk % 13 || B % 13 != chk / 13 % 13 || C % 13 != chk / 13 / 13 % 13)
+			long chk = Math.abs(a * 5712613008489222801L + b * 25214903917L + c * 281474976710655L);
+			int c0 = aKey.chk[0][(int)(chk % 13)];
+			int c1 = aKey.chk[1][(int)(chk / 13 % 13)];
+			int c2 = aKey.chk[2][(int)(chk / 13 / 13 % 13)];
+			if (A % 13 != c0 || B % 13 != c1 || C % 13 != c2)
 			{
 				return null;
 			}
 
-			a ^= aInstance.tweak[1][0];
-			b ^= aInstance.tweak[1][1];
-			c ^= aInstance.tweak[1][2];
-			for (int i = 0; i < 3; i++)
+			a ^= aKey.tweak[1][0];
+			b ^= aKey.tweak[1][1];
+			c ^= aKey.tweak[1][2];
+			for (int i = 0; i < 6; i++)
 			{
 				a += Integer.rotateLeft(b, 5) ^ Integer.rotateRight(c, 10);
 				b += Integer.rotateLeft(c, 13) ^ Integer.rotateRight(a, 25);
 				c += Integer.rotateLeft(a, 9) ^ Integer.rotateRight(b, 7);
 			}
-			a ^= aInstance.tweak[0][0];
-			b ^= aInstance.tweak[0][1];
-			c ^= aInstance.tweak[0][2];
+			a ^= aKey.tweak[0][0];
+			b ^= aKey.tweak[0][1];
+			c ^= aKey.tweak[0][2];
 
 			return new ObjectId(a, b, c);
 		}
@@ -237,28 +271,33 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	private void encode(Instance aInstance, StringBuilder aOutput, long aValue, int aIndex, int aLength)
+	private void encodeBase62(Key aKey, StringBuilder aOutput, long aValue, int aIndex, int aLength)
 	{
 		for (int i = 0, j = aIndex; i < aLength; i++, j++)
 		{
 			int symbol = (int)(aValue % 62);
-			aOutput.append(aInstance.encoder[j][symbol]);
+			aOutput.append(aKey.toBase62[j][symbol]);
 			aValue /= 62;
 		}
 	}
 
 
-	private static long decode(Instance aInstance, String aName, int aIndex, int aLength)
+	private static long decodeBase62(Key aKey, String aName, int aIndex, int aLength)
 	{
 		long value = 0;
 		for (int i = 0, j = aIndex; i < aLength; i++, j++)
 		{
-			int symbol = aInstance.decoder[j][aName.charAt(j)];
+			char ch = aName.charAt(j);
+			if (ch >= 128)
+			{
+				throw new IllegalArgumentException();
+			}
+			int symbol = aKey.fromBase62[j][ch];
 			if (symbol == -1)
 			{
 				throw new IllegalArgumentException();
 			}
-			value += symbol * Holder.SHIFT[i];
+			value += symbol * Holder.POW62[i];
 		}
 
 		return value;
@@ -334,43 +373,25 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	{
 		try
 		{
-//			long t = System.currentTimeMillis();
-//			for (int i = 0; i < 100; i++)
-//			{
-//				ObjectId objectId = ObjectId.randomId();
-//
-//				System.out.printf("%s %10d %10d %s%n", objectId, 0xffffffffL & objectId.session(), 0xffffffffL & objectId.sequence(), new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(objectId.time()));
-//
-//				if (!ObjectId.fromString(objectId.toString()).equals(objectId))
-//				{
-//					System.out.println("#");
-//				}
-//				if (!ObjectId.fromBytes(objectId.toByteArray()).equals(objectId))
-//				{
-//					System.out.println("#");
-//				}
-//			}
-//			System.out.println(System.currentTimeMillis() - t);
-
-			Instance instance = new Instance(321954098761L);
+			Key key = new Key(new byte[32]);
 
 			for (int i = 0; i < 100; i++)
 			{
 				ObjectId in = ObjectId.randomId();
-				String encoded = in.toArmoredString(instance);
-				ObjectId out = ObjectId.fromArmoredString(instance, encoded);
+				String encoded = in.toArmouredString(key);
+				ObjectId out = ObjectId.fromArmouredString(key, encoded);
 				System.out.printf("%s  %s  %s  %s%n", encoded, in, out == null ? "-".repeat(24) : out, in.equals(out));
 				if (!in.equals(out)) throw new IllegalStateException();
 			}
 
-//			System.out.println(ObjectId.fromArmoredString(instance, "UNR9gIdZObndSWNQ1lDoIcf0"));
-//			System.out.println(ObjectId.fromArmoredString(instance, "UNR9gIdZObndSWNQ1lDoIcf1"));
-//			System.out.println(ObjectId.fromArmoredString(instance, "UNR9gIdZObndSWNQ1lDoIcf2"));
-//			System.out.println(ObjectId.fromArmoredString(instance, "UNR9gIdZObndSWNQ1lDoIcf3"));
-//			System.out.println(ObjectId.fromArmoredString(instance, "UNR9gIdZObndSWNQ1lDoIcf4"));
-//			System.out.println(ObjectId.fromArmoredString(instance, "UNR9gIdZObndSWNQ1lDoIcf5"));
-//			System.out.println(ObjectId.fromArmoredString(instance, "UNR9gIdZObndSWNQ1lDoIcf6"));
-//			System.out.println(ObjectId.fromArmoredString(instance, "UNR9gIdZObndSWNQ1lDoIcf7"));
+			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papA"));
+			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papB"));
+			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papC"));
+			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papD"));
+			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papE"));
+			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papF"));
+			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papG"));
+			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papH"));
 		}
 		catch (Throwable e)
 		{
