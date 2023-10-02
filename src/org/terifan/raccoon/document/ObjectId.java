@@ -29,6 +29,19 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 	public final static int LENGTH = 12;
 
+	private final static long F1 = 5712613008489222801L;
+	private final static long F2 = 25214903917L;
+	private final static long F3 = 281474976710655L;
+	private final static int F4 = 1;
+	private final static int F5 = 83;
+	private final static int F6 = 7349;
+	private final static int L1 = 9;
+	private final static int L2 = 13;
+	private final static int L3 = 5;
+	private final static int R1 = 7;
+	private final static int R2 = 25;
+	private final static int R3 = 10;
+
 	private final int mTime;
 	private final int mSession;
 	private final int mSequence;
@@ -194,27 +207,27 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		c ^= aKey.tweak[0][2];
 		for (int i = 0; i < 3; i++)
 		{
-			c -= Integer.rotateLeft(a, 9) ^ Integer.rotateRight(b, 7);
-			b -= Integer.rotateLeft(c, 13) ^ Integer.rotateRight(a, 25);
-			a -= Integer.rotateLeft(b, 5) ^ Integer.rotateRight(c, 10);
+			c -= Integer.rotateLeft(a, L1) ^ Integer.rotateRight(b, R1);
+			b -= Integer.rotateLeft(c, L2) ^ Integer.rotateRight(a, R2);
+			a -= Integer.rotateLeft(b, L3) ^ Integer.rotateRight(c, R3);
 		}
 		a ^= aKey.tweak[1][0];
 		b ^= aKey.tweak[1][1];
 		c ^= aKey.tweak[1][2];
 
-		int chk = Math.abs((int)(a * 5712613008489222801L + b * 25214903917L + c * 281474976710655L));
-		int c0 = aKey.chk[0][chk % 13];
-		int c1 = aKey.chk[1][chk / 13 % 13];
-		int c2 = aKey.chk[2][chk / 13 / 13 % 13];
+		int chk = Math.abs((int)(a * F1 + b * F2 + c * F3));
+		int c0 = aKey.chk[0][chk / F4 % 13];
+		int c1 = aKey.chk[1][chk / F5 % 13];
+		int c2 = aKey.chk[2][chk / F6 % 13];
 
 		long A = (a & 0xffffffffL) * 13 + c0;
 		long B = (b & 0xffffffffL) * 13 + c1;
 		long C = (c & 0xffffffffL) * 13 + c2;
 
 		char[] buf = new char[18];
-		encodeBase62(aKey, buf, A, 0, 6);
-		encodeBase62(aKey, buf, B, 6, 6);
-		encodeBase62(aKey, buf, C, 12, 6);
+		encodeBase62(aKey, buf, A, 0);
+		encodeBase62(aKey, buf, B, 1);
+		encodeBase62(aKey, buf, C, 2);
 		return new String(buf);
 	}
 
@@ -229,18 +242,18 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	{
 		try
 		{
-			long A = decodeBase62(aKey, aName, 0, 6);
-			long B = decodeBase62(aKey, aName, 6, 6);
-			long C = decodeBase62(aKey, aName, 12, 6);
+			long A = decodeBase62(aKey, aName, 0);
+			long B = decodeBase62(aKey, aName, 1);
+			long C = decodeBase62(aKey, aName, 2);
 
 			int a = (int)(A / 13);
 			int b = (int)(B / 13);
 			int c = (int)(C / 13);
 
-			int chk = Math.abs((int)(a * 5712613008489222801L + b * 25214903917L + c * 281474976710655L));
-			int c0 = aKey.chk[0][chk % 13];
-			int c1 = aKey.chk[1][chk / 13 % 13];
-			int c2 = aKey.chk[2][chk / 13 / 13 % 13];
+			int chk = Math.abs((int)(a * F1 + b * F2 + c * F3));
+			int c0 = aKey.chk[0][chk / F4 % 13];
+			int c1 = aKey.chk[1][chk / F5 % 13];
+			int c2 = aKey.chk[2][chk / F6 % 13];
 			if (A % 13 != c0 || B % 13 != c1 || C % 13 != c2)
 			{
 				return null;
@@ -251,9 +264,9 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 			c ^= aKey.tweak[1][2];
 			for (int i = 0; i < 3; i++)
 			{
-				a += Integer.rotateLeft(b, 5) ^ Integer.rotateRight(c, 10);
-				b += Integer.rotateLeft(c, 13) ^ Integer.rotateRight(a, 25);
-				c += Integer.rotateLeft(a, 9) ^ Integer.rotateRight(b, 7);
+				a += Integer.rotateLeft(b, L3) ^ Integer.rotateRight(c, R3);
+				b += Integer.rotateLeft(c, L2) ^ Integer.rotateRight(a, R2);
+				c += Integer.rotateLeft(a, L1) ^ Integer.rotateRight(b, R1);
 			}
 			a ^= aKey.tweak[0][0];
 			b ^= aKey.tweak[0][1];
@@ -268,9 +281,9 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	private void encodeBase62(Key aKey, char[] aOutput, long aValue, int aIndex, int aLength)
+	private void encodeBase62(Key aKey, char[] aOutput, long aValue, int aIndex)
 	{
-		for (int j = aIndex + aLength; --j >= aIndex; )
+		for (int start = 6 * aIndex, j = start + 6; --j >= start; )
 		{
 			int symbol = (int)(aValue % 62);
 			aOutput[j] = aKey.toBase62[j][symbol];
@@ -279,10 +292,10 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	private static long decodeBase62(Key aKey, String aName, int aIndex, int aLength)
+	private static long decodeBase62(Key aKey, String aName, int aIndex)
 	{
 		long value = 0;
-		for (int i = 0, j = aIndex; i < aLength; i++, j++)
+		for (int i = 0, j = 6 * aIndex; i < 6; i++, j++)
 		{
 			int symbol = aKey.fromBase62[j][aName.charAt(j)];
 			if (symbol == -1)
