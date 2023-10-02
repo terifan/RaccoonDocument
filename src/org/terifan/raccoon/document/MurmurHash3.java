@@ -41,7 +41,7 @@ class MurmurHash3
 	}
 
 
-	public void updateBytes(byte[] aBuffer, int aOffset, int aLength)
+	public MurmurHash3 updateBytes(byte[] aBuffer, int aOffset, int aLength)
 	{
 		int i = 0;
 		for (; i + 3 < aLength; i += 4)
@@ -57,6 +57,7 @@ class MurmurHash3
 		{
 			updateByte(0xff & aBuffer[aOffset++]);
 		}
+		return this;
 	}
 
 
