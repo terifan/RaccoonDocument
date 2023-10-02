@@ -206,19 +206,20 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		b ^= aKey.tweak[1][1];
 		c ^= aKey.tweak[1][2];
 
-		long chk = Math.abs(a * 5712613008489222801L + b * 25214903917L + c * 281474976710655L);
-		int c0 = aKey.chk[0][(int)(chk % 13)];
-		int c1 = aKey.chk[1][(int)(chk / 13 % 13)];
-		int c2 = aKey.chk[2][(int)(chk / 13 / 13 % 13)];
+		int chk = Math.abs((int)(a * 5712613008489222801L + b * 25214903917L + c * 281474976710655L));
+		int c0 = aKey.chk[0][chk % 13];
+		int c1 = aKey.chk[1][chk / 13 % 13];
+		int c2 = aKey.chk[2][chk / 13 / 13 % 13];
+
 		long A = (a & 0xffffffffL) * 13 + c0;
 		long B = (b & 0xffffffffL) * 13 + c1;
 		long C = (c & 0xffffffffL) * 13 + c2;
 
-		StringBuilder buf = new StringBuilder();
+		char[] buf = new char[18];
 		encodeBase62(aKey, buf, A, 0, 6);
 		encodeBase62(aKey, buf, B, 6, 6);
 		encodeBase62(aKey, buf, C, 12, 6);
-		return buf.toString();
+		return new String(buf);
 	}
 
 
@@ -240,10 +241,10 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 			int b = (int)(B / 13);
 			int c = (int)(C / 13);
 
-			long chk = Math.abs(a * 5712613008489222801L + b * 25214903917L + c * 281474976710655L);
-			int c0 = aKey.chk[0][(int)(chk % 13)];
-			int c1 = aKey.chk[1][(int)(chk / 13 % 13)];
-			int c2 = aKey.chk[2][(int)(chk / 13 / 13 % 13)];
+			int chk = Math.abs((int)(a * 5712613008489222801L + b * 25214903917L + c * 281474976710655L));
+			int c0 = aKey.chk[0][chk % 13];
+			int c1 = aKey.chk[1][chk / 13 % 13];
+			int c2 = aKey.chk[2][chk / 13 / 13 % 13];
 			if (A % 13 != c0 || B % 13 != c1 || C % 13 != c2)
 			{
 				return null;
@@ -271,12 +272,12 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	private void encodeBase62(Key aKey, StringBuilder aOutput, long aValue, int aIndex, int aLength)
+	private void encodeBase62(Key aKey, char[] aOutput, long aValue, int aIndex, int aLength)
 	{
 		for (int i = 0, j = aIndex; i < aLength; i++, j++)
 		{
 			int symbol = (int)(aValue % 62);
-			aOutput.append(aKey.toBase62[j][symbol]);
+			aOutput[j] = aKey.toBase62[j][symbol];
 			aValue /= 62;
 		}
 	}
