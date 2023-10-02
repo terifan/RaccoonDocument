@@ -41,10 +41,6 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		final static int SESSION = PRNG.nextInt();
 		final static AtomicInteger SEQUENCE = new AtomicInteger(PRNG.nextInt());
 		final static char[] BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
-		final static long[] POW62 =
-		{
-			1, 62, 3844, 238328, 14776336, 916132832, 56800235584L, 3521614606208L
-		};
 		final static Key DEFAULT_KEY = new Key(new byte[32]);
 	}
 
@@ -196,7 +192,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		a ^= aKey.tweak[0][0];
 		b ^= aKey.tweak[0][1];
 		c ^= aKey.tweak[0][2];
-		for (int i = 0; i < 6; i++)
+		for (int i = 0; i < 3; i++)
 		{
 			c -= Integer.rotateLeft(a, 9) ^ Integer.rotateRight(b, 7);
 			b -= Integer.rotateLeft(c, 13) ^ Integer.rotateRight(a, 25);
@@ -253,7 +249,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 			a ^= aKey.tweak[1][0];
 			b ^= aKey.tweak[1][1];
 			c ^= aKey.tweak[1][2];
-			for (int i = 0; i < 6; i++)
+			for (int i = 0; i < 3; i++)
 			{
 				a += Integer.rotateLeft(b, 5) ^ Integer.rotateRight(c, 10);
 				b += Integer.rotateLeft(c, 13) ^ Integer.rotateRight(a, 25);
@@ -274,7 +270,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 	private void encodeBase62(Key aKey, char[] aOutput, long aValue, int aIndex, int aLength)
 	{
-		for (int i = 0, j = aIndex; i < aLength; i++, j++)
+		for (int j = aIndex + aLength; --j >= aIndex; )
 		{
 			int symbol = (int)(aValue % 62);
 			aOutput[j] = aKey.toBase62[j][symbol];
@@ -288,17 +284,13 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		long value = 0;
 		for (int i = 0, j = aIndex; i < aLength; i++, j++)
 		{
-			char ch = aName.charAt(j);
-			if (ch >= 128)
-			{
-				throw new IllegalArgumentException();
-			}
-			int symbol = aKey.fromBase62[j][ch];
+			int symbol = aKey.fromBase62[j][aName.charAt(j)];
 			if (symbol == -1)
 			{
 				throw new IllegalArgumentException();
 			}
-			value += symbol * Holder.POW62[i];
+			value *= 62;
+			value += symbol;
 		}
 
 		return value;
