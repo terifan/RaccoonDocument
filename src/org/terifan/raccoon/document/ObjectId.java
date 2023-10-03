@@ -2,8 +2,10 @@ package org.terifan.raccoon.document;
 
 import java.io.Serializable;
 import static java.lang.Integer.parseUnsignedInt;
+import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -137,7 +139,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 			Random rnd = new Random((getInt32L(aSecretKey, 0) << 32) | getInt32L(aSecretKey, 4));
 			for (int i = 0, k = 8; i < 2; i++)
 			{
-				for (int j = 0; j < 3; j++, k+=4)
+				for (int j = 0; j < 3; j++, k += 4)
 				{
 					tweak[i][j] = rnd.nextInt() ^ getInt32(aSecretKey, k);
 				}
@@ -180,7 +182,8 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 	/**
 	 * @param aKey the Key used to encrypt the ObjectId
-	 * @return the ObjectId as an encrypted 18 character Base62 encoded String. The encoded String also contains a checksum used for validation when decoding.
+	 * @return the ObjectId as an encrypted 18 character Base62 encoded String. The encoded String also contains a checksum used for
+	 * validation when decoding.
 	 */
 	public String toArmouredString(Key aKey)
 	{
@@ -201,14 +204,14 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		b ^= aKey.tweak[1][1];
 		c ^= aKey.tweak[1][2];
 
-		int chk = 0x7fffffff & (int)(a * F1 + b * F2 + c * F3);
-		int c0 = aKey.chk[0][chk / F4 % 13];
-		int c1 = aKey.chk[1][chk / F5 % 13];
-		int c2 = aKey.chk[2][chk / F6 % 13];
+		long chk = 0xffffffffL & (a * F1 + b * F2 + c * F3);
+		long c0 = aKey.chk[0][Math.abs((int)(chk / F4 % 13))];
+		long c1 = aKey.chk[1][Math.abs((int)(chk / F5 % 13))];
+		long c2 = aKey.chk[2][Math.abs((int)(chk / F6 % 13))];
 
-		long A = (a & 0xffffffffL) * 13 + c0;
-		long B = (b & 0xffffffffL) * 13 + c1;
-		long C = (c & 0xffffffffL) * 13 + c2;
+		long A = (a & 0xffffffffL) + (c0 << 32);
+		long B = (b & 0xffffffffL) + (c1 << 32);
+		long C = (c & 0xffffffffL) + (c2 << 32);
 
 		char[] buf = new char[18];
 		encodeBase62(aKey, buf, A, 0);
@@ -230,15 +233,15 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		long B = decodeBase62(aKey, aName, 1);
 		long C = decodeBase62(aKey, aName, 2);
 
-		int a = (int)(A / 13);
-		int b = (int)(B / 13);
-		int c = (int)(C / 13);
+		int a = (int)A;
+		int b = (int)B;
+		int c = (int)C;
 
-		int chk = 0x7fffffff & (int)(a * F1 + b * F2 + c * F3);
-		int c0 = aKey.chk[0][chk / F4 % 13];
-		int c1 = aKey.chk[1][chk / F5 % 13];
-		int c2 = aKey.chk[2][chk / F6 % 13];
-		if (A % 13 != c0 || B % 13 != c1 || C % 13 != c2)
+		long chk = 0xffffffffL & (a * F1 + b * F2 + c * F3);
+		long c0 = aKey.chk[0][Math.abs((int)(chk / F4 % 13))];
+		long c1 = aKey.chk[1][Math.abs((int)(chk / F5 % 13))];
+		long c2 = aKey.chk[2][Math.abs((int)(chk / F6 % 13))];
+		if ((A >> 32) != c0 || (B >> 32) != c1 || (C >> 32) != c2)
 		{
 			return null;
 		}
@@ -262,7 +265,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 	private void encodeBase62(Key aKey, char[] aOutput, long aValue, int aIndex)
 	{
-		for (int start = 6 * aIndex, j = start + 6; --j >= start; )
+		for (int start = 6 * aIndex, j = start + 6; --j >= start;)
 		{
 			int symbol = (int)(aValue % 62);
 			aOutput[j] = aKey.toBase62[j][symbol];
@@ -343,7 +346,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 	private static long getInt32L(byte[] aBuffer, int aPosition)
 	{
-		return getInt32(aBuffer, aPosition) & 0xFFFFFFFFL;
+		return getInt32(aBuffer, aPosition) & 0xffffffffL;
 	}
 
 
@@ -360,25 +363,39 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	{
 		try
 		{
-			Key key = new Key(new byte[32]);
+			byte[] kd = new byte[32];
+			kd[0] = 2;
+			Key key = new Key(kd);
 
-			for (int i = 0; i < 100; i++)
+			HashMap<Character, Integer> cc = new HashMap<>();
+			HashMap<Integer, HashMap<Character, Integer>> ci = new HashMap<>();
+
+			for (int i = 0; i < 10_000_000; i++)
+//			for (int i = 0; i < 10; i++)
 			{
 				ObjectId in = ObjectId.randomId();
 				String encoded = in.toArmouredString(key);
 				ObjectId out = ObjectId.fromArmouredString(key, encoded);
-				System.out.printf("%s  %s  %s  %s%n", encoded, in, out == null ? "-".repeat(24) : out, in.equals(out));
-				if (!in.equals(out)) throw new IllegalStateException();
+//				System.out.printf("%s  %s  %s  %s%n", encoded, in, out == null ? "-".repeat(24) : out, in.equals(out));
+				if (!in.equals(out))
+				{
+					throw new IllegalStateException();
+				}
+
+				for (int j = 0; j < encoded.length(); j++)
+				{
+					cc.put(encoded.charAt(j), cc.getOrDefault(encoded.charAt(j), 0) + 1);
+					HashMap<Character, Integer> m = ci.computeIfAbsent(j, k -> new HashMap<>());
+					m.put(encoded.charAt(j), m.getOrDefault(encoded.charAt(j), 0) + 1);
+					ci.put(j, m);
+				}
 			}
 
-			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papA"));
-			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papB"));
-			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papC"));
-			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papD"));
-			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papE"));
-			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papF"));
-			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papG"));
-			System.out.println(ObjectId.fromArmouredString(key, "4AtV3s6qzehyi9papH"));
+			System.out.println(cc);
+			for (Entry e : ci.entrySet())
+			{
+				System.out.println(e.getKey() + " " + e.getValue());
+			}
 		}
 		catch (Throwable e)
 		{
