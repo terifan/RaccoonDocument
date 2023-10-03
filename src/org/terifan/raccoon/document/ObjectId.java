@@ -181,6 +181,8 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 
 	/**
+	 * Return an encrypted String representation of this ObjectId
+	 *
 	 * @param aKey the Key used to encrypt the ObjectId
 	 * @return the ObjectId as an encrypted 18 character Base62 encoded String. The encoded String also contains a checksum used for
 	 * validation when decoding.
@@ -222,6 +224,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 
 	/**
+	 * Return an ObjectId from an encrypted String representation
 	 *
 	 * @param aKey the Key used to encrypt the ObjectId
 	 * @param aName the encrypted String representation of an ObjectId
