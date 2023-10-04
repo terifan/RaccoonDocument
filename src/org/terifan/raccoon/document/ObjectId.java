@@ -2,12 +2,11 @@ package org.terifan.raccoon.document;
 
 import java.io.Serializable;
 import static java.lang.Integer.parseUnsignedInt;
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /*
@@ -31,12 +30,9 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 	public final static int LENGTH = 12;
 
-	private final static long F1 = 5712613008489222801L;
-	private final static long F2 = 25214903917L;
-	private final static long F3 = 281474976710655L;
-	private final static int F4 = 1;
-	private final static int F5 = 83;
-	private final static int F6 = 7349;
+	private final static int F1 = 6949;
+	private final static int F2 = 18743;
+	private final static int F3 = 593;
 	private final static int L1 = 9;
 	private final static int L2 = 13;
 	private final static int L3 = 5;
@@ -119,10 +115,10 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	 */
 	public static class Key
 	{
-		final char[][] toBase62 = new char[18][62];
-		final int[][] fromBase62 = new int[18][128];
+		final char[][] encBase62 = new char[18][62];
+		final int[][] decBase62 = new int[18][128];
 		final int[][] tweak = new int[2][3];
-		final int[][] chk = new int[3][13];
+		final int[][] chk = new int[3][256];
 
 
 		/**
@@ -136,38 +132,60 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 				throw new IllegalArgumentException("Bad secret key, must be 8 ints.");
 			}
 
-			Random rnd = new Random((getInt32L(aSecretKey, 0) << 32) | getInt32L(aSecretKey, 4));
+			Random rnd = new Random(getInt64(aSecretKey, 0));
+			for (int i = 0; i < 3; i++)
+			{
+				chk[i] = randomRange(4096, 13, rnd);
+			}
 			for (int i = 0, k = 8; i < 2; i++)
 			{
 				for (int j = 0; j < 3; j++, k += 4)
 				{
-					tweak[i][j] = rnd.nextInt() ^ getInt32(aSecretKey, k);
+					tweak[i][j] = rnd.nextBits(32) ^ getInt32(aSecretKey, k);
 				}
 			}
 			for (int k = 0; k < 18; k++)
 			{
-				int[] order = shuffle(62, rnd);
+				int[] order = randomRange(62, 62, rnd);
 				for (int i = 0; i < 62;)
 				{
 					int j = order[i];
-					fromBase62[k][Holder.BASE62[j]] = i;
-					toBase62[k][i++] = Holder.BASE62[j];
+					decBase62[k][Holder.BASE62[j]] = i;
+					encBase62[k][i++] = Holder.BASE62[j];
 				}
-			}
-			for (int i = 0; i < 3; i++)
-			{
-				chk[i] = shuffle(13, rnd);
 			}
 		}
 	}
 
 
-	private static int[] shuffle(int aLength, Random aRandom)
+	private static class Random
+	{
+		private long seed;
+		public Random(long aSeed)
+		{
+	        seed = aSeed;
+		}
+		protected int nextBits(int aBits)
+		{
+            seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+			return (int)(seed >>> (48 - aBits));
+		}
+		public int nextInt(int aBound)
+		{
+			int r = nextBits(31);
+	        int m = aBound - 1;
+            for (int u = r; u - (r = u % aBound) + m < 0; u = nextBits(31)) {}
+			return r;
+		}
+	}
+
+
+	private static int[] randomRange(int aLength, int aLimit, Random aRandom)
 	{
 		int[] order = new int[aLength];
 		for (int i = 0; i < aLength; i++)
 		{
-			order[i] = i;
+			order[i] = i % aLimit;
 		}
 		for (int i = 0; i < aLength; i++)
 		{
@@ -206,14 +224,14 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		b ^= aKey.tweak[1][1];
 		c ^= aKey.tweak[1][2];
 
-		long chk = 0xffffffffL & (a * F1 + b * F2 + c * F3);
-		long c0 = aKey.chk[0][Math.abs((int)(chk / F4 % 13))];
-		long c1 = aKey.chk[1][Math.abs((int)(chk / F5 % 13))];
-		long c2 = aKey.chk[2][Math.abs((int)(chk / F6 % 13))];
+		int chk = a * F1 + b * F2 + c * F3;
+		int c0 = aKey.chk[0][(chk       ) & 0xfff];
+		int c1 = aKey.chk[1][(chk >>> 11) & 0xfff];
+		int c2 = aKey.chk[2][(chk >>> 20) & 0xfff];
 
-		long A = (a & 0xffffffffL) + (c0 << 32);
-		long B = (b & 0xffffffffL) + (c1 << 32);
-		long C = (c & 0xffffffffL) + (c2 << 32);
+		long A = (a & 0xffffffffL) + ((long)c0 << 32);
+		long B = (b & 0xffffffffL) + ((long)c1 << 32);
+		long C = (c & 0xffffffffL) + ((long)c2 << 32);
 
 		char[] buf = new char[18];
 		encodeBase62(aKey, buf, A, 0);
@@ -240,10 +258,10 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		int b = (int)B;
 		int c = (int)C;
 
-		long chk = 0xffffffffL & (a * F1 + b * F2 + c * F3);
-		long c0 = aKey.chk[0][Math.abs((int)(chk / F4 % 13))];
-		long c1 = aKey.chk[1][Math.abs((int)(chk / F5 % 13))];
-		long c2 = aKey.chk[2][Math.abs((int)(chk / F6 % 13))];
+		int chk = a * F1 + b * F2 + c * F3;
+		int c0 = aKey.chk[0][(chk       ) & 0xfff];
+		int c1 = aKey.chk[1][(chk >>> 11) & 0xfff];
+		int c2 = aKey.chk[2][(chk >>> 20) & 0xfff];
 		if ((A >> 32) != c0 || (B >> 32) != c1 || (C >> 32) != c2)
 		{
 			return null;
@@ -271,7 +289,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		for (int start = 6 * aIndex, j = start + 6; --j >= start;)
 		{
 			int symbol = (int)(aValue % 62);
-			aOutput[j] = aKey.toBase62[j][symbol];
+			aOutput[j] = aKey.encBase62[j][symbol];
 			aValue /= 62;
 		}
 	}
@@ -282,11 +300,10 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		long value = 0;
 		for (int i = 6 * aIndex, end = i + 6; i < end; i++)
 		{
-			int symbol = aKey.fromBase62[i][aName.charAt(i) & 0x7f];
+			int symbol = aKey.decBase62[i][aName.charAt(i) & 0x7f];
 			value *= 62;
 			value += symbol;
 		}
-
 		return value;
 	}
 
@@ -347,9 +364,9 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	private static long getInt32L(byte[] aBuffer, int aPosition)
+	private static long getInt64(byte[] aBuffer, int aPosition)
 	{
-		return getInt32(aBuffer, aPosition) & 0xffffffffL;
+		return ((0xffffffffL & getInt32(aBuffer, aPosition)) << 32) + (0xffffffffL & getInt32(aBuffer, aPosition + 4));
 	}
 
 
@@ -367,7 +384,6 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		try
 		{
 			byte[] kd = new byte[32];
-			kd[0] = 2;
 			Key key = new Key(kd);
 
 			HashMap<Character, Integer> cc = new HashMap<>();
@@ -399,6 +415,14 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 			{
 				System.out.println(e.getKey() + " " + e.getValue());
 			}
+
+			System.out.println("-".repeat(100));
+			long t = System.currentTimeMillis();
+			for (int i = 0; i < 10_000_000; i++)
+			{
+				ObjectId.fromArmouredString(key, ObjectId.randomId().toArmouredString(key));
+			}
+			System.out.println(System.currentTimeMillis() - t);
 		}
 		catch (Throwable e)
 		{
