@@ -132,4 +132,14 @@ class MurmurHash3
 
 		return o;
 	}
+
+
+	int getValue4bits()
+	{
+		int value = getValue();
+		value ^= value >>> 4;
+		value ^= value >>> 8;
+		value ^= value >>> 16;
+		return value & 15;
+	}
 }

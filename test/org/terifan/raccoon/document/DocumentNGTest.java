@@ -436,6 +436,24 @@ public class DocumentNGTest
 	}
 
 
+//	@Test
+//	public void testChecksum() throws IOException, ClassNotFoundException
+//	{
+//		Document out = _Person.createPerson(new Random(0));
+//
+//		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//		out.writeTo(baos);
+//
+//		byte[] data = baos.toByteArray();
+//
+//		Document in = new Document().readFrom(new ByteArrayInputStream(data));
+//
+//		System.out.println(in);
+//
+//		_Log.hexDump(in.toByteArray());
+//	}
+
+
 	@Test
 	public void testCrossMarshalling() throws IOException, ClassNotFoundException
 	{
@@ -664,6 +682,6 @@ public class DocumentNGTest
 		}
 		System.out.println("       bin-zip: " + baos4.size());
 
-		_Log.hexDump(doc.toByteArray());
+//		_Log.hexDump(doc.toByteArray());
 	}
 }

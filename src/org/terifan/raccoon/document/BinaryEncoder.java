@@ -285,7 +285,7 @@ class BinaryEncoder implements AutoCloseable
 
 	private int getChecksumValue()
 	{
-		return mChecksum.getValue() & 0b1111;
+		return mChecksum.getValue4bits();
 	}
 
 
@@ -705,6 +705,6 @@ class BinaryEncoder implements AutoCloseable
 //
 //	private int getChecksumValue()
 //	{
-//		return mChecksum.getValue() & 0b1111;
+//		return mChecksum.getValue4();
 //	}
 //}

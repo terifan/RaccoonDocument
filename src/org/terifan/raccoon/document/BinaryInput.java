@@ -124,7 +124,7 @@ abstract class BinaryInput
 
 	int getChecksumValue()
 	{
-		return mChecksum.getValue() & 0b1111;
+		return mChecksum.getValue4bits();
 	}
 
 
