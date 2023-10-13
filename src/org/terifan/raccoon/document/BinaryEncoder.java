@@ -2,7 +2,7 @@ package org.terifan.raccoon.document;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
+import java.util.Base64;
 import java.util.Map.Entry;
 import static org.terifan.raccoon.document.SupportedTypes.ARRAY;
 import static org.terifan.raccoon.document.SupportedTypes.DOCUMENT;
@@ -57,7 +57,7 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	void writeDocument(Document aDocument) throws IOException
+	BinaryEncoder writeDocument(Document aDocument) throws IOException
 	{
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
@@ -71,10 +71,11 @@ class BinaryEncoder implements AutoCloseable
 		}
 
 		terminate();
+		return this;
 	}
 
 
-	void writeArray(Array aArray) throws IOException
+	BinaryEncoder writeArray(Array aArray) throws IOException
 	{
 		int elementCount = aArray.size();
 
@@ -108,6 +109,7 @@ class BinaryEncoder implements AutoCloseable
 		}
 
 		terminate();
+		return this;
 	}
 
 
@@ -129,13 +131,14 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	void writeByte(int aValue) throws IOException
+	BinaryEncoder writeByte(int aValue) throws IOException
 	{
 		mOutputStream.write(aValue);
 		if (mChecksum != null)
 		{
 			mChecksum.updateByte(aValue);
 		}
+		return this;
 	}
 
 
@@ -283,6 +286,74 @@ class BinaryEncoder implements AutoCloseable
 	private int getChecksumValue()
 	{
 		return mChecksum.getValue() & 0b1111;
+	}
+
+
+	public static void main(String ... args)
+	{
+		try
+		{
+			String s = """
+			{
+				 "totalSize": 215730, "blockSize": 1048576, "pointers": [{
+					 "adr": [2626],
+					 "blk": 3,
+					 "lvl": 0,
+					 "chk": 0,
+					 "cmp": 0,
+					 "alc": 217088,
+					 "phy": 215730,
+					 "log": 215730,
+					 "key": [-1893756345, -178735963, 151717756, 426488884],
+					 "sig": [-59560821, 710175849, 1026987985, -295038902],
+					 "gen": 2
+				 }]
+			 }
+			""";
+
+			Document doc = Document.of(s);
+			System.out.println(doc);
+
+			System.out.println(doc.toByteArray().length);
+			System.out.println(doc.toJson().length());
+
+			for (byte b : doc.toByteArray()) System.out.print(b<32?'.':(char)b);
+			System.out.println();
+			System.out.println(Base64.getUrlEncoder().encodeToString(doc.toByteArray()).replace("=", ""));
+
+			String t = """
+			{
+				 "totalSize": 215730, "blockSize": 1048576, "pointers": [[
+					 [2626],
+					 3,
+					 0,
+					 0,
+					 0,
+					 217088,
+					 215730,
+					 215730,
+					 [-1893756345, -178735963, 151717756, 426488884],
+					 [-59560821, 710175849, 1026987985, -295038902],
+					 2
+				 ]]
+			 }
+			""";
+
+			doc = Document.of(t);
+			System.out.println(doc);
+
+			System.out.println(doc.toByteArray().length);
+			System.out.println(doc.toJson().length());
+
+			for (byte b : doc.toByteArray()) System.out.print(b<32?'.':(char)b);
+			System.out.println();
+
+			System.out.println(Base64.getUrlEncoder().encodeToString(doc.toByteArray()).replace("=", ""));
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
 	}
 }
 

@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 
 
-public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>
+public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
 
@@ -281,20 +281,23 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 *   {"name": ["bob", "cindy"]}
 	 * </pre>
 	 */
-	public Document append(String aKey, Object aValue)
+	public Document append(String aKey, Object... aValue)
 	{
-		Object existing = get(aKey);
-		if (existing instanceof Array v)
+		for (Object a : aValue)
 		{
-			v.add(aValue);
-		}
-		else if (existing != null)
-		{
-			put(aKey, Array.of(existing, aValue));
-		}
-		else
-		{
-			put(aKey, aValue);
+			Object existing = get(aKey);
+			if (existing instanceof Array v)
+			{
+				v.add(a);
+			}
+			else if (existing != null)
+			{
+				put(aKey, Array.of(existing, a));
+			}
+			else
+			{
+				put(aKey, a);
+			}
 		}
 		return this;
 	}

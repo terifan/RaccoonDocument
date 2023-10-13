@@ -7,7 +7,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 
-public class Array extends KeyValueContainer<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>
+public class Array extends KeyValueContainer<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
 

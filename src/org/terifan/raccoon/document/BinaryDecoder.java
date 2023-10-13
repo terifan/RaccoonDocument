@@ -68,22 +68,22 @@ class BinaryDecoder extends BinaryInput
 	}
 
 
-	Object unmarshal() throws IOException
-	{
-		BinaryInput.Token token = readToken();
-
-		switch (token.type)
-		{
-			case DOCUMENT:
-				return readDocument(new Document());
-			case ARRAY:
-				return readArray(new Array());
-			case TERMINATOR:
-				return token.type;
-			default:
-				return readValue(token.type);
-		}
-	}
+//	Object unmarshal() throws IOException
+//	{
+//		BinaryInput.Token token = readToken();
+//
+//		switch (token.type)
+//		{
+//			case DOCUMENT:
+//				return readDocument(new Document());
+//			case ARRAY:
+//				return readArray(new Array());
+//			case TERMINATOR:
+//				return token.type;
+//			default:
+//				return readValue(token.type);
+//		}
+//	}
 
 
 	Object unmarshal(Class aType) throws IOException

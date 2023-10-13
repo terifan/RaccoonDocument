@@ -3,6 +3,9 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.InputStream;
 import static org.terifan.raccoon.document.BinaryEncoder.VERSION;
+import static org.terifan.raccoon.document.SupportedTypes.ARRAY;
+import static org.terifan.raccoon.document.SupportedTypes.DOCUMENT;
+import static org.terifan.raccoon.document.SupportedTypes.TERMINATOR;
 
 
 abstract class BinaryInput
@@ -126,6 +129,31 @@ abstract class BinaryInput
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//	DocumentEntity unmarshal() throws IOException
+//	{
+//		Token token = readToken();
+//		if(token.type == SupportedTypes.ARRAY)
+//			return readArray(new Array());
+//		return readDocument(new Document());
+//	}
+	Object unmarshal() throws IOException
+	{
+		BinaryInput.Token token = readToken();
+
+		switch (token.type)
+		{
+			case DOCUMENT:
+				return readDocument(new Document());
+			case ARRAY:
+				return readArray(new Array());
+			case TERMINATOR:
+				return token.type;
+			default:
+				return readValue(token.type);
+		}
+	}
 
 
 	int readByte() throws IOException
