@@ -10,12 +10,15 @@ import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
@@ -438,6 +441,67 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		}
 
 		throw new IllegalArgumentException("Unsupported format: " + v.getClass());
+	}
+
+
+	/**
+	 * Gets a LocalDateTime object as milliseconds since the epoch of 1970-01-01T00:00:00Z
+	 */
+	public long getEpochMillis(K aKey)
+	{
+		Object o = get(aKey);
+
+		if (o instanceof OffsetDateTime v)
+		{
+			o = v.toLocalDateTime();
+		}
+
+		if (o instanceof LocalDateTime v)
+		{
+			return v.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+		}
+		else if (o instanceof LocalDate v)
+		{
+			return v.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+		}
+
+		throw new IllegalArgumentException("Unsupported value, could not convert to epoc time.");
+	}
+
+
+	/**
+	 * Gets a LocalDateTime object as milliseconds since the epoch of 1970-01-01T00:00:00Z wrapped in a {@link java.util.Date} object
+	 */
+	public Date getEpochTime(K aKey)
+	{
+		return new Date(getEpochMillis(aKey));
+	}
+
+
+	/**
+	 * Puts a LocalDateTime object as Instant with local time zone
+	 */
+	public <T extends Document> T putEpochTime(K aKey, Instant aInstant)
+	{
+		return (T)putImpl(aKey, LocalDateTime.ofInstant(aInstant, ZoneId.systemDefault()));
+	}
+
+
+	/**
+	 * Puts a LocalDateTime object as milliseconds since the epoch of 1970-01-01T00:00:00Z
+	 */
+	public <T extends Document> T putEpochTime(K aKey, long aTimeMillis)
+	{
+		return (T)putEpochTime(aKey, Instant.ofEpochMilli(aTimeMillis));
+	}
+
+
+	/**
+	 * Puts a LocalDateTime object as milliseconds since the epoch of 1970-01-01T00:00:00Z wrapped in a {@link java.util.Date} object
+	 */
+	public <T extends Document> T putEpochTime(K aKey, Date aDateTime)
+	{
+		return (T)putImpl(aKey, LocalDateTime.ofInstant(aDateTime.toInstant(), ZoneId.systemDefault()));
 	}
 
 

@@ -139,10 +139,6 @@ public enum SupportedTypes
 	REFVALUE(28,
 		(aEncoder, aValue) -> {},
 		aDecoder -> null
-	),
-	MARSHAL(29,
-		(aEncoder, aValue) -> aEncoder.marshal(aValue),
-		aDecoder -> aDecoder.unmarshal()
 	);
 
 
@@ -176,7 +172,6 @@ public enum SupportedTypes
 
 		if (Document.class == cls || Document.class.isAssignableFrom(cls)) return DOCUMENT;
 		if (Array.class == cls || Array.class.isAssignableFrom(cls)) return ARRAY;
-		if (Marshallable.class == cls || Marshallable.class.isAssignableFrom(cls)) return MARSHAL;
 		if (ObjectId.class == cls) return OBJECTID;
 		if (String.class == cls) return STRING;
 		if (byte[].class == cls) return BINARY;

@@ -34,6 +34,16 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
+	public Array addEach(Array aArray)
+	{
+		for (Object o : ((Array)aArray))
+		{
+			add(o);
+		}
+		return this;
+	}
+
+
 	public <T extends Array> T put(Integer aKey, Object aValue)
 	{
 		if (!isSupportedType(aValue))

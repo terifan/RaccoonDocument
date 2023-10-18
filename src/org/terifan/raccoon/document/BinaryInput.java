@@ -79,7 +79,15 @@ abstract class BinaryInput
 				break;
 			}
 
-			String key = readUTF(token.value);
+			String key;
+			if ((token.value & 1) == 0)
+			{
+				key = Integer.toString(token.value / 2);
+			}
+			else
+			{
+				key = readUTF(token.value / 2);
+			}
 
 			aDocument.putImpl(key, readValue(token.type));
 		}

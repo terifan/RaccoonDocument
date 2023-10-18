@@ -33,7 +33,7 @@ class BinaryDecoder extends BinaryInput
 
 	void unmarshal(KeyValueContainer aContainer) throws IOException
 	{
-		BinaryInput.Token token = readToken();
+		Token token = readToken();
 
 		if (aContainer instanceof Document v)
 		{
@@ -70,7 +70,7 @@ class BinaryDecoder extends BinaryInput
 
 //	Object unmarshal() throws IOException
 //	{
-//		BinaryInput.Token token = readToken();
+//		Token token = readToken();
 //
 //		switch (token.type)
 //		{
@@ -90,7 +90,7 @@ class BinaryDecoder extends BinaryInput
 	{
 		try
 		{
-			BinaryInput.Token token = readToken();
+			Token token = readToken();
 
 			switch (token.type)
 			{

@@ -1,6 +1,5 @@
 package org.terifan.raccoon.document;
 
-import java.util.ArrayList;
 import org.testng.annotations.Test;
 
 
@@ -17,13 +16,15 @@ public class ObjectMarshallerNGTest
 
 		System.out.println(ObjectMarshaller.toDocument(color));
 
-		ArrayList<_Color> colors = new ArrayList<>();
+		_List<_Color> colors = new _List<>();
 		colors.add(new _Color(50, 100, 200));
 		colors.add(new _Color(50, 200, 100));
 		colors.add(new _Color(100, 200, 50));
 
 		System.out.println(ObjectMarshaller.toDocument(colors));
 
-//		_Log.hexDump(data);
+		System.out.println(ObjectMarshaller.toDocument(new int[]{1,2,3}));
+
+		System.out.println(ObjectMarshaller.toDocument(new _Text("hello world")));
 	}
 }

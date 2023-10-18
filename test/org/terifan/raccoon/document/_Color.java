@@ -3,6 +3,7 @@ package org.terifan.raccoon.document;
 
 public class _Color extends _BaseColor
 {
+	private final static long serialVersionUID = 123;
 	int red;
 	int green;
 	int blue;
