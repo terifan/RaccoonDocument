@@ -435,22 +435,19 @@ public class DocumentNGTest
 	}
 
 
-//	@Test
-//	public void testChecksum() throws IOException, ClassNotFoundException
-//	{
-//		Document out = _Person.createPerson(new Random(0));
-//
-//		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//		out.writeTo(baos);
-//
-//		byte[] data = baos.toByteArray();
-//
-//		Document in = new Document().readFrom(new ByteArrayInputStream(data));
-//
-//		System.out.println(in);
-//
-//		_Log.hexDump(in.toByteArray());
-//	}
+	@Test
+	public void testChecksum() throws IOException, ClassNotFoundException
+	{
+		byte[] out1 = Document.of("id:[dog,77,surreptitious]").toByteArray();
+		byte[] out2 = Document.of("id:[cat,77,surreptitious]").toByteArray();
+		byte[] out3 = Document.of("id:[dog,67,surreptitious]").toByteArray();
+		byte[] out4 = Document.of("id:[cat,67,surreptitious]").toByteArray();
+
+		_Log.hexDump(out1);
+		_Log.hexDump(out2);
+		_Log.hexDump(out3);
+		_Log.hexDump(out4);
+	}
 
 
 	@Test
