@@ -71,6 +71,18 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	public <T> T computeIfAbsent(K aKey, Supplier<T> aSupplier)
+	{
+		T v = (T)getImpl(aKey);
+		if (v == null)
+		{
+			v = aSupplier.get();
+			putImpl(aKey, v);
+		}
+		return v;
+	}
+
+
 	public Boolean getBoolean(K aKey)
 	{
 		Object v = getImpl(aKey);
@@ -380,30 +392,6 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	public Document getDocument(K aKey)
 	{
 		return (Document)getImpl(aKey);
-	}
-
-
-	public Array getOrCreateArray(K aKey)
-	{
-		Array v = (Array)getImpl(aKey);
-		if (v == null)
-		{
-			v = new Array();
-			putImpl(aKey, v);
-		}
-		return v;
-	}
-
-
-	public Document getOrCreateDocument(K aKey)
-	{
-		Document v = (Document)getImpl(aKey);
-		if (v == null)
-		{
-			v = new Document();
-			putImpl(aKey, v);
-		}
-		return v;
 	}
 
 
