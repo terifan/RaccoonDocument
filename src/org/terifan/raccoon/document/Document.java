@@ -1,18 +1,14 @@
 package org.terifan.raccoon.document;
 
 import java.io.Externalizable;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 
 public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
@@ -70,6 +66,16 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 		}
 
 		return (T)putImpl(aKey, aValue);
+	}
+
+
+	public <T extends Document> T putIfAbsent(String aKey, Supplier<Object> aValue)
+	{
+		if (!containsKey(aKey))
+		{
+			putImpl(aKey, aValue.get());
+		}
+		return (T)this;
 	}
 
 

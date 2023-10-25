@@ -10,6 +10,8 @@ import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.channels.ByteChannel;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -755,6 +757,24 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Decodes a binary encoded Document/Array.
 	 */
+	public R fromByteArray(ByteBuffer aBinaryData)
+	{
+		try
+		{
+			BinaryDecoder decoder = new BinaryDecoder(new ByteBufferInputStream(aBinaryData));
+			decoder.unmarshal(this);
+		}
+		catch (IOException e)
+		{
+			throw new StreamException(e.toString());
+		}
+		return (R)this;
+	}
+
+
+	/**
+	 * Decodes a binary encoded Document/Array.
+	 */
 	public R fromByteArray(byte[] aBinaryData)
 	{
 		try
@@ -931,4 +951,21 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 
 	public abstract Iterable<K> keySet();
+
+
+	private static class ByteBufferInputStream extends InputStream
+	{
+		private final ByteBuffer mBuffer;
+		public ByteBufferInputStream(ByteBuffer aBuffer)
+		{
+			this.mBuffer = aBuffer;
+		}
+
+
+		@Override
+		public int read() throws IOException
+		{
+			return mBuffer.get();
+		}
+	}
 }
