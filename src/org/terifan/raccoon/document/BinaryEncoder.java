@@ -147,7 +147,7 @@ class BinaryEncoder implements AutoCloseable
 	BinaryEncoder writeShort(short aValue) throws IOException
 	{
 		mWriteBuffer[0] = (byte)(aValue >>> 8);
-		mWriteBuffer[1] = (byte)(aValue >>> 0);
+		mWriteBuffer[1] = (byte)(aValue);
 		writeBytes(mWriteBuffer, 0, 2);
 		return this;
 	}
@@ -158,7 +158,7 @@ class BinaryEncoder implements AutoCloseable
 		mWriteBuffer[0] = (byte)(aValue >>> 24);
 		mWriteBuffer[1] = (byte)(aValue >>> 16);
 		mWriteBuffer[2] = (byte)(aValue >>> 8);
-		mWriteBuffer[3] = (byte)(aValue >>> 0);
+		mWriteBuffer[3] = (byte)(aValue);
 		writeBytes(mWriteBuffer, 0, 4);
 		return this;
 	}
@@ -173,7 +173,7 @@ class BinaryEncoder implements AutoCloseable
 		mWriteBuffer[4] = (byte)(aValue >>> 24);
 		mWriteBuffer[5] = (byte)(aValue >>> 16);
 		mWriteBuffer[6] = (byte)(aValue >>> 8);
-		mWriteBuffer[7] = (byte)(aValue >>> 0);
+		mWriteBuffer[7] = (byte)(aValue);
 		writeBytes(mWriteBuffer, 0, 8);
 		return this;
 	}
@@ -262,12 +262,13 @@ class BinaryEncoder implements AutoCloseable
 
 
 	/**
-	 * Does not close the underlying stream.
+	 * note: this implementation will not close the underlying stream.
 	 */
 	@Override
 	public void close() throws IOException
 	{
 		mOutputStream = null;
+		mChecksum = null;
 	}
 
 

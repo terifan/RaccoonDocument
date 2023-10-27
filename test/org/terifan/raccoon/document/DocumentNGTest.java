@@ -26,32 +26,68 @@ public class DocumentNGTest
 		Document doc = new Document().put("a", new BigDecimal(s));
 
 //		System.out.println(doc);
-
 		byte[] data = doc.toByteArray();
 
 //		_Log.hexDump(data);
-
 		Document doc2 = new Document().fromByteArray(data);
 
 		assertEquals(doc2.getDecimal("a"), doc.getDecimal("a"));
 	}
 
+
 	@DataProvider
 	private Object[][] decimal()
 	{
-		return new Object[][]{
-			{"0"},
-			{".1"},{"1."},{"0.1"},
-			{"12"},{".12"},{"12.34"},
-			{"164313131394.654613219816131"},
-			{"1643131313941.654613219816131"},
-			{"164313131394.6546132198161312"},
-			{"1643131313943.6546132198161314"},
-			{"16431313139456.654613219816131"},
-			{"16431313139456.6546132198161317"},
-			{"16431313139456.65461321981613178"},
-			{"32196131943131.31646133219846131496311946313219841940661321981"},
-			{"-1.5e+35"}
+		return new Object[][]
+		{
+			{
+				"0"
+			},
+			{
+				".1"
+			},
+			{
+				"1."
+			},
+			{
+				"0.1"
+			},
+			{
+				"12"
+			},
+			{
+				".12"
+			},
+			{
+				"12.34"
+			},
+			{
+				"164313131394.654613219816131"
+			},
+			{
+				"1643131313941.654613219816131"
+			},
+			{
+				"164313131394.6546132198161312"
+			},
+			{
+				"1643131313943.6546132198161314"
+			},
+			{
+				"16431313139456.654613219816131"
+			},
+			{
+				"16431313139456.6546132198161317"
+			},
+			{
+				"16431313139456.65461321981613178"
+			},
+			{
+				"32196131943131.31646133219846131496311946313219841940661321981"
+			},
+			{
+				"-1.5e+35"
+			}
 		};
 	}
 
@@ -249,8 +285,7 @@ public class DocumentNGTest
 			.put("ldt", _ldt)
 			.put("arr", _arr)
 			.put("doc", _doc)
-			.put("bd", _bd)
-			;
+			.put("bd", _bd);
 
 		Array _allTypesArr = Array.of(
 			_byte0,
@@ -279,8 +314,7 @@ public class DocumentNGTest
 
 		Document srcDoc = new Document()
 			.put("doc", _allTypesDoc)
-			.put("arr", _allTypesArr)
-			;
+			.put("arr", _allTypesArr);
 
 		byte[] data = srcDoc.toByteArray();
 		String json = srcDoc.toJson();
@@ -503,12 +537,10 @@ public class DocumentNGTest
 //	{
 //		String d = "$or:[{$and:[{ratings:1},{name:{$regex:'n.*'}}]},{$and:[{ratings:2},{name:{$regex:'w.*'}}]}]";
 //
-//		Document doc = new Document().of(d);
+//		Document doc = Document.of(d);
 //
 //		System.out.println(doc);
 //	}
-
-
 //	@Test
 //	public void testMarshall2() throws IOException, ClassNotFoundException
 //	{
@@ -523,8 +555,6 @@ public class DocumentNGTest
 //		System.out.println(d);
 //
 //	}
-
-
 	@Test(enabled = false)
 	public void testMarshallCompressionRatio() throws IOException, ClassNotFoundException
 	{
@@ -596,13 +626,26 @@ public class DocumentNGTest
 	@DataProvider
 	private Object[][] arrayLengths()
 	{
-		return new Object[][]{
-			{1},
-			{2},
-			{5},
-			{10},
-			{1000},
-			{1000_000}
+		return new Object[][]
+		{
+			{
+				1
+			},
+			{
+				2
+			},
+			{
+				5
+			},
+			{
+				10
+			},
+			{
+				1000
+			},
+			{
+				1000_000
+			}
 		};
 	}
 
@@ -645,8 +688,6 @@ public class DocumentNGTest
 //		set.add("_id");
 //		assertEquals(set.toString(), "[_id, _a, 0, A, a]");
 //	}
-
-
 	@Test
 	public void testSize() throws IOException
 	{
@@ -679,5 +720,19 @@ public class DocumentNGTest
 		System.out.println("       bin-zip: " + baos4.size());
 
 //		_Log.hexDump(doc.toByteArray());
+	}
+
+
+	@Test
+	public void testLargeBlock() throws IOException
+	{
+		byte[] data = new byte[10 * 1024 * 1024];
+		new Random().nextBytes(data);
+
+		Document doc = new Document().put("bin", data);
+
+		long t = System.currentTimeMillis();
+		doc.toByteArray();
+		System.out.println(System.currentTimeMillis() - t);
 	}
 }
