@@ -11,7 +11,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.nio.channels.ByteChannel;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -720,7 +719,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	@Override
 	public String toString()
 	{
-		return new JSONEncoder().marshal(this, false, true, false);
+		return new JSONEncoder().marshal(this, true, true, false);
 	}
 
 
@@ -805,6 +804,42 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			throw new StreamException(e.toString());
 		}
 		return baos.toByteArray();
+	}
+
+
+	/**
+	 * Decodes a binary encoded Document/Array.
+	 */
+	public R fromEncodedString(String aEncodedString)
+	{
+		try
+		{
+			BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(Base64.getUrlDecoder().decode(aEncodedString)));
+			decoder.unmarshal(this);
+		}
+		catch (IOException e)
+		{
+			throw new StreamException(e.toString());
+		}
+		return (R)this;
+	}
+
+
+	/**
+	 * Return an encoded String representation of this object.
+	 */
+	public String toEncodedString()
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (BinaryEncoder encoder = new BinaryEncoder(baos))
+		{
+			encoder.marshal(this);
+		}
+		catch (IOException e)
+		{
+			throw new StreamException(e.toString());
+		}
+		return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
 	}
 
 

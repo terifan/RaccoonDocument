@@ -1,7 +1,10 @@
 package org.terifan.raccoon.document;
 
 import java.io.Externalizable;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -9,11 +12,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 
 public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
+	private final static String SIGNATURE_ALG = "HmacSHA256";
+	private final static String SIGNATURE_KEY = "~s";
 
 //	/**
 //	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal order.
@@ -311,5 +318,60 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 			}
 		}
 		return this;
+	}
+
+
+	public Document sign(String aSecret)
+	{
+		try
+		{
+			mValues.remove(SIGNATURE_KEY);
+
+			SecretKeySpec secretKeySpec = new SecretKeySpec(aSecret.getBytes(), SIGNATURE_ALG);
+			Mac mac = Mac.getInstance(SIGNATURE_ALG);
+			mac.init(secretKeySpec);
+			byte[] sign = mac.doFinal(toByteArray());
+
+			mValues.put(SIGNATURE_KEY, sign);
+
+			return this;
+		}
+		catch (InvalidKeyException | NoSuchAlgorithmException e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
+
+
+	public boolean verifty(String aSecret)
+	{
+		try
+		{
+			byte[] provided = (byte[])mValues.remove(SIGNATURE_KEY);
+
+			if (provided == null)
+			{
+				throw new IllegalArgumentException("Document has no embedded signature.");
+			}
+
+			SecretKeySpec secretKeySpec = new SecretKeySpec(aSecret.getBytes(), SIGNATURE_ALG);
+			Mac mac = Mac.getInstance(SIGNATURE_ALG);
+			mac.init(secretKeySpec);
+			byte[] control = mac.doFinal(toByteArray());
+
+			mValues.put(SIGNATURE_KEY, provided);
+
+			return Arrays.equals(control, provided);
+		}
+		catch (InvalidKeyException | NoSuchAlgorithmException e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
+
+
+	public byte[] getSignature()
+	{
+		return (byte[])mValues.get(SIGNATURE_KEY);
 	}
 }

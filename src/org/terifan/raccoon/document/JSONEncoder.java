@@ -57,6 +57,12 @@ class JSONEncoder
 	{
 		int size = aDocument.size();
 
+		if (size == 0)
+		{
+			print("{}");
+			return;
+		}
+
 		boolean hasDocument = aDocument.size() > 5;
 
 		for (Object entry : aDocument.values())

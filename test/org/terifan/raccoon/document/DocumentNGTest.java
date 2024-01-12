@@ -735,4 +735,22 @@ public class DocumentNGTest
 		doc.toByteArray();
 		System.out.println(System.currentTimeMillis() - t);
 	}
+
+
+	@Test
+	public void testSignature() throws IOException
+	{
+		Random rnd = new Random(1);
+
+		Document doc = _Person.createPerson(rnd);
+
+		doc.sign("1234");
+
+		System.out.println(doc);
+
+		assertTrue(doc.verifty("1234"));
+		assertFalse(doc.verifty("4321"));
+
+		System.out.println(doc.toEncodedString());
+	}
 }
