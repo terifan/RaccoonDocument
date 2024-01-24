@@ -88,13 +88,9 @@ class JSONEncoder
 
 			marshal(entry.getValue());
 
-			if (hasDocument && --size > 0)
+			if (--size > 0)
 			{
-				println(aNewLineOnClose ? "," : ", ", false);
-			}
-			else if (!hasDocument && --size > 0)
-			{
-				print(", ", false);
+				println(hasDocument && aNewLineOnClose ? "," : ", ", false);
 			}
 		}
 

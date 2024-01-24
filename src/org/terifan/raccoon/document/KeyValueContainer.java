@@ -753,6 +753,21 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	public String toJson(boolean aCompact)
+	{
+		return new JSONEncoder().marshal(this, aCompact, false, false);
+	}
+
+
+	/**
+	 * Encodes this instance into a JSON while retaining some type information.
+	 */
+	public String toTypedJson(boolean aCompact)
+	{
+		return new JSONEncoder().marshal(this, aCompact, true, false);
+	}
+
+
 	/**
 	 * Decodes a binary encoded Document/Array.
 	 */
