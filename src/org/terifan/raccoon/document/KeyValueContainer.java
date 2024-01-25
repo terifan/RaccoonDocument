@@ -72,12 +72,12 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
-	public <T> T computeIfAbsent(K aKey, Supplier<T> aSupplier)
+	public <T> T computeIfAbsent(K aKey, Function<K,T> aSupplier)
 	{
 		T v = (T)getImpl(aKey);
 		if (v == null)
 		{
-			v = aSupplier.get();
+			v = aSupplier.apply(aKey);
 			putImpl(aKey, v);
 		}
 		return v;
@@ -501,11 +501,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 
 	/**
-	 * find("name")
-	 * find("7")
-	 * find("name/7")
-	 * find("people/7/name")
-	 * find("people/[name=bob]/age")
+	 * find("name") find("7") find("name/7") find("people/7/name") find("people/[name=bob]/age")
 	 */
 	public <T extends Object> T findFirst(String aPath)
 	{
@@ -607,7 +603,8 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			}
 			else if (this instanceof Array)
 			{
-				((Array)this).forEach(p -> {
+				((Array)this).forEach(p ->
+				{
 					if (p instanceof Document)
 					{
 						optionalAdd(aResult, aValuesOnly, ((Document)p).get(aPath));
@@ -1006,16 +1003,18 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	private static class ByteBufferInputStream extends InputStream
 	{
 		private final ByteBuffer mBuffer;
+
+
 		public ByteBufferInputStream(ByteBuffer aBuffer)
 		{
-			this.mBuffer = aBuffer;
+			mBuffer = aBuffer;
 		}
 
 
 		@Override
 		public int read() throws IOException
 		{
-			return mBuffer.get();
+			return 0xff & mBuffer.get();
 		}
 	}
 }

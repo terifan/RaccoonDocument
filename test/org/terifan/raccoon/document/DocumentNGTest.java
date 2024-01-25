@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -752,5 +753,23 @@ public class DocumentNGTest
 		assertFalse(doc.verifty("4321"));
 
 		System.out.println(doc.toEncodedString());
+	}
+
+
+	@Test
+	public void testByteBuffer() throws IOException
+	{
+		Random rnd = new Random(1);
+
+		Document out = _Person.createPerson(rnd);
+
+		byte[] data = out.toByteArray();
+
+		ByteBuffer buf = ByteBuffer.allocate(1024);
+		buf.put(data);
+
+		Document in = new Document().fromByteArray(buf.position(0).limit(data.length));
+
+		assertEquals(in, out);
 	}
 }

@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -76,11 +76,11 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
-	public <T extends Document> T putIfAbsent(String aKey, Supplier<Object> aValue)
+	public <T extends Document> T putIfAbsent(String aKey, Function<String, Object> aValue)
 	{
 		if (!containsKey(aKey))
 		{
-			putImpl(aKey, aValue.get());
+			putImpl(aKey, aValue.apply(aKey));
 		}
 		return (T)this;
 	}
