@@ -503,4 +503,28 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 		}
 		return this;
 	}
+
+
+	public <T> T getFirst()
+	{
+		return (T)mValues.getFirst();
+	}
+
+
+	public <T> T removeFirst()
+	{
+		return (T)mValues.removeFirst();
+	}
+
+
+	public <T> T getLast()
+	{
+		return (T)mValues.getLast();
+	}
+
+
+	public <T> T removeLast()
+	{
+		return (T)mValues.removeLast();
+	}
 }

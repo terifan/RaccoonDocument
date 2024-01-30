@@ -374,4 +374,28 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	{
 		return (byte[])mValues.get(SIGNATURE_KEY);
 	}
+
+
+	public <T> T getFirst()
+	{
+		return (T)mValues.firstEntry();
+	}
+
+
+	public <T> T removeFirst()
+	{
+		return (T)mValues.remove(mValues.firstEntry().getKey());
+	}
+
+
+	public <T> T getLast()
+	{
+		return (T)mValues.lastEntry();
+	}
+
+
+	public <T> T removeLast()
+	{
+		return (T)mValues.remove(mValues.lastEntry().getKey());
+	}
 }
