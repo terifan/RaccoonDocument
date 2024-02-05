@@ -46,6 +46,13 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
+	public Document(Object aIdentity)
+	{
+		this();
+		put("_id", aIdentity);
+	}
+
+
 	@Override
 	public <T> T get(String aKey)
 	{
