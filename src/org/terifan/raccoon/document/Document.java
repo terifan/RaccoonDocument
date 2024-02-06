@@ -1,10 +1,15 @@
 package org.terifan.raccoon.document;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -12,6 +17,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -19,8 +26,15 @@ import javax.crypto.spec.SecretKeySpec;
 public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
-	private final static String SIGNATURE_ALG = "HmacSHA256";
-	private final static String SIGNATURE_KEY = "~s";
+
+	private final static LinkedHashMap<String, String> ALGORITHMS = new LinkedHashMap<>()
+	{
+		{
+			put("HS256", "HmacSHA256");
+			put("HS384", "HmacSHA384");
+			put("HS512", "HmacSHA512");
+		}
+	};
 
 //	/**
 //	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal order.
@@ -35,7 +49,6 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 //		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
 //		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
 //	};
-
 	private final LinkedHashMap<String, Object> mValues;
 
 
@@ -114,9 +127,12 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
-	public <T> T putAll(Document aSource)
+	public <T extends Document> T putAll(Document aSource)
 	{
-		aSource.entrySet().forEach(entry -> mValues.put(entry.getKey(), entry.getValue()));
+		if (aSource != null)
+		{
+			aSource.entrySet().forEach(entry -> mValues.put(entry.getKey(), entry.getValue()));
+		}
 		return (T)this;
 	}
 
@@ -328,20 +344,51 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
-	public Document sign(String aSecret)
+	/**
+	 * Return an encoded signed string representation of this Document. The format is identical to a JWT token.
+	 *
+	 * @param aSecret secret passphrase used when signing the message
+	 */
+	public String toSignedString(String aSecret)
+	{
+		return toSignedString(aSecret, new Document().put("alg", ALGORITHMS.firstEntry().getKey()));
+	}
+
+
+	/**
+	 * Return an encoded signed string representation of this Document. The format is identical to a JWT token.
+	 *
+	 * <code>
+	 * String jwt = doc.toSignedString("1234", Document.of("typ:JWT,alg:HS512"));
+	 * </code>
+	 *
+	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512".
+	 *
+	 * @param aSecret secret passphrase used when signing the message
+	 * @param aHeader a custom header document.
+	 */
+	public String toSignedString(String aSecret, Document aHeader)
 	{
 		try
 		{
-			mValues.remove(SIGNATURE_KEY);
+			aHeader = new Document().putAll(aHeader).putIfAbsent("alg", k -> ALGORITHMS.firstEntry().getKey());
 
-			SecretKeySpec secretKeySpec = new SecretKeySpec(aSecret.getBytes(), SIGNATURE_ALG);
-			Mac mac = Mac.getInstance(SIGNATURE_ALG);
-			mac.init(secretKeySpec);
-			byte[] sign = mac.doFinal(toByteArray());
+			byte[] headerBytes = aHeader.toJson(true).getBytes(StandardCharsets.UTF_8);
+			byte[] payloadBytes = toJson(true).getBytes(StandardCharsets.UTF_8);
 
-			mValues.put(SIGNATURE_KEY, sign);
+			Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
+			byte[] header = encoder.encodeToString(headerBytes).getBytes(StandardCharsets.UTF_8);
+			byte[] payload = encoder.encodeToString(payloadBytes).getBytes(StandardCharsets.UTF_8);
 
-			return this;
+			String impl = ALGORITHMS.get(aHeader.getString("alg"));
+			Mac mac = Mac.getInstance(impl);
+			mac.init(new SecretKeySpec(aSecret.getBytes(StandardCharsets.UTF_8), impl));
+			mac.update(header);
+			mac.update((byte)'.');
+			mac.update(payload);
+			byte[] sign = mac.doFinal();
+
+			return new String(header) + "." + new String(payload) + "." + encoder.encodeToString(sign);
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException e)
 		{
@@ -350,25 +397,64 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
-	public boolean verifty(String aSecret)
+	/**
+	 * Decode an encoded signed string representation of a Document.
+	 *
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aSecret secret passphrase used when signing the message
+	 * @return this document with the content of the message decoded
+	 */
+	public Document fromSignedString(String aMessage, String aSecret) throws IOException
+	{
+		return fromSignedString(aMessage, aSecret, null);
+	}
+
+
+	/**
+	 * Decode an encoded signed string representation of a Document.
+	 *
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aSecret secret passphrase used when signing the message
+	 * @param aHeader if not null then the header of the signed message will be returned in this Document
+	 * @return this document with the content of the message decoded
+	 */
+	public Document fromSignedString(String aMessage, String aSecret, Document aHeader) throws IOException
 	{
 		try
 		{
-			byte[] provided = (byte[])mValues.remove(SIGNATURE_KEY);
-
-			if (provided == null)
+			if (!aMessage.matches("[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}"))
 			{
-				throw new IllegalArgumentException("Document has no embedded signature.");
+				throw new IllegalArgumentException("Message not formatted correctly.");
 			}
 
-			SecretKeySpec secretKeySpec = new SecretKeySpec(aSecret.getBytes(), SIGNATURE_ALG);
-			Mac mac = Mac.getInstance(SIGNATURE_ALG);
-			mac.init(secretKeySpec);
-			byte[] control = mac.doFinal(toByteArray());
+			String[] chunks = aMessage.split("\\.");
+			byte[] headerBytes = Base64.getUrlDecoder().decode(chunks[0]);
+			byte[] payloadBytes = Base64.getUrlDecoder().decode(chunks[1]);
 
-			mValues.put(SIGNATURE_KEY, provided);
+			Document header = new Document().fromJson(new String(headerBytes, StandardCharsets.UTF_8));
+			String alg = ALGORITHMS.get(header.getString("alg"));
 
-			return Arrays.equals(control, provided);
+			if (alg == null)
+			{
+				throw new IllegalArgumentException("Unsupported algorithm: " + alg);
+			}
+
+			Mac mac = Mac.getInstance(alg);
+			mac.init(new SecretKeySpec(aSecret.getBytes(StandardCharsets.UTF_8), alg));
+			mac.update((chunks[0] + "." + chunks[1]).getBytes());
+			byte[] sign = mac.doFinal();
+
+			if (!chunks[2].equals(Base64.getUrlEncoder().withoutPadding().encodeToString(sign)))
+			{
+				throw new IOException();
+			}
+
+			if (aHeader != null)
+			{
+				aHeader.putAll(new Document().fromJson(new String(headerBytes, StandardCharsets.UTF_8)));
+			}
+
+			return fromJson(new String(payloadBytes, StandardCharsets.UTF_8));
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException e)
 		{
@@ -377,9 +463,115 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
-	public byte[] getSignature()
+	/**
+	 * Return a signed compressed binary representation of this Document.
+	 *
+	 * @param aSecret secret passphrase used when signing the message
+	 */
+	public byte[] toSignedBinary(byte[] aSecret) throws IOException
 	{
-		return (byte[])mValues.get(SIGNATURE_KEY);
+		return toSignedBinary(aSecret, new Document().put("alg", ALGORITHMS.firstEntry().getKey()));
+	}
+
+
+	/**
+	 * Return a signed compressed binary representation of this Document.
+	 *
+	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512".
+	 *
+	 * @param aSecret secret passphrase used when signing the message
+	 * @param aHeader a custom header document.
+	 */
+	public byte[] toSignedBinary(byte[] aSecret, Document aHeader) throws IOException
+	{
+		try
+		{
+			aHeader = new Document().putAll(aHeader).putIfAbsent("alg", k -> ALGORITHMS.firstEntry().getKey());
+
+			byte[] header = aHeader.toByteArray();
+			byte[] payload = toByteArray();
+
+			String impl = ALGORITHMS.get(aHeader.getString("alg"));
+			Mac mac = Mac.getInstance(impl);
+			mac.init(new SecretKeySpec(aSecret, impl));
+			mac.update(header);
+			mac.update(payload);
+			byte[] sign = mac.doFinal();
+
+			return Array.of(compress(header), compress(payload), sign).toByteArray();
+		}
+		catch (InvalidKeyException | NoSuchAlgorithmException e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
+
+
+	/**
+	 * Decode a signed binary representation of a Document.
+	 *
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aSecret secret passphrase used when signing the message
+	 * @return this document with the content of the message decoded
+	 */
+	public Document fromSignedBinary(byte[] aMessage, byte[] aSecret) throws IOException
+	{
+		return fromSignedBinary(aMessage, aSecret, null);
+	}
+
+
+	/**
+	 * Decode a signed binary representation of a Document and retrieving the header.
+	 *
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aSecret secret passphrase used when signing the message
+	 * @param aHeader if not null then the header of the signed message will be returned in this Document
+	 * @return this document with the content of the message decoded
+	 */
+	public Document fromSignedBinary(byte[] aMessage, byte[] aSecret, Document aHeader) throws IOException
+	{
+		try
+		{
+			Array chunks = new Array().fromByteArray(aMessage);
+
+			if (chunks.size() != 3)
+			{
+				throw new IllegalArgumentException("Expected exactly three entries in the message (array).");
+			}
+
+			byte[] headerBytes = decompress(chunks.getBinary(0));
+			byte[] payloadBytes = decompress(chunks.getBinary(1));
+			Document header = new Document().fromByteArray(headerBytes);
+
+			String alg = ALGORITHMS.get(header.getString("alg"));
+
+			if (alg == null)
+			{
+				throw new IllegalArgumentException("Unsupported algorithm: " + alg);
+			}
+
+			Mac mac = Mac.getInstance(alg);
+			mac.init(new SecretKeySpec(aSecret, alg));
+			mac.update(headerBytes);
+			mac.update(payloadBytes);
+			byte[] sign = mac.doFinal();
+
+			if (!Arrays.equals(chunks.getBinary(2), sign))
+			{
+				throw new IOException();
+			}
+
+			if (aHeader != null)
+			{
+				aHeader.putAll(header);
+			}
+
+			return fromByteArray(payloadBytes);
+		}
+		catch (InvalidKeyException | NoSuchAlgorithmException e)
+		{
+			throw new IllegalStateException(e);
+		}
 	}
 
 
@@ -404,5 +596,25 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	public <T> T removeLast()
 	{
 		return (T)mValues.remove(mValues.lastEntry().getKey());
+	}
+
+
+	private byte[] compress(byte[] aData) throws IOException
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (DeflaterOutputStream iis = new DeflaterOutputStream(baos))
+		{
+			iis.write(aData);
+		}
+		return baos.toByteArray();
+	}
+
+
+	private byte[] decompress(byte[] aData) throws IOException
+	{
+		try (InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(aData)))
+		{
+			return iis.readAllBytes();
+		}
 	}
 }

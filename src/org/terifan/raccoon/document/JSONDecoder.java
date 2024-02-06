@@ -80,7 +80,7 @@ class JSONDecoder
 			{
 				if (c != ',')
 				{
-					throw new IOException("Expected comma between elements");
+					throw new IOException("Expected comma between elements: " + c);
 				}
 
 				c = readChar();
@@ -92,7 +92,6 @@ class JSONDecoder
 			}
 			if (c != '\"' && c != '\'')
 			{
-//				throw new IOException("Expected starting quote character of key: " + c);
 				mReader.unread(c);
 			}
 
