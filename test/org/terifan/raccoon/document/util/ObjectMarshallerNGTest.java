@@ -1,5 +1,9 @@
-package org.terifan.raccoon.document;
+package org.terifan.raccoon.document.util;
 
+import org.terifan.raccoon.document._BaseColor;
+import org.terifan.raccoon.document._Color;
+import org.terifan.raccoon.document._List;
+import org.terifan.raccoon.document._Text;
 import org.testng.annotations.Test;
 
 

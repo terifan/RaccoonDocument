@@ -3,7 +3,6 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import static org.terifan.raccoon.document.SupportedTypes.ARRAY;
 import static org.terifan.raccoon.document.SupportedTypes.DOCUMENT;
 import static org.terifan.raccoon.document.SupportedTypes.TERMINATOR;
@@ -16,9 +15,9 @@ class BinaryIterator extends BinaryInput
 	private ArrayDeque<Integer> mArrayRemainings;
 
 
-	public BinaryIterator(InputStream aInputStream)
+	public BinaryIterator(InputStream aInputStream, boolean aDecodeIdOnly)
 	{
-		super(aInputStream);
+		super(aInputStream, aDecodeIdOnly);
 		mArrayRemainings = new ArrayDeque<>();
 	}
 

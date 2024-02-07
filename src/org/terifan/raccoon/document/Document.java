@@ -11,10 +11,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.zip.DeflaterOutputStream;
@@ -26,36 +27,28 @@ import javax.crypto.spec.SecretKeySpec;
 public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
-	private final static String ALG_FIELD = "alg";
-	private final static LinkedHashMap<String, String> ALGORITHMS = new LinkedHashMap<>()
+
+	/**
+	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal order.
+	 * E.g. order of keys: [_id, _alpha, 0, A, a]
+	 */
+	public final static Comparator<String> COMPARATOR = (p, q) ->
 	{
-		{
-			put("HS256", "HmacSHA256");
-			put("HS384", "HmacSHA384");
-			put("HS512", "HmacSHA512");
-		}
+		boolean S = "_id".equals(p);
+		boolean T = "_id".equals(q);
+		if (S || T) return S && !T ? -1 : T && !S ? 1 : 0;
+		boolean P = !p.isEmpty() && p.charAt(0) == '_';
+		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
+		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
 	};
 
-//	/**
-//	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal order.
-//	 * E.g. order of keys: [_id, _alpha, 0, A, a]
-//	 */
-//	final static Comparator<String> COMPARATOR = (p, q) ->
-//	{
-//		boolean S = "_id".equals(p);
-//		boolean T = "_id".equals(q);
-//		if (S || T) return S && !T ? -1 : T && !S ? 1 : 0;
-//		boolean P = !p.isEmpty() && p.charAt(0) == '_';
-//		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
-//		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
-//	};
-	private final LinkedHashMap<String, Object> mValues;
+
+	private final TreeMap<String, Object> mValues;
 
 
 	public Document()
 	{
-//		mValues = new LinkedHashMap<>(COMPARATOR);
-		mValues = new LinkedHashMap<>();
+		mValues = new TreeMap<>(COMPARATOR);
 	}
 
 
@@ -182,6 +175,30 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	public boolean containsKey(String aKey)
 	{
 		return mValues.containsKey(aKey);
+	}
+
+
+	public <T> T getFirst()
+	{
+		return (T)mValues.firstEntry();
+	}
+
+
+	public <T> T removeFirst()
+	{
+		return (T)mValues.remove(mValues.firstEntry().getKey());
+	}
+
+
+	public <T> T getLast()
+	{
+		return (T)mValues.lastEntry();
+	}
+
+
+	public <T> T removeLast()
+	{
+		return (T)mValues.remove(mValues.lastEntry().getKey());
 	}
 
 
@@ -459,162 +476,6 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 		catch (InvalidKeyException | NoSuchAlgorithmException e)
 		{
 			throw new IllegalStateException(e);
-		}
-	}
-
-
-	/**
-	 * Return a signed compressed binary representation of this Document.
-	 *
-	 * @param aSecret secret passphrase used when signing the message
-	 */
-	public byte[] toSignedBinary(byte[] aSecret) throws IOException
-	{
-		return toSignedBinary(aSecret, new Document().put(ALG_FIELD, ALGORITHMS.firstEntry().getKey()));
-	}
-
-
-	/**
-	 * Return a signed compressed binary representation of this Document.
-	 *
-	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512".
-	 *
-	 * @param aSecret secret passphrase used when signing the message
-	 * @param aHeader an optional custom header document.
-	 */
-	public byte[] toSignedBinary(byte[] aSecret, Document aHeader) throws IOException
-	{
-		try
-		{
-			aHeader = new Document().putAll(aHeader).putIfAbsent(ALG_FIELD, k -> ALGORITHMS.firstEntry().getKey());
-
-			byte[] header = aHeader.toByteArray();
-			byte[] payload = toByteArray();
-
-			String impl = ALGORITHMS.get(aHeader.getString(ALG_FIELD));
-			Mac mac = Mac.getInstance(impl);
-			mac.init(new SecretKeySpec(aSecret, impl));
-			mac.update(header);
-			mac.update(payload);
-			byte[] sign = mac.doFinal();
-
-			return Array.of(compress(header), compress(payload), sign).toByteArray();
-		}
-		catch (InvalidKeyException | NoSuchAlgorithmException e)
-		{
-			throw new IllegalStateException(e);
-		}
-	}
-
-
-	/**
-	 * Decode a signed binary representation of a Document.
-	 *
-	 * @param aMessage a three part base64 encoded and signed message
-	 * @param aSecret secret passphrase used when signing the message
-	 * @return this document with the content of the message decoded
-	 */
-	public Document fromSignedBinary(byte[] aSecret, byte[] aMessage) throws IOException
-	{
-		return fromSignedBinary(aSecret, aMessage, null);
-	}
-
-
-	/**
-	 * Decode a signed binary representation of a Document and retrieving the header.
-	 *
-	 * @param aMessage a three part base64 encoded and signed message
-	 * @param aSecret secret passphrase used when signing the message
-	 * @param aHeader if not null then the header of the signed message will be returned in this Document
-	 * @return this document with the content of the message decoded
-	 */
-	public Document fromSignedBinary(byte[] aSecret, byte[] aMessage, Document aHeader) throws IOException
-	{
-		try
-		{
-			Array chunks = new Array().fromByteArray(aMessage);
-
-			if (chunks.size() != 3)
-			{
-				throw new IllegalArgumentException("Expected exactly three entries in the message (array).");
-			}
-
-			byte[] headerBytes = decompress(chunks.getBinary(0));
-			byte[] payloadBytes = decompress(chunks.getBinary(1));
-			Document header = new Document().fromByteArray(headerBytes);
-
-			String alg = ALGORITHMS.get(header.getString(ALG_FIELD));
-
-			if (alg == null)
-			{
-				throw new IllegalArgumentException("Unsupported algorithm: " + alg);
-			}
-
-			Mac mac = Mac.getInstance(alg);
-			mac.init(new SecretKeySpec(aSecret, alg));
-			mac.update(headerBytes);
-			mac.update(payloadBytes);
-			byte[] sign = mac.doFinal();
-
-			if (!Arrays.equals(chunks.getBinary(2), sign))
-			{
-				throw new IOException("Signature missmatch");
-			}
-
-			if (aHeader != null)
-			{
-				aHeader.putAll(header);
-			}
-
-			return fromByteArray(payloadBytes);
-		}
-		catch (InvalidKeyException | NoSuchAlgorithmException e)
-		{
-			throw new IllegalStateException(e);
-		}
-	}
-
-
-	public <T> T getFirst()
-	{
-		return (T)mValues.firstEntry();
-	}
-
-
-	public <T> T removeFirst()
-	{
-		return (T)mValues.remove(mValues.firstEntry().getKey());
-	}
-
-
-	public <T> T getLast()
-	{
-		return (T)mValues.lastEntry();
-	}
-
-
-	public <T> T removeLast()
-	{
-		return (T)mValues.remove(mValues.lastEntry().getKey());
-	}
-
-
-	private byte[] compress(byte[] aData) throws IOException
-	{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (DeflaterOutputStream iis = new DeflaterOutputStream(baos))
-		{
-			iis.write(aData);
-		}
-		return baos.toByteArray();
-	}
-
-
-	private byte[] decompress(byte[] aData) throws IOException
-	{
-		try (InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(aData)))
-		{
-			return iis.readAllBytes();
 		}
 	}
 }

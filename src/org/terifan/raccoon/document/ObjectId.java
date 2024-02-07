@@ -3,10 +3,7 @@ package org.terifan.raccoon.document;
 import java.io.Serializable;
 import static java.lang.Integer.parseUnsignedInt;
 import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /*
@@ -382,54 +379,54 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	public static void main(String... args)
-	{
-		try
-		{
-			byte[] kd = new byte[32];
-			Key key = new Key(kd);
-
-			HashMap<Character, Integer> cc = new HashMap<>();
-			HashMap<Integer, HashMap<Character, Integer>> ci = new HashMap<>();
-
-			for (int i = 0; i < 10_000_000; i++)
-//			for (int i = 0; i < 10; i++)
-			{
-				ObjectId in = ObjectId.randomId();
-				String encoded = in.toArmouredString(key);
-				ObjectId out = ObjectId.fromArmouredString(key, encoded);
-//				System.out.printf("%s  %s  %s  %s%n", encoded, in, out == null ? "-".repeat(24) : out, in.equals(out));
-				if (!in.equals(out))
-				{
-					throw new IllegalStateException();
-				}
-
-				for (int j = 0; j < encoded.length(); j++)
-				{
-					cc.put(encoded.charAt(j), cc.getOrDefault(encoded.charAt(j), 0) + 1);
-					HashMap<Character, Integer> m = ci.computeIfAbsent(j, k -> new HashMap<>());
-					m.put(encoded.charAt(j), m.getOrDefault(encoded.charAt(j), 0) + 1);
-					ci.put(j, m);
-				}
-			}
-
-			System.out.println(cc);
-			for (Entry e : ci.entrySet())
-			{
-				System.out.println(e.getKey() + " " + e.getValue());
-			}
-
-			System.out.println("-".repeat(100));
-			long t = System.currentTimeMillis();
-			for (int i = 0; i < 10_000_000; i++)
-			{
-				ObjectId.fromArmouredString(key, ObjectId.randomId().toArmouredString(key));
-			}
-			System.out.println(System.currentTimeMillis() - t);
-		}
-		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
+//	public static void main(String... args)
+//	{
+//		try
+//		{
+//			byte[] kd = new byte[32];
+//			Key key = new Key(kd);
+//
+//			HashMap<Character, Integer> cc = new HashMap<>();
+//			HashMap<Integer, HashMap<Character, Integer>> ci = new HashMap<>();
+//
+//			for (int i = 0; i < 10_000_000; i++)
+////			for (int i = 0; i < 10; i++)
+//			{
+//				ObjectId in = ObjectId.randomId();
+//				String encoded = in.toArmouredString(key);
+//				ObjectId out = ObjectId.fromArmouredString(key, encoded);
+////				System.out.printf("%s  %s  %s  %s%n", encoded, in, out == null ? "-".repeat(24) : out, in.equals(out));
+//				if (!in.equals(out))
+//				{
+//					throw new IllegalStateException();
+//				}
+//
+//				for (int j = 0; j < encoded.length(); j++)
+//				{
+//					cc.put(encoded.charAt(j), cc.getOrDefault(encoded.charAt(j), 0) + 1);
+//					HashMap<Character, Integer> m = ci.computeIfAbsent(j, k -> new HashMap<>());
+//					m.put(encoded.charAt(j), m.getOrDefault(encoded.charAt(j), 0) + 1);
+//					ci.put(j, m);
+//				}
+//			}
+//
+//			System.out.println(cc);
+//			for (Entry e : ci.entrySet())
+//			{
+//				System.out.println(e.getKey() + " " + e.getValue());
+//			}
+//
+//			System.out.println("-".repeat(100));
+//			long t = System.currentTimeMillis();
+//			for (int i = 0; i < 10_000_000; i++)
+//			{
+//				ObjectId.fromArmouredString(key, ObjectId.randomId().toArmouredString(key));
+//			}
+//			System.out.println(System.currentTimeMillis() - t);
+//		}
+//		catch (Throwable e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 }

@@ -47,7 +47,7 @@ public class StreamMarshaller implements AutoCloseable
 	public StreamMarshaller(InputStream aInputStream)
 	{
 		mInputStream = aInputStream;
-		mDecoder = new BinaryDecoder(aInputStream);
+		mDecoder = new BinaryDecoder(aInputStream, false);
 	}
 
 

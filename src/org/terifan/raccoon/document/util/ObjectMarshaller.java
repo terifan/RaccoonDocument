@@ -1,8 +1,11 @@
-package org.terifan.raccoon.document;
+package org.terifan.raccoon.document.util;
 
 import java.lang.reflect.Field;
 import static java.lang.reflect.Modifier.TRANSIENT;
 import java.util.List;
+import org.terifan.raccoon.document.Array;
+import org.terifan.raccoon.document.Document;
+import org.terifan.raccoon.document.SupportedTypes;
 
 
 public class ObjectMarshaller

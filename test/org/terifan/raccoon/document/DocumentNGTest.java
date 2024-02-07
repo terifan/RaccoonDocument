@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.Random;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.zip.DeflaterOutputStream;
 import static org.testng.Assert.*;
@@ -524,7 +525,7 @@ public class DocumentNGTest
 		encoder.marshal(0);
 		encoder.writeInterleaved(a, b);
 
-		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
+		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()), false);
 		decoder.unmarshal();
 		long v = decoder.readInterleaved();
 
@@ -541,20 +542,6 @@ public class DocumentNGTest
 //		Document doc = Document.of(d);
 //
 //		System.out.println(doc);
-//	}
-//	@Test
-//	public void testMarshall2() throws IOException, ClassNotFoundException
-//	{
-//		byte[] data = Document.of("a:1,b:{c:2},d:[3,{e:4}]").toByteArray();
-//
-//		System.out.println(data.length);
-//
-//		_Log.hexDump(data);
-//
-//		Document d = new Document().fromByteArray(data);
-//
-//		System.out.println(d);
-//
 //	}
 	@Test(enabled = false)
 	public void testMarshallCompressionRatio() throws IOException, ClassNotFoundException
@@ -678,17 +665,19 @@ public class DocumentNGTest
 	}
 
 
-//	@Test
-//	public void testKeyComparator() throws IOException
-//	{
-//		TreeSet<String> set = new TreeSet<>(Document.COMPARATOR);
-//		set.add("A");
-//		set.add("_a");
-//		set.add("a");
-//		set.add("0");
-//		set.add("_id");
-//		assertEquals(set.toString(), "[_id, _a, 0, A, a]");
-//	}
+	@Test
+	public void testKeyComparator() throws IOException
+	{
+		TreeSet<String> set = new TreeSet<>(Document.COMPARATOR);
+		set.add("A");
+		set.add("_a");
+		set.add("a");
+		set.add("0");
+		set.add("_id");
+		assertEquals(set.toString(), "[_id, _a, 0, A, a]");
+	}
+
+
 	@Test
 	public void testSize() throws IOException
 	{
@@ -747,10 +736,10 @@ public class DocumentNGTest
 		Document encodingPayload = _Person.createPerson(rnd);
 		Document encodingHeader = Document.of("alg:HS256,by:bobby");
 
-		byte[] data = encodingPayload.toSignedBinary(secret, encodingHeader);
+		byte[] data = encodingPayload.toSignedByteArray(secret, encodingHeader);
 
 		Document decodedHeader = new Document();
-		Document decodedPayload = new Document().fromSignedBinary(secret, data, decodedHeader);
+		Document decodedPayload = new Document().fromSignedByteArray(secret, data, decodedHeader);
 
 		assertEquals(decodedPayload, encodingPayload);
 		assertEquals(decodedHeader, encodingHeader);
@@ -821,5 +810,21 @@ public class DocumentNGTest
 		Document in = new Document().fromByteArray(buf.position(0).limit(data.length));
 
 		assertEquals(in, out);
+	}
+
+
+	@Test
+	public void testUnmarshalId() throws IOException
+	{
+		Random rnd = new Random(1);
+		Document out = _Person.createPerson(rnd);
+
+		byte[] data = out.toByteArray();
+
+		Document doc = new Document().fromByteArray(data);
+
+		System.out.println(doc);
+
+//		assertEquals(in, out);
 	}
 }

@@ -11,6 +11,8 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,17 +20,33 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 
 abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 {
 	private final static long serialVersionUID = 1L;
+
+	final static String ALG_FIELD = "alg";
+	final static TreeMap<String, String> ALGORITHMS = new TreeMap<>()
+	{
+		{
+			put("HS256", "HmacSHA256");
+			put("HS384", "HmacSHA384");
+			put("HS512", "HmacSHA512");
+		}
+	};
 
 
 	KeyValueContainer()
@@ -772,7 +790,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	{
 		try
 		{
-			BinaryDecoder decoder = new BinaryDecoder(new ByteBufferInputStream(aBinaryData));
+			BinaryDecoder decoder = new BinaryDecoder(new ByteBufferInputStream(aBinaryData), false);
 			decoder.unmarshal(this);
 		}
 		catch (IOException e)
@@ -790,7 +808,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	{
 		try
 		{
-			BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(aBinaryData));
+			BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(aBinaryData), false);
 			decoder.unmarshal(this);
 		}
 		catch (IOException e)
@@ -819,48 +837,12 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
-//	/**
-//	 * Decodes a binary encoded Document/Array.
-//	 */
-//	public R fromEncodedString(String aEncodedString)
-//	{
-//		try
-//		{
-//			BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(Base64.getUrlDecoder().decode(aEncodedString)));
-//			decoder.unmarshal(this);
-//		}
-//		catch (IOException e)
-//		{
-//			throw new StreamException(e.toString());
-//		}
-//		return (R)this;
-//	}
-//
-//
-//	/**
-//	 * Return an encoded String representation of this object.
-//	 */
-//	public String toEncodedString()
-//	{
-//		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//		try (BinaryEncoder encoder = new BinaryEncoder(baos))
-//		{
-//			encoder.marshal(this);
-//		}
-//		catch (IOException e)
-//		{
-//			throw new StreamException(e.toString());
-//		}
-//		return Base64.getUrlEncoder().withoutPadding().encodeToString(baos.toByteArray());
-//	}
-
-
 	/**
 	 * Read a binary encoded representation of an object from the stream provided.
 	 */
 	public R readFrom(InputStream aInputStream) throws IOException
 	{
-		BinaryDecoder decoder = new BinaryDecoder(aInputStream);
+		BinaryDecoder decoder = new BinaryDecoder(aInputStream, false);
 		decoder.unmarshal(this);
 		return (R)this;
 	}
@@ -900,7 +882,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			}
 		};
 
-		BinaryDecoder decoder = new BinaryDecoder(in);
+		BinaryDecoder decoder = new BinaryDecoder(in, false);
 		decoder.unmarshal(this);
 	}
 
@@ -976,6 +958,118 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	/**
+	 * Return a signed compressed binary representation of this Document.
+	 *
+	 * @param aSecret secret passphrase used when signing the message
+	 */
+	public byte[] toSignedByteArray(byte[] aSecret) throws IOException
+	{
+		return toSignedByteArray(aSecret, new Document().put(ALG_FIELD, ALGORITHMS.firstEntry().getKey()));
+	}
+
+
+	/**
+	 * Return a signed compressed binary representation of this Document.
+	 *
+	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512".
+	 *
+	 * @param aSecret secret passphrase used when signing the message
+	 * @param aHeader an optional custom header document.
+	 */
+	public byte[] toSignedByteArray(byte[] aSecret, Document aHeader) throws IOException
+	{
+		try
+		{
+			aHeader = new Document().putAll(aHeader).putIfAbsent(ALG_FIELD, k -> ALGORITHMS.firstEntry().getKey());
+
+			byte[] header = aHeader.toByteArray();
+			byte[] payload = toByteArray();
+
+			String impl = ALGORITHMS.get(aHeader.getString(ALG_FIELD));
+			Mac mac = Mac.getInstance(impl);
+			mac.init(new SecretKeySpec(aSecret, impl));
+			mac.update(header);
+			mac.update(payload);
+			byte[] sign = mac.doFinal();
+
+			return Array.of(compress(header), compress(payload), sign).toByteArray();
+		}
+		catch (InvalidKeyException | NoSuchAlgorithmException e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
+
+
+	/**
+	 * Decode a signed binary representation of a Document.
+	 *
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aSecret secret passphrase used when signing the message
+	 * @return this document with the content of the message decoded
+	 */
+	public R fromSignedByteArray(byte[] aSecret, byte[] aMessage) throws IOException
+	{
+		return fromSignedByteArray(aSecret, aMessage, null);
+	}
+
+
+	/**
+	 * Decode a signed binary representation of a Document and retrieving the header.
+	 *
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aSecret secret passphrase used when signing the message
+	 * @param aHeader if not null then the header of the signed message will be returned in this Document
+	 * @return this document with the content of the message decoded
+	 */
+	public R fromSignedByteArray(byte[] aSecret, byte[] aMessage, Document aHeader) throws IOException
+	{
+		try
+		{
+			Array chunks = new Array().fromByteArray(aMessage);
+
+			if (chunks.size() != 3)
+			{
+				throw new IllegalArgumentException("Expected exactly three entries in the message (array).");
+			}
+
+			byte[] headerBytes = decompress(chunks.getBinary(0));
+			byte[] payloadBytes = decompress(chunks.getBinary(1));
+			Document header = new Document().fromByteArray(headerBytes);
+
+			String alg = ALGORITHMS.get(header.getString(ALG_FIELD));
+
+			if (alg == null)
+			{
+				throw new IllegalArgumentException("Unsupported algorithm: " + alg);
+			}
+
+			Mac mac = Mac.getInstance(alg);
+			mac.init(new SecretKeySpec(aSecret, alg));
+			mac.update(headerBytes);
+			mac.update(payloadBytes);
+			byte[] sign = mac.doFinal();
+
+			if (!Arrays.equals(chunks.getBinary(2), sign))
+			{
+				throw new IOException("Signature missmatch");
+			}
+
+			if (aHeader != null)
+			{
+				aHeader.putAll(header);
+			}
+
+			return fromByteArray(payloadBytes);
+		}
+		catch (InvalidKeyException | NoSuchAlgorithmException e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
+
+
 	abstract Object getImpl(K aKey);
 
 
@@ -1015,6 +1109,26 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		public int read() throws IOException
 		{
 			return 0xff & mBuffer.get();
+		}
+	}
+
+
+	private byte[] compress(byte[] aData) throws IOException
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (DeflaterOutputStream iis = new DeflaterOutputStream(baos))
+		{
+			iis.write(aData);
+		}
+		return baos.toByteArray();
+	}
+
+
+	private byte[] decompress(byte[] aData) throws IOException
+	{
+		try (InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(aData)))
+		{
+			return iis.readAllBytes();
 		}
 	}
 }

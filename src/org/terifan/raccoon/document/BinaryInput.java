@@ -13,11 +13,13 @@ abstract class BinaryInput
 	private final byte[] mReadBuffer = new byte[8];
 	private MurmurHash3 mChecksum;
 	private InputStream mInputStream;
+	private boolean mDecodeIdOnly;
 
 
-	BinaryInput(InputStream aInputStream)
+	BinaryInput(InputStream aInputStream, boolean aDecodeIdOnly)
 	{
 		mInputStream = aInputStream;
+		mDecodeIdOnly = aDecodeIdOnly;
 	}
 
 
@@ -90,6 +92,11 @@ abstract class BinaryInput
 			}
 
 			aDocument.putImpl(key, readValue(token.type));
+
+			if (mDecodeIdOnly && "_id".equals(key))
+			{
+				break;
+			}
 		}
 
 		return aDocument;
@@ -136,16 +143,6 @@ abstract class BinaryInput
 	}
 
 
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//	DocumentEntity unmarshal() throws IOException
-//	{
-//		Token token = readToken();
-//		if(token.type == SupportedTypes.ARRAY)
-//			return readArray(new Array());
-//		return readDocument(new Document());
-//	}
 	Object unmarshal() throws IOException
 	{
 		BinaryInput.Token token = readToken();

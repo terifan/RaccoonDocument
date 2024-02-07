@@ -10,8 +10,8 @@ public class StreamComparator
 {
 	public int compare(InputStream aInputStreamA, InputStream aInputStreamB) throws IOException
 	{
-		Object inA = new BinaryDecoder(aInputStreamA).unmarshal();
-		Object inB = new BinaryDecoder(aInputStreamB).unmarshal();
+		Object inA = new BinaryDecoder(aInputStreamA, false).unmarshal();
+		Object inB = new BinaryDecoder(aInputStreamB, false).unmarshal();
 
 		if (inA instanceof Document v1 && inB instanceof Document v2)
 		{
@@ -40,7 +40,7 @@ public class StreamComparator
 //
 //		return ((Array)inA).compareTo((Array)inB);
 
-		BinaryIterator it = new BinaryIterator(aInputStreamA);
+		BinaryIterator it = new BinaryIterator(aInputStreamA, true);
 
 		while (it.hasNext())
 		{

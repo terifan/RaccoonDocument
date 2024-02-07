@@ -10,9 +10,9 @@ import static org.terifan.raccoon.document.SupportedTypes.TERMINATOR;
 
 class BinaryDecoder extends BinaryInput
 {
-	public BinaryDecoder(InputStream aInputStream)
+	public BinaryDecoder(InputStream aInputStream, boolean aDecodeIdOnly)
 	{
-		super(aInputStream);
+		super(aInputStream, aDecodeIdOnly);
 	}
 
 
@@ -66,24 +66,6 @@ class BinaryDecoder extends BinaryInput
 			throw new StreamException("Stream corrupted.");
 		}
 	}
-
-
-//	Object unmarshal() throws IOException
-//	{
-//		Token token = readToken();
-//
-//		switch (token.type)
-//		{
-//			case DOCUMENT:
-//				return readDocument(new Document());
-//			case ARRAY:
-//				return readArray(new Array());
-//			case TERMINATOR:
-//				return token.type;
-//			default:
-//				return readValue(token.type);
-//		}
-//	}
 
 
 	Object unmarshal(Class aType) throws IOException
