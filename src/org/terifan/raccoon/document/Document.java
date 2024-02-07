@@ -26,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
-
+	private final static String ALG_FIELD = "alg";
 	private final static LinkedHashMap<String, String> ALGORITHMS = new LinkedHashMap<>()
 	{
 		{
@@ -349,9 +349,9 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 *
 	 * @param aSecret secret passphrase used when signing the message
 	 */
-	public String toSignedString(String aSecret)
+	public String toSignedString(byte[] aSecret)
 	{
-		return toSignedString(aSecret, new Document().put("alg", ALGORITHMS.firstEntry().getKey()));
+		return toSignedString(aSecret, new Document().put(ALG_FIELD, ALGORITHMS.firstEntry().getKey()));
 	}
 
 
@@ -367,11 +367,11 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 * @param aSecret secret passphrase used when signing the message
 	 * @param aHeader a custom header document.
 	 */
-	public String toSignedString(String aSecret, Document aHeader)
+	public String toSignedString(byte[] aSecret, Document aHeader)
 	{
 		try
 		{
-			aHeader = new Document().putAll(aHeader).putIfAbsent("alg", k -> ALGORITHMS.firstEntry().getKey());
+			aHeader = new Document().putAll(aHeader).putIfAbsent(ALG_FIELD, k -> ALGORITHMS.firstEntry().getKey());
 
 			byte[] headerBytes = aHeader.toJson(true).getBytes(StandardCharsets.UTF_8);
 			byte[] payloadBytes = toJson(true).getBytes(StandardCharsets.UTF_8);
@@ -380,9 +380,9 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 			byte[] header = encoder.encodeToString(headerBytes).getBytes(StandardCharsets.UTF_8);
 			byte[] payload = encoder.encodeToString(payloadBytes).getBytes(StandardCharsets.UTF_8);
 
-			String impl = ALGORITHMS.get(aHeader.getString("alg"));
+			String impl = ALGORITHMS.get(aHeader.getString(ALG_FIELD));
 			Mac mac = Mac.getInstance(impl);
-			mac.init(new SecretKeySpec(aSecret.getBytes(StandardCharsets.UTF_8), impl));
+			mac.init(new SecretKeySpec(aSecret, impl));
 			mac.update(header);
 			mac.update((byte)'.');
 			mac.update(payload);
@@ -404,9 +404,9 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 * @param aSecret secret passphrase used when signing the message
 	 * @return this document with the content of the message decoded
 	 */
-	public Document fromSignedString(String aMessage, String aSecret) throws IOException
+	public Document fromSignedString(byte[] aSecret, String aMessage) throws IOException
 	{
-		return fromSignedString(aMessage, aSecret, null);
+		return fromSignedString(aSecret, aMessage, null);
 	}
 
 
@@ -418,7 +418,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 * @param aHeader if not null then the header of the signed message will be returned in this Document
 	 * @return this document with the content of the message decoded
 	 */
-	public Document fromSignedString(String aMessage, String aSecret, Document aHeader) throws IOException
+	public Document fromSignedString(byte[] aSecret, String aMessage, Document aHeader) throws IOException
 	{
 		try
 		{
@@ -432,7 +432,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 			byte[] payloadBytes = Base64.getUrlDecoder().decode(chunks[1]);
 
 			Document header = new Document().fromJson(new String(headerBytes, StandardCharsets.UTF_8));
-			String alg = ALGORITHMS.get(header.getString("alg"));
+			String alg = ALGORITHMS.get(header.getString(ALG_FIELD));
 
 			if (alg == null)
 			{
@@ -440,13 +440,13 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 			}
 
 			Mac mac = Mac.getInstance(alg);
-			mac.init(new SecretKeySpec(aSecret.getBytes(StandardCharsets.UTF_8), alg));
+			mac.init(new SecretKeySpec(aSecret, alg));
 			mac.update((chunks[0] + "." + chunks[1]).getBytes());
 			byte[] sign = mac.doFinal();
 
 			if (!chunks[2].equals(Base64.getUrlEncoder().withoutPadding().encodeToString(sign)))
 			{
-				throw new IOException();
+				throw new IOException("Signature missmatch");
 			}
 
 			if (aHeader != null)
@@ -470,7 +470,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 */
 	public byte[] toSignedBinary(byte[] aSecret) throws IOException
 	{
-		return toSignedBinary(aSecret, new Document().put("alg", ALGORITHMS.firstEntry().getKey()));
+		return toSignedBinary(aSecret, new Document().put(ALG_FIELD, ALGORITHMS.firstEntry().getKey()));
 	}
 
 
@@ -480,18 +480,18 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512".
 	 *
 	 * @param aSecret secret passphrase used when signing the message
-	 * @param aHeader a custom header document.
+	 * @param aHeader an optional custom header document.
 	 */
 	public byte[] toSignedBinary(byte[] aSecret, Document aHeader) throws IOException
 	{
 		try
 		{
-			aHeader = new Document().putAll(aHeader).putIfAbsent("alg", k -> ALGORITHMS.firstEntry().getKey());
+			aHeader = new Document().putAll(aHeader).putIfAbsent(ALG_FIELD, k -> ALGORITHMS.firstEntry().getKey());
 
 			byte[] header = aHeader.toByteArray();
 			byte[] payload = toByteArray();
 
-			String impl = ALGORITHMS.get(aHeader.getString("alg"));
+			String impl = ALGORITHMS.get(aHeader.getString(ALG_FIELD));
 			Mac mac = Mac.getInstance(impl);
 			mac.init(new SecretKeySpec(aSecret, impl));
 			mac.update(header);
@@ -514,9 +514,9 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 * @param aSecret secret passphrase used when signing the message
 	 * @return this document with the content of the message decoded
 	 */
-	public Document fromSignedBinary(byte[] aMessage, byte[] aSecret) throws IOException
+	public Document fromSignedBinary(byte[] aSecret, byte[] aMessage) throws IOException
 	{
-		return fromSignedBinary(aMessage, aSecret, null);
+		return fromSignedBinary(aSecret, aMessage, null);
 	}
 
 
@@ -528,7 +528,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 * @param aHeader if not null then the header of the signed message will be returned in this Document
 	 * @return this document with the content of the message decoded
 	 */
-	public Document fromSignedBinary(byte[] aMessage, byte[] aSecret, Document aHeader) throws IOException
+	public Document fromSignedBinary(byte[] aSecret, byte[] aMessage, Document aHeader) throws IOException
 	{
 		try
 		{
@@ -543,7 +543,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 			byte[] payloadBytes = decompress(chunks.getBinary(1));
 			Document header = new Document().fromByteArray(headerBytes);
 
-			String alg = ALGORITHMS.get(header.getString("alg"));
+			String alg = ALGORITHMS.get(header.getString(ALG_FIELD));
 
 			if (alg == null)
 			{
@@ -558,7 +558,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 
 			if (!Arrays.equals(chunks.getBinary(2), sign))
 			{
-				throw new IOException();
+				throw new IOException("Signature missmatch");
 			}
 
 			if (aHeader != null)
