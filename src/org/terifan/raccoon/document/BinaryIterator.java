@@ -34,7 +34,7 @@ class BinaryIterator extends BinaryInput
 		{
 			Token componentType = mArrayType.peekLast();
 
-			System.out.println("///"+componentType);
+			System.out.println("///" + componentType);
 
 			if (mArrayRemainings.peekLast() > 1)
 			{
@@ -85,7 +85,12 @@ class BinaryIterator extends BinaryInput
 	}
 
 
-	record Value(Token token, String name, Object value){};
+	record Value(Token token, String name, Object value)
+		{
+	}
+
+
+	;
 
 
 	@Override

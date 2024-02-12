@@ -1,14 +1,11 @@
 package org.terifan.raccoon.document;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Comparator;
@@ -18,8 +15,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -29,19 +24,21 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	private final static long serialVersionUID = 1L;
 
 	/**
-	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal order.
-	 * E.g. order of keys: [_id, _alpha, 0, A, a]
+	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal
+	 * order. E.g. order of keys: [_id, _alpha, 0, A, a]
 	 */
 	public final static Comparator<String> COMPARATOR = (p, q) ->
 	{
 		boolean S = "_id".equals(p);
 		boolean T = "_id".equals(q);
-		if (S || T) return S && !T ? -1 : T && !S ? 1 : 0;
+		if (S || T)
+		{
+			return S && !T ? -1 : T && !S ? 1 : 0;
+		}
 		boolean P = !p.isEmpty() && p.charAt(0) == '_';
 		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
 		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
 	};
-
 
 	private final TreeMap<String, Object> mValues;
 
@@ -477,5 +474,22 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 		{
 			throw new IllegalStateException(e);
 		}
+	}
+
+
+	public <T extends Document> T increment(String aKey)
+	{
+		Object v = switch (mValues.get(aKey))
+		{
+			case null -> 1;
+			case Integer w -> w == Integer.MAX_VALUE ? (long)w + 1 : w + 1;
+			case Short w -> w == Short.MAX_VALUE ? (int)w + 1 : w + 1;
+			case Byte w -> w == Byte.MAX_VALUE ? (short)w + 1 : w + 1;
+			case Double w -> w + 1;
+			case Float w -> w + 1;
+			default -> throw new IllegalArgumentException("Unsupported type");
+		};
+		mValues.put(aKey, v);
+		return (T)this;
 	}
 }
