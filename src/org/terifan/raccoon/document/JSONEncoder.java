@@ -239,41 +239,13 @@ class JSONEncoder
 			}
 			else
 			{
-				if (aValue instanceof ObjectId)
-				{
-					print("ObjectId(" + escapeString(aValue.toString()) + ")");
-				}
-				else if (aValue instanceof byte[] v)
+				if (aValue instanceof byte[] v)
 				{
 					print("Base64(" + marshalBinary(v) + ")");
 				}
-				else if (aValue instanceof UUID v)
-				{
-					print("UUID(" + v + ")");
-				}
-				else if (aValue instanceof BigDecimal v)
-				{
-					print("Decimal(" + v + ")");
-				}
-				else if (aValue instanceof LocalDateTime v)
-				{
-					print("DateTime(" + v + ")");
-				}
-				else if (aValue instanceof OffsetDateTime v)
-				{
-					print("DateTime(" + v + ")");
-				}
-				else if (aValue instanceof LocalDate v)
-				{
-					print("Date(" + v + ")");
-				}
-				else if (aValue instanceof LocalTime v)
-				{
-					print("Time(" + v + ")");
-				}
 				else
 				{
-					throw new Error();
+					print(aValue.getClass().getSimpleName() + "(" + aValue + ")");
 				}
 			}
 		}

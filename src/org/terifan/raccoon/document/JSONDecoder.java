@@ -28,6 +28,8 @@ class JSONDecoder
 
 	public <T extends KeyValueContainer> T unmarshal(String aJSON, T aContainer)
 	{
+		aJSON = aJSON.trim();
+
 		try
 		{
 			if (aContainer instanceof Document v)
@@ -257,25 +259,25 @@ class JSONDecoder
 		{
 			return UUID.fromString(in.substring(5, in.length() - 1));
 		}
-		if (in.startsWith("Decimal("))
+		if (in.startsWith("BigDecimal("))
 		{
-			return new BigDecimal(in.substring(8, in.length() - 1));
+			return new BigDecimal(in.substring(11, in.length() - 1));
 		}
-		if (in.startsWith("Date("))
+		if (in.startsWith("LocalDate("))
 		{
-			return LocalDate.parse(in.substring(5, in.length() - 1));
+			return LocalDate.parse(in.substring(10, in.length() - 1));
 		}
-		if (in.startsWith("Time("))
+		if (in.startsWith("LocalTime("))
 		{
-			return LocalTime.parse(in.substring(5, in.length() - 1));
+			return LocalTime.parse(in.substring(10, in.length() - 1));
 		}
-		if (in.startsWith("DateTime("))
+		if (in.startsWith("LocalDateTime("))
 		{
-			if (in.contains("+"))
-			{
-				return OffsetDateTime.parse(in.substring(9, in.length() - 1));
-			}
-			return LocalDateTime.parse(in.substring(9, in.length() - 1));
+			return LocalDateTime.parse(in.substring(14, in.length() - 1));
+		}
+		if (in.startsWith("OffsetDateTime("))
+		{
+			return OffsetDateTime.parse(in.substring(15, in.length() - 1));
 		}
 		if (in.contains("."))
 		{

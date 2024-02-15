@@ -783,6 +783,12 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	public String toYml()
+	{
+		return new YMLEncoder().marshal(this);
+	}
+
+
 	/**
 	 * Decodes a binary encoded Document/Array.
 	 */

@@ -7,9 +7,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Random;
 import java.util.UUID;
-import org.terifan.raccoon.document.ObjectId;
-import org.terifan.raccoon.document.Array;
-import org.terifan.raccoon.document.Document;
 
 
 public class _Person
@@ -534,24 +531,27 @@ public class _Person
 	}
 
 
-//	public static void main(String ... args)
-//	{
-//		try
-//		{
-//			Document person = _Person.createPerson(new Random());
-//
-//			System.out.println(person);
-//
-//			System.out.println("-".repeat(100));
-//			System.out.println("JSON: " + person.toJson().length());
-//			System.out.println("TSON: " + person.toTypedJson().length());
-//			System.out.println("BIN:  " + person.toByteArray().length);
-//
-//			Log.hexDump(person.toByteArray());
-//		}
-//		catch (Throwable e)
-//		{
-//			e.printStackTrace(System.out);
-//		}
-//	}
+	public static void main(String ... args)
+	{
+		try
+		{
+			Document person = _Person.createPerson(new Random(1));
+
+			System.out.println(person);
+
+			System.out.println("-".repeat(100));
+			System.out.println("JSON: " + person.toJson().length());
+			System.out.println("TSON: " + person.toTypedJson().length());
+			System.out.println("YML:  " + person.toYml().length());
+			System.out.println("BIN:  " + person.toByteArray().length);
+
+			System.out.println(person.toTypedJson());
+
+//			_Log.hexDump(person.toByteArray());
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
+		}
+	}
 }
