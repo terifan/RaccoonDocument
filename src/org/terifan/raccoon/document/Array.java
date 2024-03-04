@@ -494,7 +494,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 
 	public Array removeValue(Object aValue)
 	{
-		for (int i = 0; i < size(); i++)
+		for (int i = size(); --i >= 0; )
 		{
 			if (get(i).equals(aValue))
 			{
