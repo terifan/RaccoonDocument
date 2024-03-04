@@ -235,53 +235,11 @@ class JSONDecoder
 		{
 			return null;
 		}
-		if ("true".equalsIgnoreCase(in))
+
+		Object o = SupportedTypes.decode(in);
+		if (o != null)
 		{
-			return true;
-		}
-		if ("false".equalsIgnoreCase(in))
-		{
-			return false;
-		}
-		if (in.startsWith("0x"))
-		{
-			return Long.valueOf(in.substring(2), 16);
-		}
-		if (in.startsWith("ObjectId("))
-		{
-			return ObjectId.fromString(in.substring(9, in.length() - 1));
-		}
-		if (in.startsWith("Base64("))
-		{
-			return Base64.getDecoder().decode(in.substring(7, in.length() - 1));
-		}
-		if (in.startsWith("UUID("))
-		{
-			return UUID.fromString(in.substring(5, in.length() - 1));
-		}
-		if (in.startsWith("BigDecimal("))
-		{
-			return new BigDecimal(in.substring(11, in.length() - 1));
-		}
-		if (in.startsWith("LocalDate("))
-		{
-			return LocalDate.parse(in.substring(10, in.length() - 1));
-		}
-		if (in.startsWith("LocalTime("))
-		{
-			return LocalTime.parse(in.substring(10, in.length() - 1));
-		}
-		if (in.startsWith("LocalDateTime("))
-		{
-			return LocalDateTime.parse(in.substring(14, in.length() - 1));
-		}
-		if (in.startsWith("OffsetDateTime("))
-		{
-			return OffsetDateTime.parse(in.substring(15, in.length() - 1));
-		}
-		if (in.contains("."))
-		{
-			return Double.valueOf(in);
+			return o;
 		}
 
 		try

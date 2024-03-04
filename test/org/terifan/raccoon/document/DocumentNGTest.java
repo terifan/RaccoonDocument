@@ -728,13 +728,30 @@ public class DocumentNGTest
 
 
 	@Test
+	public void testSigedBinaryEncodeNoHeader() throws IOException
+	{
+		Random rnd = new Random(1);
+		byte[] secret = "1234".getBytes();
+
+		Document encodingPayload = _Person.createPerson(rnd);
+
+		byte[] data = encodingPayload.toSignedByteArray(secret);
+
+		Document decodedHeader = new Document();
+		Document decodedPayload = new Document().fromSignedByteArray(secret, data, decodedHeader);
+
+		assertEquals(decodedPayload, encodingPayload);
+	}
+
+
+	@Test
 	public void testSigedBinaryEncode() throws IOException
 	{
 		Random rnd = new Random(1);
 		byte[] secret = "1234".getBytes();
 
 		Document encodingPayload = _Person.createPerson(rnd);
-		Document encodingHeader = Document.of("alg:HS256,by:bobby");
+		Document encodingHeader = Document.of("alg:HS512,by:bobby");
 
 		byte[] data = encodingPayload.toSignedByteArray(secret, encodingHeader);
 
@@ -789,6 +806,9 @@ public class DocumentNGTest
 
 		Document decodedHeader = new Document();
 		Document decodedPayload = new Document().fromSignedString(secret, data, decodedHeader);
+
+//		System.out.println(decodedHeader.toJson(false));
+//		System.out.println(decodedPayload.toJson(false));
 
 		assertEquals(decodedHeader.get("by"), "bobby");
 		assertEquals(decodedPayload.get("_id"), "65c2532e1c4f883cb2700365");

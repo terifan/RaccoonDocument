@@ -77,7 +77,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 
 	public <T extends Document> T put(String aKey, Object aValue)
 	{
-		if (!isSupportedType(aValue))
+		if (!SupportedTypes.isSupported(aValue))
 		{
 			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
 		}
@@ -325,6 +325,47 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
+	public static Document of(String aFormat, Object... aParameters)
+	{
+		StringBuilder sb = new StringBuilder();
+		String remaining = aFormat;
+
+		for (Object o : aParameters)
+		{
+			int i = remaining.indexOf('$');
+
+			while (i != -1 && remaining.length() > i + 1 && remaining.charAt(i + 1) == '$')
+			{
+				sb.append(remaining.substring(0, i + 1));
+				remaining = remaining.substring(i + 2);
+				i = remaining.indexOf('$');
+			}
+
+			if (i == -1)
+			{
+				throw new IllegalArgumentException("More parameters than placeholders: " + aFormat);
+			}
+
+			sb.append(remaining.substring(0, i));
+
+			if (o instanceof String)
+			{
+				o = "\"" + SupportedTypes.escapeString(o.toString()) + "\"";
+			}
+			else if (SupportedTypes.isExtendedType(o))
+			{
+				o = SupportedTypes.encode(o, true);
+			}
+
+			sb.append(o);
+
+			remaining = remaining.substring(i + 1);
+		}
+
+		return of(sb.toString() + remaining.replace("$$", "$"));
+	}
+
+
 	/**
 	 * Puts the value for the key specified, appends the value to an existing array, or create an array if a value already exists.
 	 * <pre>
@@ -481,13 +522,20 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	{
 		Object v = switch (mValues.get(aKey))
 		{
-			case null -> 1;
-			case Integer w -> w == Integer.MAX_VALUE ? (long)w + 1 : w + 1;
-			case Short w -> w == Short.MAX_VALUE ? (int)w + 1 : w + 1;
-			case Byte w -> w == Byte.MAX_VALUE ? (short)w + 1 : w + 1;
-			case Double w -> w + 1;
-			case Float w -> w + 1;
-			default -> throw new IllegalArgumentException("Unsupported type");
+			case null ->
+				1;
+			case Integer w ->
+				w == Integer.MAX_VALUE ? (long)w + 1 : w + 1;
+			case Short w ->
+				w == Short.MAX_VALUE ? (int)w + 1 : w + 1;
+			case Byte w ->
+				w == Byte.MAX_VALUE ? (short)w + 1 : w + 1;
+			case Double w ->
+				w + 1;
+			case Float w ->
+				w + 1;
+			default ->
+				throw new IllegalArgumentException("Unsupported type");
 		};
 		mValues.put(aKey, v);
 		return (T)this;

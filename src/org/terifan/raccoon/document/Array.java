@@ -46,7 +46,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 
 	public <T extends Array> T put(Integer aKey, Object aValue)
 	{
-		if (!isSupportedType(aValue))
+		if (!SupportedTypes.isSupported(aValue))
 		{
 			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
 		}
@@ -57,7 +57,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 
 	public <T extends Array> T put(String aPath, Object aValue)
 	{
-		if (!isSupportedType(aValue))
+		if (!SupportedTypes.isSupported(aValue))
 		{
 			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
 		}
@@ -86,7 +86,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	 */
 	public Array add(Object aValue)
 	{
-		if (aValue == null || isSupportedType(aValue))
+		if (SupportedTypes.isSupported(aValue))
 		{
 			mValues.add(aValue);
 		}
@@ -331,7 +331,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 
 		for (Object value : aValues)
 		{
-			if (value == null || isSupportedType(value))
+			if (SupportedTypes.isSupported(value))
 			{
 				array.add(value);
 			}

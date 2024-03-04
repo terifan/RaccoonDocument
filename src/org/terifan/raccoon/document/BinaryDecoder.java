@@ -3,9 +3,9 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import static org.terifan.raccoon.document.SupportedTypes.ARRAY;
-import static org.terifan.raccoon.document.SupportedTypes.DOCUMENT;
-import static org.terifan.raccoon.document.SupportedTypes.TERMINATOR;
+import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
+import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
+import static org.terifan.raccoon.document.BinaryCodec.TERMINATOR;
 
 
 class BinaryDecoder extends BinaryInput
@@ -17,7 +17,7 @@ class BinaryDecoder extends BinaryInput
 
 
 	@Override
-	Object readValue(SupportedTypes aType) throws IOException
+	Object readValue(BinaryCodec aType) throws IOException
 	{
 		switch (aType)
 		{
@@ -37,11 +37,11 @@ class BinaryDecoder extends BinaryInput
 
 		if (aContainer instanceof Document v)
 		{
-			if (token.type == SupportedTypes.ARRAY)
+			if (token.type == BinaryCodec.ARRAY)
 			{
 				throw new StreamException("Attempt to unmarshal a Document when binary stream contains an Array.");
 			}
-			if (token.type != SupportedTypes.DOCUMENT)
+			if (token.type != BinaryCodec.DOCUMENT)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
@@ -50,11 +50,11 @@ class BinaryDecoder extends BinaryInput
 		}
 		else if (aContainer instanceof Array v)
 		{
-			if (token.type == SupportedTypes.DOCUMENT)
+			if (token.type == BinaryCodec.DOCUMENT)
 			{
 				throw new StreamException("Attempt to unmarshal an Array when binary stream contains a Document.");
 			}
-			if (token.type != SupportedTypes.ARRAY)
+			if (token.type != BinaryCodec.ARRAY)
 			{
 				throw new StreamException("Stream corrupted.");
 			}

@@ -1,13 +1,8 @@
 package org.terifan.raccoon.document;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.util.Base64;
 import java.util.Map.Entry;
-import java.util.UUID;
+import static org.terifan.raccoon.document.SupportedTypes.escapeChar;
+import static org.terifan.raccoon.document.SupportedTypes.escapeString;
 
 
 class JSONEncoder
@@ -216,38 +211,9 @@ class JSONEncoder
 		{
 			print("null");
 		}
-		else if (
-				aValue instanceof BigDecimal
-			 || aValue instanceof ObjectId
-			 || aValue instanceof UUID
-			 || aValue instanceof LocalDate
-			 || aValue instanceof LocalTime
-			 || aValue instanceof LocalDateTime
-			 || aValue instanceof OffsetDateTime
-			 || aValue instanceof byte[])
+		else if (SupportedTypes.isExtendedType(aValue))
 		{
-			if (!mTyped)
-			{
-				if (aValue instanceof byte[] v)
-				{
-					print(mQuote + marshalBinary(v) + mQuote);
-				}
-				else
-				{
-					print(mQuote + escapeString(aValue.toString()) + mQuote);
-				}
-			}
-			else
-			{
-				if (aValue instanceof byte[] v)
-				{
-					print("Base64(" + marshalBinary(v) + ")");
-				}
-				else
-				{
-					print(aValue.getClass().getSimpleName() + "(" + aValue + ")");
-				}
-			}
+			print(SupportedTypes.encode(aValue, mTyped));
 		}
 		else if (aValue instanceof Number || aValue instanceof Boolean) // note: bigdecimal is number
 		{
@@ -258,53 +224,6 @@ class JSONEncoder
 			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
 		}
 	}
-
-
-	private String marshalBinary(byte[] aBuffer)
-	{
-		return Base64.getEncoder().encodeToString(aBuffer).replace("=", "");
-	}
-
-
-	private String escapeString(String aString)
-	{
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0, len = aString.length(); i < len; i++)
-		{
-			sb.append(escapeChar(aString.charAt(i)));
-		}
-		return sb.toString();
-	}
-
-
-	private String escapeChar(char c)
-	{
-		switch (c)
-		{
-			case '\"':
-				return "\\\"";
-			case '\\':
-				return "\\\\";
-			case '\n':
-				return "\\n";
-			case '\r':
-				return "\\r";
-			case '\t':
-				return "\\t";
-			case '\b':
-				return "\\b";
-			case '\f':
-				return "\\f";
-			default:
-				if (c >= ' ')
-				{
-					return Character.toString(c);
-				}
-				return String.format("\\u%04X", (int)c);
-		}
-	}
-
-
 
 
 	public void indent(int aDelta)

@@ -3,8 +3,8 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map.Entry;
-import static org.terifan.raccoon.document.SupportedTypes.ARRAY;
-import static org.terifan.raccoon.document.SupportedTypes.DOCUMENT;
+import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
+import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
 
 
 class BinaryEncoder implements AutoCloseable
@@ -24,7 +24,7 @@ class BinaryEncoder implements AutoCloseable
 
 	void marshal(Object aObject) throws IOException
 	{
-		SupportedTypes type = SupportedTypes.identify(aObject);
+		BinaryCodec type = BinaryCodec.identify(aObject);
 
 		if (type == null)
 		{
@@ -62,7 +62,7 @@ class BinaryEncoder implements AutoCloseable
 		{
 			String key = entry.getKey();
 			Object value = entry.getValue();
-			SupportedTypes type = SupportedTypes.identify(value);
+			BinaryCodec type = BinaryCodec.identify(value);
 
 			Integer numeric = parseInt(key);
 			if (numeric != null)
@@ -88,13 +88,13 @@ class BinaryEncoder implements AutoCloseable
 
 		for (int offset = 0; offset < elementCount;)
 		{
-			SupportedTypes type = null;
+			BinaryCodec type = null;
 			int runLen = 0;
 
 			for (int i = offset; i < elementCount; i++, runLen++)
 			{
 				Object v = aArray.get(i);
-				SupportedTypes nextType = SupportedTypes.identify(v);
+				BinaryCodec nextType = BinaryCodec.identify(v);
 				if (type != nextType && type != null)
 				{
 					break;
@@ -117,17 +117,17 @@ class BinaryEncoder implements AutoCloseable
 
 	public void terminate() throws IOException
 	{
-		writeToken(SupportedTypes.TERMINATOR, getChecksumValue());
+		writeToken(BinaryCodec.TERMINATOR, getChecksumValue());
 	}
 
 
-	private void writeValue(SupportedTypes aType, Object aValue) throws IOException
+	private void writeValue(BinaryCodec aType, Object aValue) throws IOException
 	{
 		aType.encoder.encode(this, aValue);
 	}
 
 
-	private void writeToken(SupportedTypes aType, int aValue) throws IOException
+	private void writeToken(BinaryCodec aType, int aValue) throws IOException
 	{
 		writeInterleaved(aType.ordinal(), aValue);
 	}

@@ -3,9 +3,9 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.InputStream;
 import static org.terifan.raccoon.document.BinaryEncoder.VERSION;
-import static org.terifan.raccoon.document.SupportedTypes.ARRAY;
-import static org.terifan.raccoon.document.SupportedTypes.DOCUMENT;
-import static org.terifan.raccoon.document.SupportedTypes.TERMINATOR;
+import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
+import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
+import static org.terifan.raccoon.document.BinaryCodec.TERMINATOR;
 
 
 abstract class BinaryInput
@@ -37,13 +37,13 @@ abstract class BinaryInput
 		Token token = new Token();
 		token.checksum = checksum;
 		token.value = (int)(params >>> 32);
-		token.type = SupportedTypes.values()[(int)params];
+		token.type = BinaryCodec.values()[(int)params];
 
 		if (first && token.value != VERSION)
 		{
 			throw new StreamException("Unsupported stream encoding version: " + token.value);
 		}
-		if (token.type == SupportedTypes.TERMINATOR && token.value != token.checksum)
+		if (token.type == BinaryCodec.TERMINATOR && token.value != token.checksum)
 		{
 			throw new StreamException("Checksum error in data stream");
 		}
@@ -56,7 +56,7 @@ abstract class BinaryInput
 	{
 		int value;
 		int checksum;
-		SupportedTypes type;
+		BinaryCodec type;
 
 
 		@Override
@@ -72,7 +72,7 @@ abstract class BinaryInput
 		for (;;)
 		{
 			Token token = readToken();
-			if (token.type == SupportedTypes.TERMINATOR)
+			if (token.type == BinaryCodec.TERMINATOR)
 			{
 				if (token.value != token.checksum)
 				{
@@ -109,7 +109,7 @@ abstract class BinaryInput
 		{
 			Token token = readToken();
 
-			if (token.type == SupportedTypes.TERMINATOR)
+			if (token.type == BinaryCodec.TERMINATOR)
 			{
 				if (token.value != token.checksum)
 				{
@@ -128,7 +128,7 @@ abstract class BinaryInput
 	}
 
 
-	abstract Object readValue(SupportedTypes aType) throws IOException;
+	abstract Object readValue(BinaryCodec aType) throws IOException;
 
 
 	void close() throws IOException

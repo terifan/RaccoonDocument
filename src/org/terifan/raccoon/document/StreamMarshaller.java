@@ -106,7 +106,7 @@ public class StreamMarshaller implements AutoCloseable
 			throw new IllegalStateException("This Marshaller is either closed or not created for reading a stream.");
 		}
 		Object value = mDecoder.unmarshal();
-		if (value != SupportedTypes.TERMINATOR)
+		if (value != BinaryCodec.TERMINATOR)
 		{
 			throw new IOException("Expected a terminator but found: " + (value == null ? null : value.getClass()));
 		}

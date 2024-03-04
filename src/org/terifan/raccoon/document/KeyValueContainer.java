@@ -39,10 +39,11 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	private final static long serialVersionUID = 1L;
 
 	final static String ALG_FIELD = "alg";
+	final static String DEFAULT_ALGORITHM = "HS256";
 	final static TreeMap<String, String> ALGORITHMS = new TreeMap<>()
 	{
 		{
-			put("HS256", "HmacSHA256");
+			put(DEFAULT_ALGORITHM, "HmacSHA256");
 			put("HS384", "HmacSHA384");
 			put("HS512", "HmacSHA512");
 		}
@@ -109,17 +110,17 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof Boolean)
+		if (v instanceof Boolean w)
 		{
-			return (Boolean)v;
+			return w;
 		}
-		if (v instanceof String)
+		if (v instanceof String w)
 		{
-			return Boolean.valueOf((String)v);
+			return Boolean.valueOf(w);
 		}
-		if (v instanceof Number)
+		if (v instanceof Number w)
 		{
-			return ((Number)v).longValue() != 0;
+			return w.longValue() != 0;
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " cannot be cast on a Boolean");
 	}
@@ -132,9 +133,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof Number)
+		if (v instanceof Number w)
 		{
-			return ((Number)v).byteValue();
+			return w.byteValue();
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " cannot be cast on a Byte: " + v.getClass());
 	}
@@ -147,9 +148,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof Number)
+		if (v instanceof Number w)
 		{
-			return ((Number)v).shortValue();
+			return w.shortValue();
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " cannot be cast on a Short");
 	}
@@ -162,9 +163,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof Number)
+		if (v instanceof Number w)
 		{
-			return ((Number)v).intValue();
+			return w.intValue();
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " cannot be cast on an Integer");
 	}
@@ -177,9 +178,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof Number)
+		if (v instanceof Number w)
 		{
-			return ((Number)v).longValue();
+			return w.longValue();
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " cannot be cast on a Long");
 	}
@@ -192,9 +193,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof Number)
+		if (v instanceof Number w)
 		{
-			return ((Number)v).floatValue();
+			return w.floatValue();
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a Double");
 	}
@@ -207,9 +208,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof Number)
+		if (v instanceof Number w)
 		{
-			return ((Number)v).doubleValue();
+			return w.doubleValue();
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a Double");
 	}
@@ -233,13 +234,13 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof LocalDate)
+		if (v instanceof LocalDate w)
 		{
-			return (LocalDate)v;
+			return w;
 		}
-		if (v instanceof String)
+		if (v instanceof String w)
 		{
-			return LocalDate.parse((String)v);
+			return LocalDate.parse(w);
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a LocalDate");
 	}
@@ -252,13 +253,13 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof LocalTime)
+		if (v instanceof LocalTime w)
 		{
-			return (LocalTime)v;
+			return w;
 		}
-		if (v instanceof String)
+		if (v instanceof String w)
 		{
-			return LocalTime.parse((String)v);
+			return LocalTime.parse(w);
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a LocalTime");
 	}
@@ -271,13 +272,13 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof LocalDateTime)
+		if (v instanceof LocalDateTime w)
 		{
-			return (LocalDateTime)v;
+			return w;
 		}
-		if (v instanceof String)
+		if (v instanceof String w)
 		{
-			return LocalDateTime.parse((String)v);
+			return LocalDateTime.parse(w);
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a LocalDateTime");
 	}
@@ -290,13 +291,13 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof OffsetDateTime)
+		if (v instanceof OffsetDateTime w)
 		{
-			return (OffsetDateTime)v;
+			return w;
 		}
-		if (v instanceof String)
+		if (v instanceof String w)
 		{
-			return OffsetDateTime.parse((String)v);
+			return OffsetDateTime.parse(w);
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a OffsetDateTime");
 	}
@@ -309,24 +310,22 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof UUID)
+		if (v instanceof UUID w)
 		{
-			return (UUID)v;
+			return w;
 		}
-		if (v instanceof String)
+		if (v instanceof String w)
 		{
-			String s = (String)v;
-			if (s.length() == 36 && s.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))
+			if (w.length() == 36 && w.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))
 			{
-				return UUID.fromString(s);
+				return UUID.fromString(w);
 			}
 		}
-		if (v instanceof Array)
+		if (v instanceof Array w)
 		{
-			Array a = (Array)v;
-			if (a.size() == 2 && (a.getImpl(0) instanceof Long) && (a.getImpl(1) instanceof Long))
+			if (w.size() == 2 && (w.getImpl(0) instanceof Long) && (w.getImpl(1) instanceof Long))
 			{
-				return new UUID(a.getLong(0), a.getLong(1));
+				return new UUID(w.getLong(0), w.getLong(1));
 			}
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a UUID");
@@ -340,26 +339,24 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof ObjectId)
+		if (v instanceof ObjectId w)
 		{
-			return (ObjectId)v;
+			return w;
 		}
-		if (v instanceof String)
+		if (v instanceof String w)
 		{
-			String s = (String)v;
-			if (s.length() == 24 && s.matches("[0-9a-fA-F]{24}"))
+			if (w.length() == 24 && w.matches("[0-9a-fA-F]{24}"))
 			{
-				return ObjectId.fromString(s);
+				return ObjectId.fromString(w);
 			}
 		}
-		if (v instanceof Array)
+		if (v instanceof Array w)
 		{
-			Array a = (Array)v;
-			if (a.size() == 3)
+			if (w.size() == 3)
 			{
-				return ObjectId.fromParts(a.getInt(0), a.getInt(1), a.getInt(2));
+				return ObjectId.fromParts(w.getInt(0), w.getInt(1), w.getInt(2));
 			}
-			if (a.size() == ObjectId.LENGTH)
+			if (w.size() == ObjectId.LENGTH)
 			{
 				return ObjectId.fromBytes(getBinary(aKey));
 			}
@@ -375,9 +372,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof Number)
+		if (v instanceof Number w)
 		{
-			return (Number)v;
+			return w;
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a Number");
 	}
@@ -390,13 +387,13 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof BigDecimal)
+		if (v instanceof BigDecimal w)
 		{
-			return (BigDecimal)v;
+			return w;
 		}
-		if (v instanceof String)
+		if (v instanceof String w)
 		{
-			return new BigDecimal((String)v);
+			return new BigDecimal(w);
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a BigDecimal");
 	}
@@ -421,28 +418,24 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return null;
 		}
-		if (v instanceof byte[])
+		if (v instanceof byte[] bs)
 		{
-			return (byte[])v;
+			return bs;
 		}
-		if (v instanceof String)
+		if (v instanceof String s)
 		{
-			String s = (String)v;
-
 			if (s.matches("[a-zA-Z0-9\\-\\=\\\\].*"))
 			{
 				return Base64.getDecoder().decode(s);
 			}
-
 			return s.getBytes();
 		}
-		if (v instanceof Array)
+		if (v instanceof Array arr)
 		{
-			Array a = (Array)v;
-			byte[] tmp = new byte[a.size()];
+			byte[] tmp = new byte[arr.size()];
 			for (int i = 0; i < tmp.length; i++)
 			{
-				tmp[i] = (Byte)a.get(i);
+				tmp[i] = (Byte)arr.get(i);
 			}
 			return tmp;
 		}
@@ -467,7 +460,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return v.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 		}
-		else if (o instanceof LocalDate v)
+		if (o instanceof LocalDate v)
 		{
 			return v.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 		}
@@ -544,9 +537,8 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			String value = aPath.substring(aPath.indexOf('=') + 1, aPath.indexOf(']'));
 			for (Object o : (Array)this)
 			{
-				if (o instanceof Document)
+				if (o instanceof Document doc)
 				{
-					Document doc = (Document)o;
 					if (value.equals(doc.get(key)))
 					{
 						T result = doc.findFirst(aPath.substring(aPath.indexOf(']') + 1));
@@ -598,15 +590,12 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 		if (aPath.equals("*"))
 		{
-			Iterable it;
-			if (this instanceof Array)
+			Iterable it = switch (this)
 			{
-				it = (Array)this;
-			}
-			else
-			{
-				it = ((Document)this).values();
-			}
+				case Array v -> v;
+				case Document v -> v.values();
+				default -> throw new Error();
+			};
 			for (Object v : it)
 			{
 				optionalAdd(aResult, aValuesOnly, v);
@@ -619,13 +608,13 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			{
 				optionalAdd(aResult, aValuesOnly, ((Array)this).get(Integer.valueOf(aPath)));
 			}
-			else if (this instanceof Array)
+			else if (this instanceof Array v)
 			{
-				((Array)this).forEach(p ->
+				v.forEach(p ->
 				{
-					if (p instanceof Document)
+					if (p instanceof Document w)
 					{
-						optionalAdd(aResult, aValuesOnly, ((Document)p).get(aPath));
+						optionalAdd(aResult, aValuesOnly, w.get(aPath));
 					}
 				});
 			}
@@ -647,12 +636,11 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			String value = aPath.substring(aPath.indexOf('=') + 1, aPath.indexOf(']'));
 			for (Object o : (Array)this)
 			{
-				if (o instanceof Document)
+				if (o instanceof Document v)
 				{
-					Document doc = (Document)o;
-					if (value.equals(doc.get(key)))
+					if (value.equals(v.get(key)))
 					{
-						doc.findMany(aPath.substring(aPath.indexOf(']') + 1), aResult, aValuesOnly);
+						v.findMany(aPath.substring(aPath.indexOf(']') + 1), aResult, aValuesOnly);
 					}
 				}
 			}
@@ -662,20 +650,20 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		String path = aPath.substring(0, i);
 		String remain = aPath.substring(i + 1);
 
-		if (this instanceof Array)
+		if (this instanceof Array v)
 		{
 			if (path.matches("[0-9]*"))
 			{
-				((KeyValueContainer)((Array)this).get(Integer.valueOf(path))).findMany(remain, aResult, aValuesOnly);
+				((KeyValueContainer)v.get(Integer.valueOf(path))).findMany(remain, aResult, aValuesOnly);
 			}
 			else
 			{
-				((Array)this).forEach(p -> ((KeyValueContainer)((Document)p).get(path)).findMany(remain, aResult, aValuesOnly));
+				v.forEach(p -> ((KeyValueContainer)((Document)p).get(path)).findMany(remain, aResult, aValuesOnly));
 			}
 		}
-		else
+		else if (this instanceof Document v)
 		{
-			KeyValueContainer collection = (KeyValueContainer)((Document)this).get(path);
+			KeyValueContainer collection = v.get(path);
 			if (collection != null)
 			{
 				collection.findMany(remain, aResult, aValuesOnly);
@@ -702,29 +690,13 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 	void hashCode(MurmurHash3 aChecksum, Object aValue)
 	{
-		if (aValue instanceof KeyValueContainer)
+		switch (aValue)
 		{
-			((KeyValueContainer)aValue).hashCode(aChecksum);
+			case KeyValueContainer v -> v.hashCode(aChecksum);
+			case CharSequence v -> aChecksum.updateUTF8(v);
+			case byte[] v -> aChecksum.updateBytes(v, 0, v.length);
+			default -> aChecksum.updateInt(Objects.hashCode(aValue));
 		}
-		else if (aValue instanceof CharSequence)
-		{
-			aChecksum.updateUTF8((CharSequence)aValue);
-		}
-		else if (aValue instanceof byte[])
-		{
-			byte[] buf = (byte[])aValue;
-			aChecksum.updateBytes(buf, 0, buf.length);
-		}
-		else
-		{
-			aChecksum.updateInt(Objects.hashCode(aValue));
-		}
-	}
-
-
-	public static boolean isSupportedType(Object aValue)
-	{
-		return SupportedTypes.identify(aValue) != null;
 	}
 
 
@@ -738,6 +710,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	/**
+	 * Decodes a JSON (version 1 & 2) into a Document or Array.
+	 */
 	public R fromJson(String aJson)
 	{
 		return fromJson(aJson, false);
@@ -753,6 +728,10 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	/**
+	 * Encodes this instance into a compact JSON.
+	 * @return a compact JSON representation of this object
+	 */
 	public String toJson()
 	{
 		return new JSONEncoder().marshal(this, true, false, false);
@@ -768,6 +747,11 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	/**
+	 * Encodes this instance into a JSON.
+	 * @param aCompact a compact JSON will not include line breaks and indentations.
+	 * @return a JSON representation of this object
+	 */
 	public String toJson(boolean aCompact)
 	{
 		return new JSONEncoder().marshal(this, aCompact, false, false);
@@ -783,6 +767,10 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	/**
+	 * Encodes this instance into a YML.
+	 * @return a YML representation of this object
+	 */
 	public String toYml()
 	{
 		return new YMLEncoder().marshal(this);
@@ -949,11 +937,10 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			{
 				remove(key);
 			}
-			else if (value instanceof KeyValueContainer)
+			else if (value instanceof KeyValueContainer v)
 			{
-				KeyValueContainer coll = (KeyValueContainer)value;
-				coll.reduce();
-				if (coll.isEmpty())
+				v.reduce();
+				if (v.isEmpty())
 				{
 					remove(key);
 				}
@@ -965,20 +952,21 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 
 	/**
-	 * Return a signed compressed binary representation of this Document.
+	 * Return a signed compressed binary representation of this Document. Signing algorithm is HS256.
 	 *
 	 * @param aSecret secret passphrase used when signing the message
 	 */
 	public byte[] toSignedByteArray(byte[] aSecret) throws IOException
 	{
-		return toSignedByteArray(aSecret, new Document().put(ALG_FIELD, ALGORITHMS.firstEntry().getKey()));
+		return toSignedByteArray(aSecret, new Document().put(ALG_FIELD, DEFAULT_ALGORITHM));
 	}
 
 
 	/**
 	 * Return a signed compressed binary representation of this Document.
 	 *
-	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512".
+	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512". Default is
+	 * HS256.
 	 *
 	 * @param aSecret secret passphrase used when signing the message
 	 * @param aHeader an optional custom header document.
@@ -987,7 +975,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	{
 		try
 		{
-			aHeader = new Document().putAll(aHeader).putIfAbsent(ALG_FIELD, k -> ALGORITHMS.firstEntry().getKey());
+			aHeader = new Document().putAll(aHeader).putIfAbsent(ALG_FIELD, k -> DEFAULT_ALGORITHM);
 
 			byte[] header = aHeader.toByteArray();
 			byte[] payload = toByteArray();

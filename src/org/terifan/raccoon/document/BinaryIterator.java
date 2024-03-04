@@ -3,9 +3,9 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
-import static org.terifan.raccoon.document.SupportedTypes.ARRAY;
-import static org.terifan.raccoon.document.SupportedTypes.DOCUMENT;
-import static org.terifan.raccoon.document.SupportedTypes.TERMINATOR;
+import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
+import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
+import static org.terifan.raccoon.document.BinaryCodec.TERMINATOR;
 
 
 class BinaryIterator extends BinaryInput
@@ -94,7 +94,7 @@ class BinaryIterator extends BinaryInput
 
 
 	@Override
-	Object readValue(SupportedTypes aType) throws IOException
+	Object readValue(BinaryCodec aType) throws IOException
 	{
 		return aType.decoder.decode(this);
 	}
