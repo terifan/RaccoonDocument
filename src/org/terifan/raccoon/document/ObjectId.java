@@ -88,7 +88,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	}
 
 
-	public static ObjectId fromBytes(byte[] aBuffer)
+	public static ObjectId fromByteArray(byte[] aBuffer)
 	{
 		if (aBuffer == null || aBuffer.length != LENGTH)
 		{
@@ -376,6 +376,18 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		aBuffer[aPosition + 1] = (byte)(aValue >> 16);
 		aBuffer[aPosition + 2] = (byte)(aValue >> 8);
 		aBuffer[aPosition + 3] = (byte)(aValue);
+	}
+
+
+	public static int compare(byte[] aBuffer1, int aOffset1, byte[] aBuffer2, int aOffset2)
+	{
+		return getInt32(aBuffer1, aOffset1) < getInt32(aBuffer2, aOffset2) ? -1
+			: getInt32(aBuffer1, aOffset1) > getInt32(aBuffer2, aOffset2) ? 1
+			: getInt32(aBuffer1, aOffset1 + 4) < getInt32(aBuffer2, aOffset2 + 4) ? -1
+			: getInt32(aBuffer1, aOffset1 + 4) > getInt32(aBuffer2, aOffset2 + 4) ? 1
+			: getInt32(aBuffer1, aOffset1 + 8) < getInt32(aBuffer2, aOffset2 + 8) ? -1
+			: getInt32(aBuffer1, aOffset1 + 8) > getInt32(aBuffer2, aOffset2 + 8) ? 1
+			: 0;
 	}
 
 

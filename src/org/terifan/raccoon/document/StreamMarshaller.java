@@ -3,6 +3,7 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.function.Function;
 
 
 /**
@@ -10,7 +11,8 @@ import java.io.OutputStream;
  * <p/>
  * This class maintains a running checksum of data written and each token contain a 4 bit checksum value.
  * <p/>
- * <pre>
+ * <
+ * pre>
  * 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
  *		try (StreamMarshaller enc = new StreamMarshaller(baos))
  *		{
@@ -39,8 +41,14 @@ public class StreamMarshaller implements AutoCloseable
 
 	public StreamMarshaller(OutputStream aOutputStream)
 	{
+		this(aOutputStream, k -> true);
+	}
+
+
+	public StreamMarshaller(OutputStream aOutputStream, Function<Object, Boolean> aFilter)
+	{
 		mOutputStream = aOutputStream;
-		mEncoder = new BinaryEncoder(aOutputStream);
+		mEncoder = new BinaryEncoder(aOutputStream, aFilter);
 	}
 
 

@@ -32,4 +32,17 @@ public class ObjectIdNGTest
 //		assertTrue(cnt < 5000);
 		assertEquals(cnt, 4295);
 	}
+
+
+	@Test
+	public void testCompare()
+	{
+		ObjectId A = ObjectId.randomId();
+		ObjectId B = ObjectId.randomId();
+
+		byte[] a = A.toByteArray();
+		byte[] b = B.toByteArray();
+
+		assertEquals(A.compareTo(B), ObjectId.compare(a, 0, b, 0));
+	}
 }

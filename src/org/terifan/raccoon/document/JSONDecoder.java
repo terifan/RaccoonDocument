@@ -70,7 +70,7 @@ class JSONDecoder
 
 	private Document readDocument(Document aDocument) throws IOException
 	{
-		for (;;)
+		for (int i = 0;; i++)
 		{
 			char c = readChar();
 
@@ -78,7 +78,7 @@ class JSONDecoder
 			{
 				break;
 			}
-			if (aDocument.size() > 0)
+			if (i > 0)
 			{
 				if (c != ',')
 				{
@@ -113,7 +113,7 @@ class JSONDecoder
 
 	private Array readArray(Array aArray) throws IOException
 	{
-		for (;;)
+		for (int i = 0;; i++)
 		{
 			char c = readChar();
 
@@ -126,7 +126,7 @@ class JSONDecoder
 				throw new IOException("Found colon after element in array");
 			}
 
-			if (aArray.size() > 0)
+			if (i > 0)
 			{
 				if (c != ',')
 				{

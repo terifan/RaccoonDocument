@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -38,12 +38,12 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 {
 	private final static long serialVersionUID = 1L;
 
-	final static String ALG_FIELD = "alg";
-	final static String DEFAULT_ALGORITHM = "HS256";
-	final static TreeMap<String, String> ALGORITHMS = new TreeMap<>()
+	final static String ALGORITHM_FIELD = "alg";
+	final static String DEFAULT_HASH_ALGORITHM = "HS256";
+	final static HashMap<String, String> HASH_ALGORITHMS = new HashMap<>()
 	{
 		{
-			put(DEFAULT_ALGORITHM, "HmacSHA256");
+			put(DEFAULT_HASH_ALGORITHM, "HmacSHA256");
 			put("HS384", "HmacSHA384");
 			put("HS512", "HmacSHA512");
 		}
@@ -56,6 +56,33 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 
 	public abstract <T> T get(K aKey);
+
+
+	public abstract int size();
+
+
+	public abstract R clear();
+
+
+	public abstract boolean same(R aOther);
+
+
+	public abstract Iterable<K> keySet();
+
+
+	public abstract boolean containsKey(K aKey);
+
+
+	abstract Object getImpl(K aKey);
+
+
+	abstract R putImpl(K aKey, Object aValue);
+
+
+	abstract R remove(K aKey);
+
+
+	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum);
 
 
 	public <T> T get(K aKey, T aDefaultValue)
@@ -358,7 +385,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			}
 			if (w.size() == ObjectId.LENGTH)
 			{
-				return ObjectId.fromBytes(getBinary(aKey));
+				return ObjectId.fromByteArray(getBinary(aKey));
 			}
 		}
 		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a ObjectId");
@@ -512,7 +539,17 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 
 	/**
-	 * find("name") find("7") find("name/7") find("people/7/name") find("people/[name=bob]/age")
+	 * Find a single value in the Document using a path by recursively visiting child Arrays and Documents.
+	 *
+	 * <li>find("name") - find field using name</li>
+	 * <li>find("7") - find array element</li>
+	 * <li>find("name/7") - find array element in child Document</li>
+	 * <li>find("people/7/name") - find the 7th name</li>
+	 * <li>find("people/[name=bob]/age")</li>
+	 *
+	 * todo:
+	 * <li>find("people/[name=bob && age > 18]/age")</li>
+	 * <li>find("people/[name=bob || age > 18 && gender=male]/age")</li>
 	 */
 	public <T extends Object> T findFirst(String aPath)
 	{
@@ -576,6 +613,12 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	/**
+	 * Find many values in the Document using a path by recursively visiting child Arrays and Documents.
+	 *
+	 * <li>find("people/7/name") - find a single name at index 7 (index starts at zero)</li>
+	 * <li>find("people/name") - find the name of all people</li>
+	 */
 	public Array findMany(String aPath, boolean aValuesOnly)
 	{
 		Array result = new Array();
@@ -658,7 +701,9 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			}
 			else
 			{
-				v.forEach(p -> ((KeyValueContainer)((Document)p).get(path)).findMany(remain, aResult, aValuesOnly));
+				v.forEach(p -> {
+					((KeyValueContainer)((Document)p).get(path)).findMany(remain, aResult, aValuesOnly);
+				});
 			}
 		}
 		else if (this instanceof Document v)
@@ -674,7 +719,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 	private void optionalAdd(Array aResult, boolean aValuesOnly, Object v)
 	{
-		if (!aValuesOnly || !(v instanceof KeyValueContainer))
+		if (v != null && (!aValuesOnly || !(v instanceof KeyValueContainer)))
 		{
 			aResult.add(v);
 		}
@@ -814,12 +859,48 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 
 	/**
+	 * Decodes a binary encoded Document/Array.
+	 */
+	public R fromByteArray(byte[] aBinaryData, int aOffset, int aLength)
+	{
+		try
+		{
+			BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(aBinaryData, aOffset, aLength), false);
+			decoder.unmarshal(this);
+		}
+		catch (IOException e)
+		{
+			throw new StreamException(e.toString());
+		}
+		return (R)this;
+	}
+
+
+	/**
 	 * Return a binary representation of this object.
 	 */
 	public byte[] toByteArray()
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (BinaryEncoder encoder = new BinaryEncoder(baos))
+		try (BinaryEncoder encoder = new BinaryEncoder(baos, k->true))
+		{
+			encoder.marshal(this);
+		}
+		catch (IOException e)
+		{
+			throw new StreamException(e.toString());
+		}
+		return baos.toByteArray();
+	}
+
+
+	/**
+	 * Return a binary representation of this object.
+	 */
+	public byte[] toByteArray(Function<K, Boolean> aFilter)
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (BinaryEncoder encoder = new BinaryEncoder(baos, aFilter))
 		{
 			encoder.marshal(this);
 		}
@@ -847,7 +928,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	 */
 	public void writeTo(OutputStream aOutputStream) throws IOException
 	{
-		try (BinaryEncoder encoder = new BinaryEncoder(aOutputStream))
+		try (BinaryEncoder encoder = new BinaryEncoder(aOutputStream, k->true))
 		{
 			encoder.marshal(this);
 		}
@@ -903,7 +984,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			}
 		};
 
-		try (BinaryEncoder encoder = new BinaryEncoder(tmp))
+		try (BinaryEncoder encoder = new BinaryEncoder(tmp, k->true))
 		{
 			encoder.marshal(this);
 		}
@@ -954,11 +1035,11 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Return a signed compressed binary representation of this Document. Signing algorithm is HS256.
 	 *
-	 * @param aSecret secret passphrase used when signing the message
+	 * @param aSecret secret used when signing the message
 	 */
-	public byte[] toSignedByteArray(byte[] aSecret) throws IOException
+	public byte[] toSignedByteArray(byte[] aSecret)
 	{
-		return toSignedByteArray(aSecret, new Document().put(ALG_FIELD, DEFAULT_ALGORITHM));
+		return toSignedByteArray(aSecret, new Document().put(ALGORITHM_FIELD, DEFAULT_HASH_ALGORITHM));
 	}
 
 
@@ -968,19 +1049,19 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512". Default is
 	 * HS256.
 	 *
-	 * @param aSecret secret passphrase used when signing the message
+	 * @param aSecret secret used when signing the message
 	 * @param aHeader an optional custom header document.
 	 */
-	public byte[] toSignedByteArray(byte[] aSecret, Document aHeader) throws IOException
+	public byte[] toSignedByteArray(byte[] aSecret, Document aHeader)
 	{
 		try
 		{
-			aHeader = new Document().putAll(aHeader).putIfAbsent(ALG_FIELD, k -> DEFAULT_ALGORITHM);
+			aHeader = new Document().putAll(aHeader).putIfAbsent(ALGORITHM_FIELD, k -> DEFAULT_HASH_ALGORITHM);
 
 			byte[] header = aHeader.toByteArray();
 			byte[] payload = toByteArray();
 
-			String impl = ALGORITHMS.get(aHeader.getString(ALG_FIELD));
+			String impl = HASH_ALGORITHMS.get(aHeader.getString(ALGORITHM_FIELD));
 			Mac mac = Mac.getInstance(impl);
 			mac.init(new SecretKeySpec(aSecret, impl));
 			mac.update(header);
@@ -999,8 +1080,8 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Decode a signed binary representation of a Document.
 	 *
+	 * @param aSecret secret used when signing the message
 	 * @param aMessage a three part base64 encoded and signed message
-	 * @param aSecret secret passphrase used when signing the message
 	 * @return this document with the content of the message decoded
 	 */
 	public R fromSignedByteArray(byte[] aSecret, byte[] aMessage) throws IOException
@@ -1012,35 +1093,49 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Decode a signed binary representation of a Document and retrieving the header.
 	 *
+	 * @param aSecret secret used when signing the message
 	 * @param aMessage a three part base64 encoded and signed message
-	 * @param aSecret secret passphrase used when signing the message
 	 * @param aHeader if not null then the header of the signed message will be returned in this Document
 	 * @return this document with the content of the message decoded
 	 */
 	public R fromSignedByteArray(byte[] aSecret, byte[] aMessage, Document aHeader) throws IOException
 	{
+		return fromSignedByteArray(header -> aSecret, aMessage, aHeader);
+	}
+
+
+	/**
+	 * Decode a signed binary representation of a Document and retrieving the header.
+	 *
+	 * @param aSecretProvider secret used when signing the message
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aHeader if not null then the header of the signed message will be returned in this Document
+	 * @return this document with the content of the message decoded
+	 */
+	public R fromSignedByteArray(Function<Document, byte[]> aSecretProvider, byte[] aMessage, Document aHeader) throws IOException
+	{
+		Array chunks = new Array().fromByteArray(aMessage);
+
+		if (chunks.size() != 3)
+		{
+			throw new IllegalArgumentException("Expected exactly three entries in the message (array).");
+		}
+
+		byte[] headerBytes = decompress(chunks.getBinary(0));
+		byte[] payloadBytes = decompress(chunks.getBinary(1));
+		Document header = new Document().fromByteArray(headerBytes);
+
+		String alg = HASH_ALGORITHMS.get(header.getString(ALGORITHM_FIELD));
+
+		if (alg == null)
+		{
+			throw new IllegalArgumentException("Unsupported algorithm: " + alg);
+		}
+
 		try
 		{
-			Array chunks = new Array().fromByteArray(aMessage);
-
-			if (chunks.size() != 3)
-			{
-				throw new IllegalArgumentException("Expected exactly three entries in the message (array).");
-			}
-
-			byte[] headerBytes = decompress(chunks.getBinary(0));
-			byte[] payloadBytes = decompress(chunks.getBinary(1));
-			Document header = new Document().fromByteArray(headerBytes);
-
-			String alg = ALGORITHMS.get(header.getString(ALG_FIELD));
-
-			if (alg == null)
-			{
-				throw new IllegalArgumentException("Unsupported algorithm: " + alg);
-			}
-
 			Mac mac = Mac.getInstance(alg);
-			mac.init(new SecretKeySpec(aSecret, alg));
+			mac.init(new SecretKeySpec(aSecretProvider.apply(header), alg));
 			mac.update(headerBytes);
 			mac.update(payloadBytes);
 			byte[] sign = mac.doFinal();
@@ -1049,43 +1144,19 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 			{
 				throw new IOException("Signature missmatch");
 			}
-
-			if (aHeader != null)
-			{
-				aHeader.putAll(header);
-			}
-
-			return fromByteArray(payloadBytes);
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException e)
 		{
 			throw new IllegalStateException(e);
 		}
+
+		if (aHeader != null)
+		{
+			aHeader.putAll(header);
+		}
+
+		return fromByteArray(payloadBytes);
 	}
-
-
-	abstract Object getImpl(K aKey);
-
-
-	abstract R putImpl(K aKey, Object aValue);
-
-
-	abstract R remove(K aKey);
-
-
-	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum);
-
-
-	public abstract int size();
-
-
-	public abstract R clear();
-
-
-	public abstract boolean same(R aOther);
-
-
-	public abstract Iterable<K> keySet();
 
 
 	private static class ByteBufferInputStream extends InputStream
@@ -1107,12 +1178,16 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
-	private byte[] compress(byte[] aData) throws IOException
+	private byte[] compress(byte[] aData)
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (DeflaterOutputStream iis = new DeflaterOutputStream(baos))
 		{
 			iis.write(aData);
+		}
+		catch (IOException e)
+		{
+			throw new IllegalStateException(e);
 		}
 		return baos.toByteArray();
 	}
@@ -1124,5 +1199,51 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 		{
 			return iis.readAllBytes();
 		}
+	}
+
+
+	/**
+	 * Put a value if the condition evaluation return true.
+	 *
+	 * @param aCondition evaluates aValue and returning true if it is accepted
+	 * @return this container
+	 */
+	public <V> R putWithCondition(K aKey, V aValue, Function<V, Boolean> aCondition)
+	{
+		if (aCondition.apply(aValue))
+		{
+			putImpl(aKey, aValue);
+		}
+		return (R)this;
+	}
+
+
+	/**
+	 * Put the value produced via the Supplier if the condition evaluation return true.
+	 *
+	 * @param aCondition evaluates aKey and returning true if it is accepted
+	 * @param aSupplier produces the value after evaluation to be added
+	 * @return this container
+	 */
+	public R putWhenCondition(K aKey, Function<K, Boolean> aCondition, Function<K, Object> aSupplier)
+	{
+		if (aCondition.apply(aKey))
+		{
+			putImpl(aKey, aSupplier.apply(aKey));
+		}
+		return (R)this;
+	}
+
+
+	/**
+	 * Puts the value produced via aSupplier if the key doesn't already exist
+	 */
+	public R putIfAbsent(K aKey, Function<K, Object> aSupplier)
+	{
+		if (!containsKey(aKey))
+		{
+			putImpl(aKey, aSupplier.apply(aKey));
+		}
+		return (R)this;
 	}
 }

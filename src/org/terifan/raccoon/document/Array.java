@@ -4,6 +4,7 @@ import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 
@@ -134,12 +135,17 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 				addAll(java.lang.reflect.Array.get(aValue, i));
 			}
 		}
+		else if (aValue instanceof Iterator v)
+		{
+			v.forEachRemaining(this::addAll);
+		}
 		else if (aValue instanceof Iterable v)
 		{
-			for (Object o : v)
-			{
-				addAll(o);
-			}
+			v.forEach(this::addAll);
+		}
+		else if (aValue instanceof Stream v)
+		{
+			v.forEach(this::addAll);
 		}
 		else
 		{
@@ -162,6 +168,21 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 			addAll(o);
 		}
 
+		return this;
+	}
+
+
+	/**
+	 * Add a value if the condition evaluation return true.
+	 *
+	 * @return this Array
+	 */
+	public <V> Array addWithCondition(V aValue, Function<V, Boolean> aCondition)
+	{
+		if (aCondition.apply(aValue))
+		{
+			add(aValue);
+		}
 		return this;
 	}
 
@@ -316,6 +337,57 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 		}
 
 		return true;
+	}
+
+
+	/**
+	 * Create an array of item provided including primitives and arrays.
+	 *
+	 * @param aValues an array of objects
+	 * @return an array
+	 */
+	public static Array of(Object aValue)
+	{
+		Array array = new Array();
+
+		if (SupportedTypes.isSupported(aValue))
+		{
+			array.add(aValue);
+		}
+		else if (aValue.getClass().isArray())
+		{
+			for (int i = 0, len = java.lang.reflect.Array.getLength(aValue); i < len; i++)
+			{
+				Object v = java.lang.reflect.Array.get(aValue, i);
+
+				if (v == null || !v.getClass().isArray())
+				{
+					array.mValues.add(v);
+				}
+				else
+				{
+					array.mValues.add(of(v));
+				}
+			}
+		}
+		else if (aValue instanceof Iterable v)
+		{
+			v.forEach(array::addAll);
+		}
+		else if (aValue instanceof Iterator v)
+		{
+			v.forEachRemaining(array::addAll);
+		}
+		else if (aValue instanceof Stream v)
+		{
+			v.forEach(array::addAll);
+		}
+		else
+		{
+			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
+		}
+
+		return array;
 	}
 
 
@@ -526,5 +598,12 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	public <T> T removeLast()
 	{
 		return (T)mValues.removeLast();
+	}
+
+
+	@Override
+	public boolean containsKey(Integer aKey)
+	{
+		return aKey < size();
 	}
 }

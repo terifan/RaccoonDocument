@@ -1,4 +1,4 @@
-package org.terifan.raccoon.document;
+package test_document;
 
 import java.nio.charset.Charset;
 

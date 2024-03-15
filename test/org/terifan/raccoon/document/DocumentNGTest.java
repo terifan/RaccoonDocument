@@ -1,5 +1,6 @@
 package org.terifan.raccoon.document;
 
+import test_document._Log;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.time.OffsetDateTime;
 import java.util.Random;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.stream.Stream;
 import java.util.zip.DeflaterOutputStream;
 import static org.testng.Assert.*;
 import org.testng.annotations.DataProvider;
@@ -117,7 +119,7 @@ public class DocumentNGTest
 	@Test
 	public void testFindMany()
 	{
-		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
+		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:x,name:fag},{name:adam},{gender:m},{first:bob,last:andersson},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
 
 		Array m = doc.findMany("people/[gender=m]/name");
 		Array f = doc.findMany("people/[gender=f]/name");
@@ -133,6 +135,7 @@ public class DocumentNGTest
 		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
 
 		assertEquals(doc.findMany("people/gender", true).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\"]");
+		assertEquals(doc.findMany("people/gender", false).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\",[\"m\",\"f\"]]");
 	}
 
 
@@ -162,7 +165,7 @@ public class DocumentNGTest
 	@Test
 	public void testFindMany4()
 	{
-		Document doc = Document.of("maps:[{a:[0,{b:4}]},{a:[0,{b:5}]},{a:[0,{b:6}]}]");
+		Document doc = Document.of("maps:[{a:[0,{b:4},{b:x}]},{a:[0,{b:5}]},{a:[0,{b:6}]}]");
 
 		assertEquals(doc.findMany("maps/a/1/b").toJson(), "[4,5,6]");
 	}
@@ -521,7 +524,7 @@ public class DocumentNGTest
 		int b = 789;
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BinaryEncoder encoder = new BinaryEncoder(baos);
+		BinaryEncoder encoder = new BinaryEncoder(baos, k -> true);
 		encoder.marshal(0);
 		encoder.writeInterleaved(a, b);
 
@@ -657,6 +660,26 @@ public class DocumentNGTest
 
 
 	@Test
+	public void testFilter() throws IOException, ClassNotFoundException
+	{
+		Document out = new Document();
+		out.put("a", (short)14);
+		out.put("b", (int)765464647);
+		out.put("c", (long)7646464147844586464L);
+		out.put("d", (float)7);
+		out.put("e", (double)7);
+
+		byte[] data = out.toByteArray(k -> k.equals("a") || k.equals("c"));
+
+		Document in = new Document().fromByteArray(data);
+
+		assertEquals(in.size(), 2);
+		assertEquals(in.get("a"), out.getShort("a"));
+		assertEquals(in.get("c"), out.getLong("c"));
+	}
+
+
+	@Test
 	public void testReduce()
 	{
 		Document d = Document.of("{a:[1],b:[],c:[{}],d:[{x:1},[null],{}],e:null}");
@@ -773,8 +796,10 @@ public class DocumentNGTest
 
 		String data = encodingPayload.toSignedString(secret);
 
-		Document decodedPayload = new Document().fromSignedString(secret, data);
+		Document header = new Document();
+		Document decodedPayload = new Document().fromSignedString(secret, data, header);
 
+		assertEquals(header.get("alg"), KeyValueContainer.DEFAULT_HASH_ALGORITHM);
 		assertEquals(decodedPayload, encodingPayload);
 	}
 
@@ -802,15 +827,21 @@ public class DocumentNGTest
 	public void testSigedStringDecode() throws IOException
 	{
 		String data = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImJ5IjoiYm9iYnkifQ.eyJfaWQiOiI2NWMyNTMyZTFjNGY4ODNjYjI3MDAzNjUiLCJjcmVhdGVEYXRlVGltZSI6IjIwMTQtMDUtMTVUMjI6NTg6MjgiLCJjaGFuZ2VEYXRlVGltZSI6IjIwMDktMDItMDZUMTU6NDI6MzQiLCJ2ZXJzaW9uIjo1OTIsInBlcnNvbmFsIjp7ImdpdmVuTmFtZSI6IkRhbmllbGxlIiwic3VybmFtZSI6Ik1pdGNoZWxsIiwiZ2VuZGVyIjoiRmVtYWxlIiwibGFuZ3VhZ2UiOiJBd25naSIsImJpcnRoZGF5IjoiMTk3Ni0wNi0xNyIsImRpc3BsYXlOYW1lIjoibGF1cmVhbGFzc29fYW1kaXJ0aG9ybjk5IiwiaGVhbHRoSW5mbyI6eyJ3ZWlnaHQiOjU0LCJoZWlnaHQiOjE0OSwiYmxvb2RUeXBlIjoiQUIrIn0sImNvbnRhY3RzIjpbeyJ0eXBlIjoiZW1haWwiLCJ0ZXh0IjoibGFud2F0YW5fYnJlZ29sMkB5YWhvby5jb20ifSx7InR5cGUiOiJwaG9uZSIsInRleHQiOiIwNTAtNjM1OTA1NDUwNyJ9LHsidHlwZSI6Im1vYmlsZVBob25lIiwidGV4dCI6IjA3Ny0yMDgwNzIzNjU2In1dLCJob21lIjp7InN0cmVldCI6IlNhZmZyb24gUm91dGUiLCJhZGRyZXNzIjoiUGFya2VyIEZvcmsiLCJwb3N0YWxDb2RlIjoiNDAxIDYzIiwiY2l0eSI6IkNvcmsiLCJzdGF0ZSI6Ildhc2hpbmd0b24iLCJjb3VudHJ5IjoiUnVzc2lhIn0sImZhdm9yaXRlIjp7ImNvbG9yIjoiRGFya0dvbGRlblJvZCIsImZydWl0IjoiQXByaWNvdCIsIm51bWJlciI6MjgsImZvb2QiOiJXb250b24gc291cCJ9LCJhY2NvdW50X2JhbGFuY2UiOiI1NDMzLjExMjM4MjA2NSJ9LCJ3b3JrIjp7ImNvbXBhbnkiOiJNYXR1cmF0aW9uIFBsYWNlIiwicm9sZSI6IkVtcGxveWVlIiwidGVhbSI6IkZyb250ZW5kIiwidXNhZ2VMb2NhdGlvbiI6IlRvbGlhcmEiLCJqb2JUaXRsZSI6IkRhbmNlciIsImNvbnRhY3RzIjpbeyJ0eXBlIjoiZW1haWwiLCJ0ZXh0IjoiZGFuaWVsbGUubWl0Y2hlbGxAbWF0dXJhdGlvbl9wbGFjZS5jb20ifSx7InR5cGUiOiJwaG9uZSIsInRleHQiOiIwNTEtNzgyMTg1OTk1OSJ9LHsidHlwZSI6Im1vYmlsZVBob25lIiwidGV4dCI6IjAxNy02NDAzNTExNjA0In1dLCJ0b2tlbiI6IjQ2ZmZlOTdkLTAzN2MtNGU2NS04MzVkLWNjMGQwY2EzMjVjMyJ9LCJsb2NhdGlvbkhpc3RvcnkiOlt7ImxhdCI6NDEuNzAxNDc3LCJsbmciOjc5LjA1ODU5LCJ0aW1lIjoiMjAxNC0wMS0yNVQxNTowMzowNy0wMzowMCJ9LHsibGF0Ijo1Ny4zMTgzMDYsImxuZyI6NTYuNzM2NDM1LCJ0aW1lIjoiMjAxMy0xMC0wM1QxNzowNToxMC0wMTowMCJ9LHsibGF0IjozOC41OTA1NzIsImxuZyI6MTIuMzE0NzQsInRpbWUiOiIyMDEwLTA1LTAxVDE2OjIxOjE5KzA0OjAwIn1dfQ.QzWpZNvjzHZSsSVatjU5pUrg9UNd7FSogirsm289GXpbjfRzONYLuOmtaiyA9TuSid3e2M-rgWVIrBMbf1q8wg";
-		byte[] secret = "1234".getBytes();
+
+		Document secrets = Document.of("bobby:1234,alice:5678");
 
 		Document decodedHeader = new Document();
-		Document decodedPayload = new Document().fromSignedString(secret, data, decodedHeader);
+		Document decodedPayload = new Document().put("preexisting", true).fromSignedString(header ->
+		{
+			header.put("dummy", true);
+			return secrets.getString(header.get("by")).getBytes();
+		}, data, decodedHeader);
 
 //		System.out.println(decodedHeader.toJson(false));
 //		System.out.println(decodedPayload.toJson(false));
-
 		assertEquals(decodedHeader.get("by"), "bobby");
+		assertEquals(decodedPayload.getBoolean("preexisting"), Boolean.TRUE);
+		assertEquals(decodedHeader.getBoolean("dummy"), Boolean.TRUE);
 		assertEquals(decodedPayload.get("_id"), "65c2532e1c4f883cb2700365");
 	}
 
@@ -834,6 +865,76 @@ public class DocumentNGTest
 
 
 	@Test
+	public void testIncrement() throws IOException
+	{
+		assertEquals((long)Document.of("i:" + Integer.MAX_VALUE).increment("i").getLong("i"), 2147483648L);
+	}
+
+
+	@Test
+	public void testMaintainOldValuesAfterFrom() throws IOException
+	{
+		byte[] secret = "secret".getBytes();
+
+		Document doc = Document.of("a:1");
+		doc.fromByteArray(Document.of("b:2").toByteArray());
+		doc.fromJson("c:3");
+		doc.fromSignedByteArray(secret, Document.of("d:4").toSignedByteArray(secret));
+		doc.fromSignedString(secret, Document.of("e:5").toSignedString(secret));
+
+		assertEquals(doc.getInt("a"), (Integer)1);
+		assertEquals(doc.getInt("b"), (Integer)2);
+		assertEquals(doc.getInt("c"), (Integer)3);
+		assertEquals(doc.getInt("d"), (Integer)4);
+		assertEquals(doc.getInt("e"), (Integer)5);
+	}
+
+
+	@Test
+	public void testConditionalPut()
+	{
+		Document doc = new Document();
+
+		doc.putWithCondition("a", 1, x -> x == 1);
+		doc.putWithCondition("b", 2, x -> x == 1);
+
+		assertEquals(doc.get("a"), (Integer)1);
+		assertTrue(!doc.containsKey("b"));
+	}
+
+
+	@Test
+	public void testChaining()
+	{
+		Object gender = null;
+		Stream s = Stream.of(1, 2, 3).map(i -> -i);
+
+		Document doc = new Document()
+			.put("name", "bob")
+			.putIfAbsent("address", key -> new Document()
+				.put("street", "Big road")
+				.put("city", "Smallville")
+				.put("country", "Americastan")
+			)
+			.put("info", Array.of("fatty")
+				.addWithCondition("weirdo", key -> gender == null)
+			)
+			.put("number", new Array()
+				.addAll(s)
+			)
+			.fromJson("color:red,shape:round")
+			.putWithCondition("gender", gender, value -> value != null)
+			.putWhenCondition("catapult", key -> gender == null, key -> Document.of("when:now!"))
+			.append("name", "johnson")
+			;
+
+//		System.out.println(doc);
+
+		assertEquals(doc.toString(), "{\"address\":{\"city\":\"Smallville\",\"country\":\"Americastan\",\"street\":\"Big road\"},\"catapult\":{\"when\":\"now!\"},\"color\":\"red\",\"info\":[\"fatty\",\"weirdo\"],\"name\":[\"bob\",\"johnson\"],\"number\":[-1,-2,-3],\"shape\":\"round\"}");
+	}
+
+
+	@Test
 	public void testUnmarshalId() throws IOException
 	{
 		Random rnd = new Random(1);
@@ -846,12 +947,5 @@ public class DocumentNGTest
 		System.out.println(doc);
 
 //		assertEquals(in, out);
-	}
-
-
-	@Test
-	public void testIncrement() throws IOException
-	{
-		assertEquals((long)Document.of("i:" + Integer.MAX_VALUE).increment("i").getLong("i"), 2147483648L);
 	}
 }

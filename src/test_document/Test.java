@@ -1,7 +1,10 @@
 package test_document;
 
-import java.lang.reflect.Array;
+import java.io.ByteArrayInputStream;
+import org.terifan.raccoon.document.Array;
 import org.terifan.raccoon.document.Document;
+import org.terifan.raccoon.document.StreamMarshaller;
+import static test_document._Log.hexDump;
 
 
 public class Test
@@ -20,14 +23,24 @@ public class Test
 //              {"id":"0001","type":"donut","name":"Cake","ppu":0.55,"batters":{"batter":[{"id":"1001","type":"Regular"},{"id":"1002","type":"Chocolate"},{"id":"1003","type":"Blueberry"},{"id":"1004","type":"Devil's Food"}]},"topping":[{"id":"5001","type":"None"},{"id":"5002","type":"Glazed"},{"id":"5005","type":"Sugar"},{"id":"5007","type":"Powdered Sugar"},{"id":"5006","type":"Chocolate with Sprinkles"},{"id":"5003","type":"Chocolate"},{"id":"5004","type":"Maple"}]}
 //            """);
 
-			Document doc = new Document().fromJson("{\"_id\":ObjectId(65ce2f9bcfa1e6cc9cd9baa2),\"changeDateTime\":LocalDateTime(2009-02-06T15:42:34),\"createDateTime\":LocalDateTime(2014-05-15T22:58:28),\"locationHistory\":[{\"lat\":41.701477,\"lng\":79.05859,\"time\":OffsetDateTime(2014-01-25T15:03:07-03:00)},{\"lat\":57.318306,\"lng\":56.736435,\"time\":OffsetDateTime(2013-10-03T17:05:10-01:00)},{\"lat\":38.590572,\"lng\":12.31474,\"time\":OffsetDateTime(2010-05-01T16:21:19+04:00)}],\"personal\":{\"account_balance\":BigDecimal(5433.112382065),\"birthday\":LocalDate(1976-06-17),\"contacts\":[{\"text\":\"lanwatan_bregol2@yahoo.com\",\"type\":\"email\"},{\"text\":\"050-6359054507\",\"type\":\"phone\"},{\"text\":\"077-2080723656\",\"type\":\"mobilePhone\"}],\"displayName\":\"laurealasso_amdirthorn99\",\"favorite\":{\"color\":\"DarkGoldenRod\",\"food\":\"Wonton soup\",\"fruit\":\"Apricot\",\"number\":28},\"gender\":\"Female\",\"givenName\":\"Danielle\",\"healthInfo\":{\"bloodType\":\"AB+\",\"height\":149,\"weight\":54},\"home\":{\"address\":\"Parker Fork\",\"city\":\"Cork\",\"country\":\"Russia\",\"postalCode\":\"401 63\",\"state\":\"Washington\",\"street\":\"Saffron Route\"},\"language\":\"Awngi\",\"surname\":\"Mitchell\"},\"version\":592,\"work\":{\"company\":\"Maturation Place\",\"contacts\":[{\"text\":\"danielle.mitchell@maturation_place.com\",\"type\":\"email\"},{\"text\":\"051-7821859959\",\"type\":\"phone\"},{\"text\":\"017-6403511604\",\"type\":\"mobilePhone\"}],\"jobTitle\":\"Dancer\",\"role\":\"Employee\",\"team\":\"Frontend\",\"token\":UUID(ceaf5858-1be0-4d03-8b27-809e9398b1e0),\"usageLocation\":\"Toliara\"}}");
+//			Document doc = new Document().fromJson("{\"_id\":ObjectId(65ce2f9bcfa1e6cc9cd9baa2),\"changeDateTime\":LocalDateTime(2009-02-06T15:42:34),\"createDateTime\":LocalDateTime(2014-05-15T22:58:28),\"locationHistory\":[{\"lat\":41.701477,\"lng\":79.05859,\"time\":OffsetDateTime(2014-01-25T15:03:07-03:00)},{\"lat\":57.318306,\"lng\":56.736435,\"time\":OffsetDateTime(2013-10-03T17:05:10-01:00)},{\"lat\":38.590572,\"lng\":12.31474,\"time\":OffsetDateTime(2010-05-01T16:21:19+04:00)}],\"personal\":{\"account_balance\":BigDecimal(5433.112382065),\"birthday\":LocalDate(1976-06-17),\"contacts\":[{\"text\":\"lanwatan_bregol2@yahoo.com\",\"type\":\"email\"},{\"text\":\"050-6359054507\",\"type\":\"phone\"},{\"text\":\"077-2080723656\",\"type\":\"mobilePhone\"}],\"displayName\":\"laurealasso_amdirthorn99\",\"favorite\":{\"color\":\"DarkGoldenRod\",\"food\":\"Wonton soup\",\"fruit\":\"Apricot\",\"number\":28},\"gender\":\"Female\",\"givenName\":\"Danielle\",\"healthInfo\":{\"bloodType\":\"AB+\",\"height\":149,\"weight\":54},\"home\":{\"address\":\"Parker Fork\",\"city\":\"Cork\",\"country\":\"Russia\",\"postalCode\":\"401 63\",\"state\":\"Washington\",\"street\":\"Saffron Route\"},\"language\":\"Awngi\",\"surname\":\"Mitchell\"},\"version\":592,\"work\":{\"company\":\"Maturation Place\",\"contacts\":[{\"text\":\"danielle.mitchell@maturation_place.com\",\"type\":\"email\"},{\"text\":\"051-7821859959\",\"type\":\"phone\"},{\"text\":\"017-6403511604\",\"type\":\"mobilePhone\"}],\"jobTitle\":\"Dancer\",\"role\":\"Employee\",\"team\":\"Frontend\",\"token\":UUID(ceaf5858-1be0-4d03-8b27-809e9398b1e0),\"usageLocation\":\"Toliara\"}}");
 
 //			System.out.println(doc.toJson(false));
 //
 //			System.out.println("-".repeat(100));
-
-			System.out.println(doc.toYml());
+//			System.out.println(doc.toYml());
 //			System.out.println(doc.toJson(false));
+
+			Document doc = new Document().fromJson("a:1,b:test,c:[{d:2,e:[{f:3,g:4},{h:5,i:6}]},{d:7,e:[{f:8,g:9},{h:10,i:11}]},{d:12,e:[{f:13,g:14},{h:15,i:[16,17]}]}]");
+//			System.out.println(doc.toJson(false));
+
+			Array arr = doc.findMany("c/e/i");
+			System.out.println(arr);
+
+			StreamMarshaller stream = new StreamMarshaller(new ByteArrayInputStream(doc.toByteArray()));
+			System.out.println("" + stream.read());
+
+			hexDump(doc.toByteArray());
 		}
 		catch (Throwable e)
 		{

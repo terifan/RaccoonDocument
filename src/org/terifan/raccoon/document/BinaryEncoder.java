@@ -3,6 +3,7 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
 import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
 
@@ -14,11 +15,13 @@ class BinaryEncoder implements AutoCloseable
 	private MurmurHash3 mChecksum;
 	private OutputStream mOutputStream;
 	private final byte[] mWriteBuffer = new byte[8];
+	private final Function<Object, Boolean> mFilter;
 
 
-	public BinaryEncoder(OutputStream aOutputStream)
+	public BinaryEncoder(OutputStream aOutputStream, Function aFilter)
 	{
 		mOutputStream = aOutputStream;
+		mFilter = aFilter;
 	}
 
 
@@ -61,20 +64,24 @@ class BinaryEncoder implements AutoCloseable
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
 			String key = entry.getKey();
-			Object value = entry.getValue();
-			BinaryCodec type = BinaryCodec.identify(value);
 
-			Integer numeric = parseInt(key);
-			if (numeric != null)
+			if (mFilter.apply(key))
 			{
-				writeToken(type, 2 * numeric);
+				Object value = entry.getValue();
+				BinaryCodec type = BinaryCodec.identify(value);
+
+				Integer numeric = parseInt(key);
+				if (numeric != null)
+				{
+					writeToken(type, 2 * numeric);
+				}
+				else
+				{
+					writeToken(type, 2 * key.length() + 1);
+					writeUTF(key);
+				}
+				writeValue(type, value);
 			}
-			else
-			{
-				writeToken(type, 2 * key.length() + 1);
-				writeUTF(key);
-			}
-			writeValue(type, value);
 		}
 
 		terminate();

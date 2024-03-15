@@ -6,7 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Base64.Decoder;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -41,11 +43,13 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	};
 
 	private final TreeMap<String, Object> mValues;
+//	private final SortedMap<String, Object> mValues;
 
 
 	public Document()
 	{
 		mValues = new TreeMap<>(COMPARATOR);
+//		mValues = new SortedMap<>(COMPARATOR);
 	}
 
 
@@ -83,16 +87,6 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 		}
 
 		return (T)putImpl(aKey, aValue);
-	}
-
-
-	public <T extends Document> T putIfAbsent(String aKey, Function<String, Object> aValue)
-	{
-		if (!containsKey(aKey))
-		{
-			putImpl(aKey, aValue.apply(aKey));
-		}
-		return (T)this;
 	}
 
 
@@ -169,6 +163,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
+	@Override
 	public boolean containsKey(String aKey)
 	{
 		return mValues.containsKey(aKey);
@@ -406,7 +401,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	 */
 	public String toSignedString(byte[] aSecret)
 	{
-		return toSignedString(aSecret, new Document().put(ALG_FIELD, ALGORITHMS.firstEntry().getKey()));
+		return toSignedString(aSecret, new Document().put(ALGORITHM_FIELD, DEFAULT_HASH_ALGORITHM));
 	}
 
 
@@ -426,7 +421,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	{
 		try
 		{
-			aHeader = new Document().putAll(aHeader).putIfAbsent(ALG_FIELD, k -> ALGORITHMS.firstEntry().getKey());
+			aHeader = new Document().putAll(aHeader).putIfAbsent(ALGORITHM_FIELD, k -> DEFAULT_HASH_ALGORITHM);
 
 			byte[] headerBytes = aHeader.toJson(true).getBytes(StandardCharsets.UTF_8);
 			byte[] payloadBytes = toJson(true).getBytes(StandardCharsets.UTF_8);
@@ -435,7 +430,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 			byte[] header = encoder.encodeToString(headerBytes).getBytes(StandardCharsets.UTF_8);
 			byte[] payload = encoder.encodeToString(payloadBytes).getBytes(StandardCharsets.UTF_8);
 
-			String impl = ALGORITHMS.get(aHeader.getString(ALG_FIELD));
+			String impl = HASH_ALGORITHMS.get(aHeader.getString(ALGORITHM_FIELD));
 			Mac mac = Mac.getInstance(impl);
 			mac.init(new SecretKeySpec(aSecret, impl));
 			mac.update(header);
@@ -455,8 +450,8 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	/**
 	 * Decode an encoded signed string representation of a Document.
 	 *
+	 * @param aSecret secret used when signing the message
 	 * @param aMessage a three part base64 encoded and signed message
-	 * @param aSecret secret passphrase used when signing the message
 	 * @return this document with the content of the message decoded
 	 */
 	public Document fromSignedString(byte[] aSecret, String aMessage) throws IOException
@@ -468,53 +463,75 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	/**
 	 * Decode an encoded signed string representation of a Document.
 	 *
+	 * @param aSecret secret used when signing the message
 	 * @param aMessage a three part base64 encoded and signed message
-	 * @param aSecret secret passphrase used when signing the message
-	 * @param aHeader if not null then the header of the signed message will be returned in this Document
+	 * @param aDecodedHeader if not null then the header of the signed message will be returned in this Document
 	 * @return this document with the content of the message decoded
 	 */
-	public Document fromSignedString(byte[] aSecret, String aMessage, Document aHeader) throws IOException
+	public Document fromSignedString(byte[] aSecret, String aMessage, Document aDecodedHeader) throws IOException
 	{
+		return fromSignedString(header -> aSecret, aMessage, aDecodedHeader);
+	}
+
+
+	/**
+	 * Decode an encoded signed string representation of a Document.
+	 *
+	 * @param aSecretProvider Function returning the secret used when signing the message. The function receive the decoded header of the message.
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aDecodedHeader if not null then the header of the signed message will be returned in this Document
+	 * @return this document with the content of the message decoded
+	 * @throws IOException on signature mismatch
+	 */
+	public Document fromSignedString(Function<Document, byte[]> aSecretProvider, String aMessage, Document aDecodedHeader) throws IOException
+	{
+		if (!aMessage.matches("[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}"))
+		{
+			throw new IllegalArgumentException("Message not formatted correctly.");
+		}
+
+		Decoder decoder = Base64.getUrlDecoder();
+
+		int i = aMessage.indexOf('.');
+		int j = aMessage.lastIndexOf('.');
+		String messageHeader = aMessage.substring(0, i);
+		String messagePayload = aMessage.substring(i + 1, j);
+		String messageSignature = aMessage.substring(j + 1);
+
+		Document header = new Document().fromJson(new String(decoder.decode(messageHeader), StandardCharsets.UTF_8));
+
+		String alg = HASH_ALGORITHMS.get(header.get(ALGORITHM_FIELD, DEFAULT_HASH_ALGORITHM));
+
+		if (alg == null)
+		{
+			throw new IllegalArgumentException("Unsupported algorithm: " + alg);
+		}
+
 		try
 		{
-			if (!aMessage.matches("[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}"))
-			{
-				throw new IllegalArgumentException("Message not formatted correctly.");
-			}
-
-			String[] chunks = aMessage.split("\\.");
-			byte[] headerBytes = Base64.getUrlDecoder().decode(chunks[0]);
-			byte[] payloadBytes = Base64.getUrlDecoder().decode(chunks[1]);
-
-			Document header = new Document().fromJson(new String(headerBytes, StandardCharsets.UTF_8));
-			String alg = ALGORITHMS.get(header.getString(ALG_FIELD));
-
-			if (alg == null)
-			{
-				throw new IllegalArgumentException("Unsupported algorithm: " + alg);
-			}
-
 			Mac mac = Mac.getInstance(alg);
-			mac.init(new SecretKeySpec(aSecret, alg));
-			mac.update((chunks[0] + "." + chunks[1]).getBytes());
+			mac.init(new SecretKeySpec(aSecretProvider.apply(header), alg));
+			mac.update(messageHeader.getBytes());
+			mac.update((byte)'.');
+			mac.update(messagePayload.getBytes());
 			byte[] sign = mac.doFinal();
 
-			if (!chunks[2].equals(Base64.getUrlEncoder().withoutPadding().encodeToString(sign)))
+			if (!Arrays.equals(decoder.decode(messageSignature), sign))
 			{
-				throw new IOException("Signature missmatch");
+				throw new IOException("Signature mismatch");
 			}
-
-			if (aHeader != null)
-			{
-				aHeader.putAll(new Document().fromJson(new String(headerBytes, StandardCharsets.UTF_8)));
-			}
-
-			return fromJson(new String(payloadBytes, StandardCharsets.UTF_8));
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException e)
 		{
-			throw new IllegalStateException(e);
+			throw new IOException(e);
 		}
+
+		if (aDecodedHeader != null)
+		{
+			aDecodedHeader.putAll(header);
+		}
+
+		return fromJson(new String(decoder.decode(messagePayload), StandardCharsets.UTF_8));
 	}
 
 

@@ -25,7 +25,7 @@ enum BinaryCodec
 	/** type: org.terifan.raccoon.document.ObjectId */
 	OBJECTID(3,
 		(aEncoder, aValue) -> aEncoder.writeBytes(((ObjectId)aValue).toByteArray()),
-		aDecoder -> ObjectId.fromBytes(aDecoder.readBytes(new byte[ObjectId.LENGTH]))
+		aDecoder -> ObjectId.fromByteArray(aDecoder.readBytes(new byte[ObjectId.LENGTH]))
 	),
 	INT(4,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Integer)aValue),

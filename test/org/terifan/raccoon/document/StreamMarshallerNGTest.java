@@ -1,5 +1,6 @@
 package org.terifan.raccoon.document;
 
+import test_document._Log;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
