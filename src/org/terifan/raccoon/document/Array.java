@@ -221,11 +221,14 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
+	/**
+	 * Remove an element at index
+	 * @return the value at this index
+	 */
 	@Override
-	public Array remove(Integer aIndex)
+	public Object remove(Integer aIndex)
 	{
-		mValues.remove((int)aIndex);
-		return this;
+		return mValues.remove((int)aIndex);
 	}
 
 

@@ -79,7 +79,11 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	abstract R putImpl(K aKey, Object aValue);
 
 
-	abstract R remove(K aKey);
+	/**
+	 * Remove an element
+	 * @return the old value
+	 */
+	abstract Object remove(K aKey);
 
 
 	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum);

@@ -121,11 +121,14 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
+	/**
+	 * Remove an element with a key
+	 * @return the value stored with that key or null if no value
+	 */
 	@Override
-	public Document remove(String aKey)
+	public Object remove(String aKey)
 	{
-		mValues.remove(aKey);
-		return this;
+		return mValues.remove(aKey);
 	}
 
 
