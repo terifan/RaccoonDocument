@@ -26,6 +26,7 @@ class JSONDecoder
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T extends KeyValueContainer> T unmarshal(String aJSON, T aContainer)
 	{
 		aJSON = aJSON.trim();

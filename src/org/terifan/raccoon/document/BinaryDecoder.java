@@ -68,6 +68,7 @@ class BinaryDecoder extends BinaryInput
 	}
 
 
+	@SuppressWarnings("unchecked")
 	Object unmarshal(Class aType) throws IOException
 	{
 		try

@@ -59,6 +59,7 @@ public class StreamMarshaller implements AutoCloseable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T extends Object> T read(Class aType) throws IOException
 	{
 		if (mDecoder == null)
@@ -69,6 +70,7 @@ public class StreamMarshaller implements AutoCloseable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T extends Object> T read() throws IOException
 	{
 		if (mDecoder == null)

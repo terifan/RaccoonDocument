@@ -35,6 +35,7 @@ public class SortedMap<K extends Comparable, V>
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public V get(K aKey)
 	{
 		int i = binarySearch(mKeys, 0, mSize, aKey);
@@ -126,6 +127,7 @@ public class SortedMap<K extends Comparable, V>
 	}
 
 
+	@SuppressWarnings("unchecked")
 	private int binarySearch(Comparable[] aArray, int aFromIndex, int aToIndex, Comparable aKey)
 	{
 		int low = aFromIndex;

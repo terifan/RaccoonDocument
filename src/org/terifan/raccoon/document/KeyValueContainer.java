@@ -85,6 +85,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum);
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T get(K aKey, T aDefaultValue)
 	{
 		Object v = getImpl(aKey);
@@ -96,6 +97,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T get(K aKey, Function<K, T> aDefaultValue)
 	{
 		Object v = getImpl(aKey);
@@ -107,6 +109,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T get(K aKey, Supplier<T> aDefaultValue)
 	{
 		Object v = getImpl(aKey);
@@ -118,6 +121,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T computeIfAbsent(K aKey, Function<K,T> aSupplier)
 	{
 		T v = (T)getImpl(aKey);
@@ -508,6 +512,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Puts a LocalDateTime object as Instant with local time zone
 	 */
+	@SuppressWarnings("unchecked")
 	public <T extends Document> T putEpochTime(K aKey, Instant aInstant)
 	{
 		return (T)putImpl(aKey, LocalDateTime.ofInstant(aInstant, ZoneId.systemDefault()));
@@ -517,6 +522,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Puts a LocalDateTime object as milliseconds since the epoch of 1970-01-01T00:00:00Z
 	 */
+	@SuppressWarnings("unchecked")
 	public <T extends Document> T putEpochTime(K aKey, long aTimeMillis)
 	{
 		return (T)putEpochTime(aKey, Instant.ofEpochMilli(aTimeMillis));
@@ -526,6 +532,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Puts a LocalDateTime object as milliseconds since the epoch of 1970-01-01T00:00:00Z wrapped in a {@link java.util.Date} object
 	 */
+	@SuppressWarnings("unchecked")
 	public <T extends Document> T putEpochTime(K aKey, Date aDateTime)
 	{
 		return (T)putImpl(aKey, LocalDateTime.ofInstant(aDateTime.toInstant(), ZoneId.systemDefault()));
@@ -551,6 +558,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	 * <li>find("people/[name=bob && age > 18]/age")</li>
 	 * <li>find("people/[name=bob || age > 18 && gender=male]/age")</li>
 	 */
+	@SuppressWarnings("unchecked")
 	public <T extends Object> T findFirst(String aPath)
 	{
 		int i = aPath.indexOf('/');
@@ -627,18 +635,26 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	protected <T> void findMany(String aPath, Array aResult, boolean aValuesOnly)
 	{
 		int i = aPath.indexOf('/');
 
 		if (aPath.equals("*"))
 		{
-			Iterable it = switch (this)
+			Iterable it;
+			if (this instanceof Array v)
 			{
-				case Array v -> v;
-				case Document v -> v.values();
-				default -> throw new Error();
-			};
+				it = v;
+			}
+			else if (this instanceof Document v)
+			{
+				it = v.values();
+			}
+			else
+			{
+				throw new Error();
+			}
 			for (Object v : it)
 			{
 				optionalAdd(aResult, aValuesOnly, v);
@@ -735,12 +751,21 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 	void hashCode(MurmurHash3 aChecksum, Object aValue)
 	{
-		switch (aValue)
+		if (aValue instanceof KeyValueContainer v)
 		{
-			case KeyValueContainer v -> v.hashCode(aChecksum);
-			case CharSequence v -> aChecksum.updateUTF8(v);
-			case byte[] v -> aChecksum.updateBytes(v, 0, v.length);
-			default -> aChecksum.updateInt(Objects.hashCode(aValue));
+			v.hashCode(aChecksum);
+		}
+		else if (aValue instanceof CharSequence v)
+		{
+			aChecksum.updateUTF8(v);
+		}
+		else if (aValue instanceof byte[] v)
+		{
+			aChecksum.updateBytes(v, 0, v.length);
+		}
+		else
+		{
+			aChecksum.updateInt(Objects.hashCode(aValue));
 		}
 	}
 
@@ -767,6 +792,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * @param aRestoreByteShortValues if true low numeric values will be unmarshalled as either Byte or Short; [default] if false Integer.
 	 */
+	@SuppressWarnings("unchecked")
 	public R fromJson(String aJson, boolean aRestoreByteShortValues)
 	{
 		return (R)new JSONDecoder().setRestoreByteShortValues(aRestoreByteShortValues).unmarshal(aJson, this);
@@ -825,6 +851,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Decodes a binary encoded Document/Array.
 	 */
+	@SuppressWarnings("unchecked")
 	public R fromByteArray(ByteBuffer aBinaryData)
 	{
 		try
@@ -843,6 +870,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Decodes a binary encoded Document/Array.
 	 */
+	@SuppressWarnings("unchecked")
 	public R fromByteArray(byte[] aBinaryData)
 	{
 		try
@@ -861,6 +889,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Decodes a binary encoded Document/Array.
 	 */
+	@SuppressWarnings("unchecked")
 	public R fromByteArray(byte[] aBinaryData, int aOffset, int aLength)
 	{
 		try
@@ -897,7 +926,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Return a binary representation of this object.
 	 */
-	public byte[] toByteArray(Function<K, Boolean> aFilter)
+	public byte[] toByteArray(Function<Object, Boolean> aFilter)
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (BinaryEncoder encoder = new BinaryEncoder(baos, aFilter))
@@ -915,6 +944,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Read a binary encoded representation of an object from the stream provided.
 	 */
+	@SuppressWarnings("unchecked")
 	public R readFrom(InputStream aInputStream) throws IOException
 	{
 		BinaryDecoder decoder = new BinaryDecoder(aInputStream, false);
@@ -1002,6 +1032,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	 *
 	 * @return this Document
 	 */
+	@SuppressWarnings("unchecked")
 	public R reduce()
 	{
 		ArrayList<K> keySet = new ArrayList<>();
@@ -1208,6 +1239,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	 * @param aCondition evaluates aValue and returning true if it is accepted
 	 * @return this container
 	 */
+	@SuppressWarnings("unchecked")
 	public <V> R putWithCondition(K aKey, V aValue, Function<V, Boolean> aCondition)
 	{
 		if (aCondition.apply(aValue))
@@ -1225,6 +1257,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	 * @param aSupplier produces the value after evaluation to be added
 	 * @return this container
 	 */
+	@SuppressWarnings("unchecked")
 	public R putWhenCondition(K aKey, Function<K, Boolean> aCondition, Function<K, Object> aSupplier)
 	{
 		if (aCondition.apply(aKey))
@@ -1238,6 +1271,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	/**
 	 * Puts the value produced via aSupplier if the key doesn't already exist
 	 */
+	@SuppressWarnings("unchecked")
 	public R putIfAbsent(K aKey, Function<K, Object> aSupplier)
 	{
 		if (!containsKey(aKey))

@@ -12,7 +12,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 {
 	private final static long serialVersionUID = 1L;
 
-	private final ArrayList<Object> mValues;
+	private ArrayList<Object> mValues;
 
 
 	public Array()
@@ -22,6 +22,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T get(Integer aKey)
 	{
 		return (T)getImpl(aKey);
@@ -45,6 +46,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T extends Array> T put(Integer aKey, Object aValue)
 	{
 		if (!SupportedTypes.isSupported(aValue))
@@ -56,6 +58,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T extends Array> T put(String aPath, Object aValue)
 	{
 		if (!SupportedTypes.isSupported(aValue))
@@ -85,6 +88,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	 *
 	 * @return this Array
 	 */
+	@SuppressWarnings("unchecked")
 	public Array add(Object aValue)
 	{
 		if (SupportedTypes.isSupported(aValue))
@@ -126,6 +130,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	 *
 	 * @return this Array
 	 */
+	@SuppressWarnings("unchecked")
 	public Array addAll(Object aValue)
 	{
 		if (aValue.getClass().isArray())
@@ -346,6 +351,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	 * @param aValues an array of objects
 	 * @return an array
 	 */
+	@SuppressWarnings("unchecked")
 	public static Array of(Object aValue)
 	{
 		Array array = new Array();
@@ -397,6 +403,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	 * @param aValues an array of objects
 	 * @return an array
 	 */
+	@SuppressWarnings("unchecked")
 	public static Array of(Object... aValues)
 	{
 		Array array = new Array();
@@ -441,6 +448,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> Stream<T> stream(Class<T> aType)
 	{
 		return (Stream<T>)mValues.stream();
@@ -459,11 +467,22 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	@Override
 	public Array clone()
 	{
-		return new Array().fromByteArray(toByteArray());
+		try
+		{
+			Array arr = (Array)super.clone();
+			arr.mValues = new ArrayList<>();
+			arr.fromByteArray(toByteArray());
+			return arr;
+		}
+		catch (CloneNotSupportedException e)
+		{
+			throw new Error(e);
+		}
 	}
 
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public int compareTo(Array aOther)
 	{
 		for (int i = 0, sz = Math.min(size(), aOther.size()); i < sz; i++)
@@ -577,27 +596,35 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T getFirst()
 	{
-		return (T)mValues.getFirst();
+		return (T)mValues.get(0);
+//		return (T)mValues.getFirst();
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T removeFirst()
 	{
-		return (T)mValues.removeFirst();
+		return (T)mValues.remove(0);
+//		return (T)mValues.removeFirst();
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T getLast()
 	{
-		return (T)mValues.getLast();
+		return (T)mValues.get(mValues.size() - 1);
+//		return (T)mValues.getLast();
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T removeLast()
 	{
-		return (T)mValues.removeLast();
+		return (T)mValues.remove(mValues.size() - 1);
+//		return (T)mValues.removeLast();
 	}
 
 

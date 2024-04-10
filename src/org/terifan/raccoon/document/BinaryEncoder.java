@@ -18,7 +18,7 @@ class BinaryEncoder implements AutoCloseable
 	private final Function<Object, Boolean> mFilter;
 
 
-	public BinaryEncoder(OutputStream aOutputStream, Function aFilter)
+	public BinaryEncoder(OutputStream aOutputStream, Function<Object, Boolean> aFilter)
 	{
 		mOutputStream = aOutputStream;
 		mFilter = aFilter;

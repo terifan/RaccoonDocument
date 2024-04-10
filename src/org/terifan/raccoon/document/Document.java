@@ -42,7 +42,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
 	};
 
-	private final TreeMap<String, Object> mValues;
+	private TreeMap<String, Object> mValues;
 //	private final SortedMap<String, Object> mValues;
 
 
@@ -61,6 +61,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T get(String aKey)
 	{
 		return (T)getImpl(aKey);
@@ -68,6 +69,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T get(String aKey, T aDefaultValue)
 	{
 		Object v = getImpl(aKey);
@@ -79,6 +81,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T extends Document> T put(String aKey, Object aValue)
 	{
 		if (!SupportedTypes.isSupported(aValue))
@@ -111,6 +114,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T extends Document> T putAll(Document aSource)
 	{
 		if (aSource != null)
@@ -170,24 +174,28 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T getFirst()
 	{
 		return (T)mValues.firstEntry();
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T removeFirst()
 	{
 		return (T)mValues.remove(mValues.firstEntry().getKey());
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T getLast()
 	{
 		return (T)mValues.lastEntry();
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T> T removeLast()
 	{
 		return (T)mValues.remove(mValues.lastEntry().getKey());
@@ -282,32 +290,46 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	@Override
 	public Document clone()
 	{
-		return new Document().fromByteArray(toByteArray());
+		try
+		{
+			Document doc = (Document)super.clone();
+			doc.mValues = new TreeMap<>();
+			return doc.fromByteArray(toByteArray());
+		}
+		catch (CloneNotSupportedException e)
+		{
+			throw new Error(e);
+		}
 	}
 
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public int compareTo(Document aOther)
 	{
 		ArrayList<String> thisKeys = new ArrayList<>(keySet());
-		ArrayList<String> otherKeys = new ArrayList<>(aOther.keySet());
+		ArrayList<String> othrKeys = new ArrayList<>(aOther.keySet());
 
 		for (String key : thisKeys.toArray(String[]::new))
 		{
-			Object a = get(key);
-			Object b = aOther.get(key);
+			Comparable a = get(key);
+			Comparable b = aOther.get(key);
 			thisKeys.remove(key);
-			otherKeys.remove(key);
+			othrKeys.remove(key);
 
-			int v = b == null ? 1 : ((Comparable)a).compareTo(b);
+			if (b == null)
+			{
+				return 1;
+			}
 
+			int v = a.compareTo(b);
 			if (v != 0)
 			{
 				return v;
 			}
 		}
 
-		return otherKeys.isEmpty() ? 0 : -1;
+		return othrKeys.isEmpty() ? 0 : -1;
 	}
 
 
@@ -535,25 +557,42 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
+	@SuppressWarnings("unchecked")
 	public <T extends Document> T increment(String aKey)
 	{
-		Object v = switch (mValues.get(aKey))
+		Object v = mValues.get(aKey);
+		if (v == null)
 		{
-			case null ->
-				1;
-			case Integer w ->
-				w == Integer.MAX_VALUE ? (long)w + 1 : w + 1;
-			case Short w ->
-				w == Short.MAX_VALUE ? (int)w + 1 : w + 1;
-			case Byte w ->
-				w == Byte.MAX_VALUE ? (short)w + 1 : w + 1;
-			case Double w ->
-				w + 1;
-			case Float w ->
-				w + 1;
-			default ->
-				throw new IllegalArgumentException("Unsupported type");
-		};
+			v = 1;
+		}
+		else if (v instanceof Integer w)
+		{
+			v = w == Integer.MAX_VALUE ? (long)w + 1 : w + 1;
+		}
+		else if (v instanceof Long w)
+		{
+			v = w + 1;
+		}
+		else if (v instanceof Short w)
+		{
+			v = w == Short.MAX_VALUE ? (int)w + 1 : w + 1;
+		}
+		else if (v instanceof Byte w)
+		{
+			v = w == Byte.MAX_VALUE ? (short)w + 1 : w + 1;
+		}
+		else if (v instanceof Double w)
+		{
+			v = w + 1;
+		}
+		else if (v instanceof Float w)
+		{
+			v = w + 1;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Unsupported type");
+		}
 		mValues.put(aKey, v);
 		return (T)this;
 	}

@@ -948,4 +948,16 @@ public class DocumentNGTest
 
 //		assertEquals(in, out);
 	}
+
+
+	@Test
+	public void testClone() throws IOException
+	{
+		Document doc = Document.of("a:1,b:{c:2},d:[3,4]").put("arr", Array.of(1,2,3));
+
+		Document other = doc.clone();
+
+		assertEquals(doc, other);
+		assertNotSame(doc.getArray("arr"), other.getArray("arr"));
+	}
 }
