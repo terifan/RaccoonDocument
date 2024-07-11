@@ -34,13 +34,19 @@ public class Test
 			Document doc = new Document().fromJson("a:1,b:test,c:[{d:2,e:[{f:3,g:4},{h:5,i:6}]},{d:7,e:[{f:8,g:9},{h:10,i:11}]},{d:12,e:[{f:13,g:14},{h:15,i:[16,17]}]}]");
 //			System.out.println(doc.toJson(false));
 
-			Array arr = doc.findMany("c/e/i");
-			System.out.println(arr);
+			byte[] arr = doc.toSignedByteArray("secret".getBytes());
+			hexDump(arr);
 
-			StreamMarshaller stream = new StreamMarshaller(new ByteArrayInputStream(doc.toByteArray()));
-			System.out.println("" + stream.read());
+			Document d = new Document().fromSignedByteArray(arr);
+			System.out.println(d);
 
-			hexDump(doc.toByteArray());
+//			Array arr = doc.findMany("c/e/i");
+//			System.out.println(arr);
+//
+//			StreamMarshaller stream = new StreamMarshaller(new ByteArrayInputStream(doc.toByteArray()));
+//			System.out.println("" + stream.read());
+//
+//			hexDump(doc.toByteArray());
 		}
 		catch (Throwable e)
 		{

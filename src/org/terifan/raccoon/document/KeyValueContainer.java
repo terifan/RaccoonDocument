@@ -9,7 +9,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Serializable;
-import java.math.BigDecimal;
+import java.math.BigDecimal;	
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -1113,6 +1113,18 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 
 	/**
+	 * Decode a signed binary representation of a Document without checking the signature.
+	 *
+	 * @param aMessage a three part base64 encoded and signed message
+	 * @return this document with the content of the message decoded
+	 */
+	public R fromSignedByteArray(byte[] aMessage) throws IOException
+	{
+		return fromSignedByteArray(header->null, aMessage, null);
+	}
+
+
+	/**
 	 * Decode a signed binary representation of a Document.
 	 *
 	 * @param aSecret secret used when signing the message
@@ -1121,6 +1133,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	 */
 	public R fromSignedByteArray(byte[] aSecret, byte[] aMessage) throws IOException
 	{
+		if (aSecret==null)throw new IllegalArgumentException();
 		return fromSignedByteArray(aSecret, aMessage, null);
 	}
 
@@ -1135,6 +1148,7 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 	 */
 	public R fromSignedByteArray(byte[] aSecret, byte[] aMessage, Document aHeader) throws IOException
 	{
+		if (aSecret==null)throw new IllegalArgumentException();
 		return fromSignedByteArray(header -> aSecret, aMessage, aHeader);
 	}
 
@@ -1169,15 +1183,19 @@ abstract class KeyValueContainer<K, R> implements Externalizable, Serializable
 
 		try
 		{
-			Mac mac = Mac.getInstance(alg);
-			mac.init(new SecretKeySpec(aSecretProvider.apply(header), alg));
-			mac.update(headerBytes);
-			mac.update(payloadBytes);
-			byte[] sign = mac.doFinal();
-
-			if (!Arrays.equals(chunks.getBinary(2), sign))
+			byte[] secret = aSecretProvider.apply(header);
+			if (secret != null)
 			{
-				throw new IOException("Signature missmatch");
+				Mac mac = Mac.getInstance(alg);
+				mac.init(new SecretKeySpec(secret, alg));
+				mac.update(headerBytes);
+				mac.update(payloadBytes);
+				byte[] sign = mac.doFinal();
+
+				if (!Arrays.equals(chunks.getBinary(2), sign))
+				{
+					throw new IOException("Signature missmatch");
+				}
 			}
 		}
 		catch (InvalidKeyException | NoSuchAlgorithmException e)
