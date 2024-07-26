@@ -1,14 +1,7 @@
 package org.terifan.raccoon.document;
 
 import java.io.Externalizable;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Base64.Decoder;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -16,9 +9,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 
 
 public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
@@ -368,9 +358,9 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 
 			sb.append(remaining.substring(0, i));
 
-			if (o instanceof String)
+			if (o instanceof String s)
 			{
-				o = "\"" + SupportedTypes.escapeString(o.toString()) + "\"";
+				o = "\"" + SupportedTypes.escapeString(s) + "\"";
 			}
 			else if (SupportedTypes.isExtendedType(o))
 			{
@@ -416,147 +406,6 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 			}
 		}
 		return this;
-	}
-
-
-	/**
-	 * Return an encoded signed string representation of this Document. The format is identical to a JWT token.
-	 *
-	 * @param aSecret secret passphrase used when signing the message
-	 */
-	public String toSignedString(byte[] aSecret)
-	{
-		return toSignedString(aSecret, new Document().put(ALGORITHM_FIELD, DEFAULT_HASH_ALGORITHM));
-	}
-
-
-	/**
-	 * Return an encoded signed string representation of this Document. The format is identical to a JWT token.
-	 *
-	 * <code>
-	 * String jwt = doc.toSignedString("1234", Document.of("typ:JWT,alg:HS512"));
-	 * </code>
-	 *
-	 * note: if the header is missing an "alg" field one will be added. The supported algorithms are "HS256", "HS384", "HS512".
-	 *
-	 * @param aSecret secret passphrase used when signing the message
-	 * @param aHeader a custom header document.
-	 */
-	public String toSignedString(byte[] aSecret, Document aHeader)
-	{
-		try
-		{
-			aHeader = new Document().putAll(aHeader).putIfAbsent(ALGORITHM_FIELD, k -> DEFAULT_HASH_ALGORITHM);
-
-			byte[] headerBytes = aHeader.toJson(true).getBytes(StandardCharsets.UTF_8);
-			byte[] payloadBytes = toJson(true).getBytes(StandardCharsets.UTF_8);
-
-			Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
-			byte[] header = encoder.encodeToString(headerBytes).getBytes(StandardCharsets.UTF_8);
-			byte[] payload = encoder.encodeToString(payloadBytes).getBytes(StandardCharsets.UTF_8);
-
-			String impl = HASH_ALGORITHMS.get(aHeader.getString(ALGORITHM_FIELD));
-			Mac mac = Mac.getInstance(impl);
-			mac.init(new SecretKeySpec(aSecret, impl));
-			mac.update(header);
-			mac.update((byte)'.');
-			mac.update(payload);
-			byte[] sign = mac.doFinal();
-
-			return new String(header) + "." + new String(payload) + "." + encoder.encodeToString(sign);
-		}
-		catch (InvalidKeyException | NoSuchAlgorithmException e)
-		{
-			throw new IllegalStateException(e);
-		}
-	}
-
-
-	/**
-	 * Decode an encoded signed string representation of a Document.
-	 *
-	 * @param aSecret secret used when signing the message
-	 * @param aMessage a three part base64 encoded and signed message
-	 * @return this document with the content of the message decoded
-	 */
-	public Document fromSignedString(byte[] aSecret, String aMessage) throws IOException
-	{
-		return fromSignedString(aSecret, aMessage, null);
-	}
-
-
-	/**
-	 * Decode an encoded signed string representation of a Document.
-	 *
-	 * @param aSecret secret used when signing the message
-	 * @param aMessage a three part base64 encoded and signed message
-	 * @param aDecodedHeader if not null then the header of the signed message will be returned in this Document
-	 * @return this document with the content of the message decoded
-	 */
-	public Document fromSignedString(byte[] aSecret, String aMessage, Document aDecodedHeader) throws IOException
-	{
-		return fromSignedString(header -> aSecret, aMessage, aDecodedHeader);
-	}
-
-
-	/**
-	 * Decode an encoded signed string representation of a Document.
-	 *
-	 * @param aSecretProvider Function returning the secret used when signing the message. The function receive the decoded header of the message.
-	 * @param aMessage a three part base64 encoded and signed message
-	 * @param aDecodedHeader if not null then the header of the signed message will be returned in this Document
-	 * @return this document with the content of the message decoded
-	 * @throws IOException on signature mismatch
-	 */
-	public Document fromSignedString(Function<Document, byte[]> aSecretProvider, String aMessage, Document aDecodedHeader) throws IOException
-	{
-		if (!aMessage.matches("[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}"))
-		{
-			throw new IllegalArgumentException("Message not formatted correctly.");
-		}
-
-		Decoder decoder = Base64.getUrlDecoder();
-
-		int i = aMessage.indexOf('.');
-		int j = aMessage.lastIndexOf('.');
-		String messageHeader = aMessage.substring(0, i);
-		String messagePayload = aMessage.substring(i + 1, j);
-		String messageSignature = aMessage.substring(j + 1);
-
-		Document header = new Document().fromJson(new String(decoder.decode(messageHeader), StandardCharsets.UTF_8));
-
-		String alg = HASH_ALGORITHMS.get(header.get(ALGORITHM_FIELD, DEFAULT_HASH_ALGORITHM));
-
-		if (alg == null)
-		{
-			throw new IllegalArgumentException("Unsupported algorithm: " + alg);
-		}
-
-		try
-		{
-			Mac mac = Mac.getInstance(alg);
-			mac.init(new SecretKeySpec(aSecretProvider.apply(header), alg));
-			mac.update(messageHeader.getBytes());
-			mac.update((byte)'.');
-			mac.update(messagePayload.getBytes());
-			byte[] sign = mac.doFinal();
-
-			if (!Arrays.equals(decoder.decode(messageSignature), sign))
-			{
-				throw new IOException("Signature mismatch");
-			}
-		}
-		catch (InvalidKeyException | NoSuchAlgorithmException e)
-		{
-			throw new IOException(e);
-		}
-
-		if (aDecodedHeader != null)
-		{
-			aDecodedHeader.putAll(header);
-		}
-
-		return fromJson(new String(decoder.decode(messagePayload), StandardCharsets.UTF_8));
 	}
 
 

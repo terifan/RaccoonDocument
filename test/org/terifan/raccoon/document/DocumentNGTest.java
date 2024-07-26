@@ -751,102 +751,6 @@ public class DocumentNGTest
 
 
 	@Test
-	public void testSigedBinaryEncodeNoHeader() throws IOException
-	{
-		Random rnd = new Random(1);
-		byte[] secret = "1234".getBytes();
-
-		Document encodingPayload = _Person.createPerson(rnd);
-
-		byte[] data = encodingPayload.toSignedByteArray(secret);
-
-		Document decodedHeader = new Document();
-		Document decodedPayload = new Document().fromSignedByteArray(secret, data, decodedHeader);
-
-		assertEquals(decodedPayload, encodingPayload);
-	}
-
-
-	@Test
-	public void testSigedBinaryEncode() throws IOException
-	{
-		Random rnd = new Random(1);
-		byte[] secret = "1234".getBytes();
-
-		Document encodingPayload = _Person.createPerson(rnd);
-		Document encodingHeader = Document.of("alg:HS512,by:bobby");
-
-		byte[] data = encodingPayload.toSignedByteArray(secret, encodingHeader);
-
-		Document decodedHeader = new Document();
-		Document decodedPayload = new Document().fromSignedByteArray(secret, data, decodedHeader);
-
-		assertEquals(decodedPayload, encodingPayload);
-		assertEquals(decodedHeader, encodingHeader);
-	}
-
-
-	@Test
-	public void testSigedStringEncode() throws IOException
-	{
-		Random rnd = new Random(1);
-		byte[] secret = "1234".getBytes();
-
-		Document encodingPayload = _Person.createPerson(rnd);
-
-		String data = encodingPayload.toSignedString(secret);
-
-		Document header = new Document();
-		Document decodedPayload = new Document().fromSignedString(secret, data, header);
-
-		assertEquals(header.get("alg"), KeyValueContainer.DEFAULT_HASH_ALGORITHM);
-		assertEquals(decodedPayload, encodingPayload);
-	}
-
-
-	@Test
-	public void testSigedStringEncodeWithHeader() throws IOException
-	{
-		Random rnd = new Random(1);
-		byte[] secret = "1234".getBytes();
-
-		Document encodingPayload = _Person.createPerson(rnd);
-		Document encodingHeader = Document.of("typ:JWT,alg:HS512,by:bobby");
-
-		String data = encodingPayload.toSignedString(secret, encodingHeader);
-
-		Document decodedHeader = new Document();
-		Document decodedPayload = new Document().fromSignedString(secret, data, decodedHeader);
-
-		assertEquals(decodedHeader.get("by"), "bobby");
-		assertEquals(decodedPayload, encodingPayload);
-	}
-
-
-	@Test
-	public void testSigedStringDecode() throws IOException
-	{
-		String data = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImJ5IjoiYm9iYnkifQ.eyJfaWQiOiI2NWMyNTMyZTFjNGY4ODNjYjI3MDAzNjUiLCJjcmVhdGVEYXRlVGltZSI6IjIwMTQtMDUtMTVUMjI6NTg6MjgiLCJjaGFuZ2VEYXRlVGltZSI6IjIwMDktMDItMDZUMTU6NDI6MzQiLCJ2ZXJzaW9uIjo1OTIsInBlcnNvbmFsIjp7ImdpdmVuTmFtZSI6IkRhbmllbGxlIiwic3VybmFtZSI6Ik1pdGNoZWxsIiwiZ2VuZGVyIjoiRmVtYWxlIiwibGFuZ3VhZ2UiOiJBd25naSIsImJpcnRoZGF5IjoiMTk3Ni0wNi0xNyIsImRpc3BsYXlOYW1lIjoibGF1cmVhbGFzc29fYW1kaXJ0aG9ybjk5IiwiaGVhbHRoSW5mbyI6eyJ3ZWlnaHQiOjU0LCJoZWlnaHQiOjE0OSwiYmxvb2RUeXBlIjoiQUIrIn0sImNvbnRhY3RzIjpbeyJ0eXBlIjoiZW1haWwiLCJ0ZXh0IjoibGFud2F0YW5fYnJlZ29sMkB5YWhvby5jb20ifSx7InR5cGUiOiJwaG9uZSIsInRleHQiOiIwNTAtNjM1OTA1NDUwNyJ9LHsidHlwZSI6Im1vYmlsZVBob25lIiwidGV4dCI6IjA3Ny0yMDgwNzIzNjU2In1dLCJob21lIjp7InN0cmVldCI6IlNhZmZyb24gUm91dGUiLCJhZGRyZXNzIjoiUGFya2VyIEZvcmsiLCJwb3N0YWxDb2RlIjoiNDAxIDYzIiwiY2l0eSI6IkNvcmsiLCJzdGF0ZSI6Ildhc2hpbmd0b24iLCJjb3VudHJ5IjoiUnVzc2lhIn0sImZhdm9yaXRlIjp7ImNvbG9yIjoiRGFya0dvbGRlblJvZCIsImZydWl0IjoiQXByaWNvdCIsIm51bWJlciI6MjgsImZvb2QiOiJXb250b24gc291cCJ9LCJhY2NvdW50X2JhbGFuY2UiOiI1NDMzLjExMjM4MjA2NSJ9LCJ3b3JrIjp7ImNvbXBhbnkiOiJNYXR1cmF0aW9uIFBsYWNlIiwicm9sZSI6IkVtcGxveWVlIiwidGVhbSI6IkZyb250ZW5kIiwidXNhZ2VMb2NhdGlvbiI6IlRvbGlhcmEiLCJqb2JUaXRsZSI6IkRhbmNlciIsImNvbnRhY3RzIjpbeyJ0eXBlIjoiZW1haWwiLCJ0ZXh0IjoiZGFuaWVsbGUubWl0Y2hlbGxAbWF0dXJhdGlvbl9wbGFjZS5jb20ifSx7InR5cGUiOiJwaG9uZSIsInRleHQiOiIwNTEtNzgyMTg1OTk1OSJ9LHsidHlwZSI6Im1vYmlsZVBob25lIiwidGV4dCI6IjAxNy02NDAzNTExNjA0In1dLCJ0b2tlbiI6IjQ2ZmZlOTdkLTAzN2MtNGU2NS04MzVkLWNjMGQwY2EzMjVjMyJ9LCJsb2NhdGlvbkhpc3RvcnkiOlt7ImxhdCI6NDEuNzAxNDc3LCJsbmciOjc5LjA1ODU5LCJ0aW1lIjoiMjAxNC0wMS0yNVQxNTowMzowNy0wMzowMCJ9LHsibGF0Ijo1Ny4zMTgzMDYsImxuZyI6NTYuNzM2NDM1LCJ0aW1lIjoiMjAxMy0xMC0wM1QxNzowNToxMC0wMTowMCJ9LHsibGF0IjozOC41OTA1NzIsImxuZyI6MTIuMzE0NzQsInRpbWUiOiIyMDEwLTA1LTAxVDE2OjIxOjE5KzA0OjAwIn1dfQ.QzWpZNvjzHZSsSVatjU5pUrg9UNd7FSogirsm289GXpbjfRzONYLuOmtaiyA9TuSid3e2M-rgWVIrBMbf1q8wg";
-
-		Document secrets = Document.of("bobby:1234,alice:5678");
-
-		Document decodedHeader = new Document();
-		Document decodedPayload = new Document().put("preexisting", true).fromSignedString(header ->
-		{
-			header.put("dummy", true);
-			return secrets.getString(header.get("by")).getBytes();
-		}, data, decodedHeader);
-
-//		System.out.println(decodedHeader.toJson(false));
-//		System.out.println(decodedPayload.toJson(false));
-		assertEquals(decodedHeader.get("by"), "bobby");
-		assertEquals(decodedPayload.getBoolean("preexisting"), Boolean.TRUE);
-		assertEquals(decodedHeader.getBoolean("dummy"), Boolean.TRUE);
-		assertEquals(decodedPayload.get("_id"), "65c2532e1c4f883cb2700365");
-	}
-
-
-	@Test
 	public void testByteBuffer() throws IOException
 	{
 		Random rnd = new Random(1);
@@ -868,25 +772,6 @@ public class DocumentNGTest
 	public void testIncrement() throws IOException
 	{
 		assertEquals((long)Document.of("i:" + Integer.MAX_VALUE).increment("i").getLong("i"), 2147483648L);
-	}
-
-
-	@Test
-	public void testMaintainOldValuesAfterFrom() throws IOException
-	{
-		byte[] secret = "secret".getBytes();
-
-		Document doc = Document.of("a:1");
-		doc.fromByteArray(Document.of("b:2").toByteArray());
-		doc.fromJson("c:3");
-		doc.fromSignedByteArray(secret, Document.of("d:4").toSignedByteArray(secret));
-		doc.fromSignedString(secret, Document.of("e:5").toSignedString(secret));
-
-		assertEquals(doc.getInt("a"), (Integer)1);
-		assertEquals(doc.getInt("b"), (Integer)2);
-		assertEquals(doc.getInt("c"), (Integer)3);
-		assertEquals(doc.getInt("d"), (Integer)4);
-		assertEquals(doc.getInt("e"), (Integer)5);
 	}
 
 

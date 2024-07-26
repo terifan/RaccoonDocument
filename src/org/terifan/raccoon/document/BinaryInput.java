@@ -15,6 +15,8 @@ abstract class BinaryInput
 	private InputStream mInputStream;
 	private boolean mDecodeIdOnly;
 
+	Dictionary mDictionary;
+
 
 	BinaryInput(InputStream aInputStream, boolean aDecodeIdOnly)
 	{
@@ -82,9 +84,9 @@ abstract class BinaryInput
 			}
 
 			String key;
-			if ((token.value & 1) == 0)
+			if (mDictionary != null && (token.value & 1) == 1)
 			{
-				key = Integer.toString(token.value / 2);
+				key = (String)mDictionary.decode(token.value / 2);
 			}
 			else
 			{

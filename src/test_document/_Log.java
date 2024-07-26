@@ -7,7 +7,7 @@ public class _Log
 {
 	public static void hexDump(byte[] aBuffer)
 	{
-		int LW = 32;
+		int LW = 48;
 		int MR = 1000;
 
 		StringBuilder binText = new StringBuilder("");
@@ -35,7 +35,7 @@ public class _Log
 				}
 
 				hexText.append(String.format("%02x ", c));
-				binText.append(Character.isISOControl(c) ? '.' : (char)c);
+				binText.append(Character.isISOControl(c) || c > 127 ? '.' : (char)c);
 
 				if (c < ' ' || c >= 128 || c >= '0' && c <= '9')
 				{

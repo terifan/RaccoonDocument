@@ -17,11 +17,20 @@ class BinaryEncoder implements AutoCloseable
 	private final byte[] mWriteBuffer = new byte[8];
 	private final Function<Object, Boolean> mFilter;
 
+	final Dictionary mDictionary;
+
 
 	public BinaryEncoder(OutputStream aOutputStream, Function<Object, Boolean> aFilter)
 	{
+		this(aOutputStream, aFilter, null);
+	}
+
+
+	public BinaryEncoder(OutputStream aOutputStream, Function<Object, Boolean> aFilter, Dictionary aDictionary)
+	{
 		mOutputStream = aOutputStream;
 		mFilter = aFilter;
+		mDictionary = aDictionary;
 	}
 
 
@@ -70,16 +79,30 @@ class BinaryEncoder implements AutoCloseable
 				Object value = entry.getValue();
 				BinaryCodec type = BinaryCodec.identify(value);
 
-				Integer numeric = parseInt(key);
-				if (numeric != null)
+				if (mDictionary != null)
 				{
-					writeToken(type, 2 * numeric);
+					if (mDictionary.encode(value) != null)
+					{
+						type = BinaryCodec.DICTIONARY;
+					}
+
+					Integer index = mDictionary.get(key);
+					if (index != null)
+					{
+						writeToken(type, 2 * index + 1);
+					}
+					else
+					{
+						writeToken(type, 2 * key.length());
+						writeUTF(key);
+					}
 				}
 				else
 				{
-					writeToken(type, 2 * key.length() + 1);
+					writeToken(type, 2 * key.length());
 					writeUTF(key);
 				}
+
 				writeValue(type, value);
 			}
 		}
@@ -100,8 +123,7 @@ class BinaryEncoder implements AutoCloseable
 
 			for (int i = offset; i < elementCount; i++, runLen++)
 			{
-				Object v = aArray.get(i);
-				BinaryCodec nextType = BinaryCodec.identify(v);
+				BinaryCodec nextType = BinaryCodec.identify(aArray.get(i));
 				if (type != nextType && type != null)
 				{
 					break;
@@ -299,19 +321,19 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	private Integer parseInt(String aKey)
-	{
-		int v = 0;
-		for (int i = 0; i < aKey.length(); i++)
-		{
-			char c = aKey.charAt(i);
-			if (c < '0' || c > '9' || i == 0 && c == '0')
-			{
-				return null;
-			}
-			v *= 10;
-			v += c - '0';
-		}
-		return v;
-	}
+//	private Integer parseInt(String aKey)
+//	{
+//		int v = 0;
+//		for (int i = 0; i < aKey.length(); i++)
+//		{
+//			char c = aKey.charAt(i);
+//			if (c < '0' || c > '9' || i == 0 && c == '0')
+//			{
+//				return null;
+//			}
+//			v *= 10;
+//			v += c - '0';
+//		}
+//		return v;
+//	}
 }

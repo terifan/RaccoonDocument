@@ -102,44 +102,49 @@ enum BinaryCodec
 		(aEncoder, aValue) -> aEncoder.writeVarint((Character)aValue),
 		aDecoder -> (char)aDecoder.readVarint()
 	),
-	/** fixed size encoding of a Short value */
-	FIXEDSHORT(21,
-		(aEncoder, aValue) -> aEncoder.writeShort((Short)aValue),
-		aDecoder -> (short)aDecoder.readShort()
-	),
-	/** fixed size encoding of a Integer value */
-	FIXEDINT(22,
-		(aEncoder, aValue) -> aEncoder.writeInt((Integer)aValue),
-		aDecoder -> (int)aDecoder.readInt()
-	),
-	/** fixed size encoding of a char value */
-	FIXEDCHAR(23,
-		(aEncoder, aValue) -> aEncoder.writeShort((short)(char)(Character)aValue),
-		aDecoder -> (char)aDecoder.readShort()
-	),
-	/** fixed size encoding of a Long value */
-	FIXEDLONG(24,
-		(aEncoder, aValue) -> aEncoder.writeLong((Long)aValue),
-		aDecoder -> aDecoder.readLong()
-	),
-	/** variable length encoding of a Float value */
-	VARFLOAT(25,
-		(aEncoder, aValue) -> aEncoder.writeVarint(Float.floatToIntBits((Float)aValue)),
-		aDecoder -> Float.intBitsToFloat((int)aDecoder.readVarint())
-	),
-	/** variable length encoding of a Double value */
-	VARDOUBLE(26,
-		(aEncoder, aValue) -> aEncoder.writeVarint(Long.reverseBytes(Double.doubleToLongBits((Double)aValue))),
-		aDecoder -> Double.longBitsToDouble(Long.reverseBytes(aDecoder.readVarint()))
-	),
-	REF(27,
-		(aEncoder, aValue) -> {},
-		aDecoder -> null
-	),
-	REFVALUE(28,
-		(aEncoder, aValue) -> {},
-		aDecoder -> null
-	);
+	DICTIONARY(21,
+		(aEncoder, aValue) -> aEncoder.writeVarint(aEncoder.mDictionary.encode(aValue)),
+		aDecoder -> aDecoder.mDictionary.decode(aDecoder.readVarint())
+	)
+//	/** fixed size encoding of a Short value */
+//	FIXEDSHORT(21,
+//		(aEncoder, aValue) -> aEncoder.writeShort((Short)aValue),
+//		aDecoder -> (short)aDecoder.readShort()
+//	),
+//	/** fixed size encoding of a Integer value */
+//	FIXEDINT(22,
+//		(aEncoder, aValue) -> aEncoder.writeInt((Integer)aValue),
+//		aDecoder -> (int)aDecoder.readInt()
+//	),
+//	/** fixed size encoding of a char value */
+//	FIXEDCHAR(23,
+//		(aEncoder, aValue) -> aEncoder.writeShort((short)(char)(Character)aValue),
+//		aDecoder -> (char)aDecoder.readShort()
+//	),
+//	/** fixed size encoding of a Long value */
+//	FIXEDLONG(24,
+//		(aEncoder, aValue) -> aEncoder.writeLong((Long)aValue),
+//		aDecoder -> aDecoder.readLong()
+//	),
+//	/** variable length encoding of a Float value */
+//	VARFLOAT(25,
+//		(aEncoder, aValue) -> aEncoder.writeVarint(Float.floatToIntBits((Float)aValue)),
+//		aDecoder -> Float.intBitsToFloat((int)aDecoder.readVarint())
+//	),
+//	/** variable length encoding of a Double value */
+//	VARDOUBLE(26,
+//		(aEncoder, aValue) -> aEncoder.writeVarint(Long.reverseBytes(Double.doubleToLongBits((Double)aValue))),
+//		aDecoder -> Double.longBitsToDouble(Long.reverseBytes(aDecoder.readVarint()))
+//	),
+//	REF(27,
+//		(aEncoder, aValue) -> {},
+//		aDecoder -> null
+//	),
+//	REFVALUE(28,
+//		(aEncoder, aValue) -> {},
+//		aDecoder -> null
+//	)
+	;
 
 
 	Encoder encoder;
