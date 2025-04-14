@@ -1,9 +1,9 @@
 package org.terifan.raccoon.document;
 
-import test_document._Log;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
@@ -99,20 +99,99 @@ public class DocumentNGTest
 	@Test
 	public void testFind()
 	{
-		Document doc = Document.of("a:{b:{c:[{d:1},{e:2},{f:3},{g:bob,h:4}]}}");
-		Array arr = Array.of(Document.of("g:bob,h:5"), Document.of("g:eve,h:6"));
+		Document doc = Document.of(
+			"""
+				a:{
+					b:[
+						{
+							x:true,
+							c:[
+								{d:1},
+								{e:2},
+								{f:3},
+								{g:bob, h:4}
+							]
+						},
+						{
+							x:false,
+							c:[
+								{d:1},
+								{e:2},
+								{f:3},
+								{g:bob, h:-4}
+							]
+						}
+					],
+					j:[
+						[1,2,3],
+						[4,{k:test},6]
+					]
+				}
+			""");
 
-		int d = doc.findFirst("a/b/c/0/d");
-		int e = doc.findFirst("a/b/c/1/e");
-		int f = doc.findFirst("a/b/c/2/f");
-		int h = doc.findFirst("a/b/c/[g=bob]/h");
-		int i = arr.findFirst("[g=bob]/h");
+		int d = doc.findFirst("a/b/0/c/0/d");
+		int e = doc.findFirst("a/b/0/c/1/e");
+		int f = doc.findFirst("a/b/0/c/2/f");
+		int h = doc.findFirst("a/b/[x=false]/c/[g=bob]/h");
+		Integer i = doc.findFirst("a/b/[x=false]/c/[g=bob]/a");
+		Document j = doc.findFirst("a/j/1/1");
 
 		assertEquals(d, 1);
 		assertEquals(e, 2);
 		assertEquals(f, 3);
-		assertEquals(h, 4);
-		assertEquals(i, 5);
+		assertEquals(h, -4);
+		assertEquals(i, null);
+		assertEquals(j, Document.of("k:test"));
+
+//		Array arr = Array.of(Document.of("g:bob,h:5"), Document.of("g:eve,h:6"));
+//		int i = arr.findFirst("[g=bob]/h");
+//		assertEquals(i, 5);
+	}
+
+
+	@Test
+	public void testFind2()
+	{
+		Document doc = new Document().fromJson(new InputStreamReader(DocumentNGTest.class.getResourceAsStream("trip.json")));
+
+		String s = doc.findFirst("/event/payload/lines/0/orderLineId");
+
+		System.out.println(s);
+	}
+
+
+	@Test
+	public void testFindMany2()
+	{
+		Document doc = new Document().fromJson(new InputStreamReader(DocumentNGTest.class.getResourceAsStream("trip.json")));
+
+		System.out.println(doc.findMany("/projections/trip/consignments/parties/shippingLocation/identifiers/identifier"));
+		System.out.println("-".repeat(100));
+
+		System.out.println(doc.findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/0/identifier"));
+		System.out.println(doc.findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/1/identifier"));
+		System.out.println(doc.findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/2/identifier"));
+		System.out.println("-".repeat(100));
+
+		System.out.println(doc.findMany("/projections/trip/consignments/1/parties/shippingLocation/identifiers/identifier"));
+		System.out.println(doc.findMany("/projections/trip/consignments/2/parties/shippingLocation/identifiers/identifier"));
+		System.out.println(doc.findMany("/projections/trip/consignments/3/parties/shippingLocation/identifiers/identifier"));
+		System.out.println(doc.findMany("/projections/trip/consignments/4/parties/shippingLocation/identifiers/identifier"));
+		System.out.println(doc.findMany("/projections/trip/consignments/5/parties/shippingLocation/identifiers/identifier"));
+		System.out.println(doc.findMany("/projections/trip/consignments/6/parties/shippingLocation/identifiers/identifier"));
+		System.out.println("-".repeat(100));
+
+		System.out.println(doc.findMany("/projections/trip/consignments/parties/*/identifiers/identifier"));
+		System.out.println("-".repeat(100));
+
+		System.out.println(doc.findMany("/projections/trip/consignments/parties/*/identifiers"));
+		System.out.println("-".repeat(100));
+
+		System.out.println(doc.findMany("/projections/trip/consignments/parties/*/identifiers[domain=party]"));
+		System.out.println("-".repeat(100));
+
+		System.out.println(doc.findMany("/projections/trip/consignments/parties/*/identifiers[domain=party]/identifier"));
+		System.out.println("-".repeat(100));
 	}
 
 
@@ -176,7 +255,7 @@ public class DocumentNGTest
 	{
 		Document doc = Document.of("personal/details/language/*:1,personal/firstName:1,personal/ratings/2:1");
 
-		System.out.println(doc);
+//		System.out.println(doc);
 	}
 
 
@@ -468,7 +547,7 @@ public class DocumentNGTest
 		out.writeTo(baos);
 
 		byte[] data = baos.toByteArray();
-		data[10] ^= 2; // "name" => "ncme"
+		data[10] ^= 4;
 
 		new Document().readFrom(new ByteArrayInputStream(data));
 	}
@@ -482,10 +561,10 @@ public class DocumentNGTest
 		byte[] out3 = Document.of("id:[dog,67,surreptitious]").toByteArray();
 		byte[] out4 = Document.of("id:[cat,67,surreptitious]").toByteArray();
 
-		_Log.hexDump(out1);
-		_Log.hexDump(out2);
-		_Log.hexDump(out3);
-		_Log.hexDump(out4);
+//		_Log.hexDump(out1);
+//		_Log.hexDump(out2);
+//		_Log.hexDump(out3);
+//		_Log.hexDump(out4);
 	}
 
 
@@ -528,7 +607,7 @@ public class DocumentNGTest
 		encoder.marshal(0);
 		encoder.writeInterleaved(a, b);
 
-		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()), false);
+		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
 		decoder.unmarshal();
 		long v = decoder.readInterleaved();
 
@@ -691,7 +770,7 @@ public class DocumentNGTest
 	@Test
 	public void testKeyComparator() throws IOException
 	{
-		TreeSet<String> set = new TreeSet<>(Document.COMPARATOR);
+		TreeSet<String> set = new TreeSet<>(Document.STANDARD_COMPARATOR);
 		set.add("A");
 		set.add("_a");
 		set.add("a");
@@ -706,6 +785,8 @@ public class DocumentNGTest
 	{
 		Random rnd = new Random(1);
 		Document doc = _Person.createPerson(rnd);
+
+		Dictionary dic = Dictionary.of(doc);
 
 		System.out.println("          json: " + doc.toJson().length());
 		System.out.println("    typed-json: " + doc.toTypedJson().length());
@@ -732,6 +813,20 @@ public class DocumentNGTest
 		}
 		System.out.println("       bin-zip: " + baos4.size());
 
+		System.out.println("       bin-dic: " + dic.toByteArray(doc).length + " +" + DictionaryNGTest.marshal(dic).length);
+
+		ByteArrayOutputStream baos5a = new ByteArrayOutputStream();
+		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos5a))
+		{
+			dos.write(dic.toByteArray(doc));
+		}
+		ByteArrayOutputStream baos5b = new ByteArrayOutputStream();
+		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos5b))
+		{
+			dos.write(DictionaryNGTest.marshal(dic));
+		}
+		System.out.println("   bin-dic-zip: " + baos5a.size() + " +" + baos5b.size());
+
 //		_Log.hexDump(doc.toByteArray());
 	}
 
@@ -746,7 +841,7 @@ public class DocumentNGTest
 
 		long t = System.currentTimeMillis();
 		doc.toByteArray();
-		System.out.println(System.currentTimeMillis() - t);
+//		System.out.println(System.currentTimeMillis() - t);
 	}
 
 
@@ -815,7 +910,7 @@ public class DocumentNGTest
 
 //		System.out.println(doc);
 
-		assertEquals(doc.toString(), "{\"address\":{\"city\":\"Smallville\",\"country\":\"Americastan\",\"street\":\"Big road\"},\"catapult\":{\"when\":\"now!\"},\"color\":\"red\",\"info\":[\"fatty\",\"weirdo\"],\"name\":[\"bob\",\"johnson\"],\"number\":[-1,-2,-3],\"shape\":\"round\"}");
+		assertEquals(doc.toString(), "{\"name\":[\"bob\",\"johnson\"],\"address\":{\"street\":\"Big road\",\"city\":\"Smallville\",\"country\":\"Americastan\"},\"info\":[\"fatty\",\"weirdo\"],\"number\":[-1,-2,-3],\"color\":\"red\",\"shape\":\"round\",\"catapult\":{\"when\":\"now!\"}}");
 	}
 
 
@@ -829,7 +924,7 @@ public class DocumentNGTest
 
 		Document doc = new Document().fromByteArray(data);
 
-		System.out.println(doc);
+//		System.out.println(doc);
 
 //		assertEquals(in, out);
 	}
@@ -844,5 +939,38 @@ public class DocumentNGTest
 
 		assertEquals(doc, other);
 		assertNotSame(doc.getArray("arr"), other.getArray("arr"));
+	}
+
+
+	@Test
+	public void testSort() throws IOException
+	{
+		Document doc = Document.of("a:1,c:3,b:2,_id:7,_bool:true");
+
+		assertEquals(doc.toString(), "{\"a\":1,\"c\":3,\"b\":2,\"_id\":7,\"_bool\":true}");
+
+		doc.sort();
+
+		assertEquals(doc.toString(), "{\"_id\":7,\"_bool\":true,\"a\":1,\"b\":2,\"c\":3}");
+
+		doc.sort((o1, o2) -> o1.compareTo(o2));
+
+		assertEquals(doc.toString(), "{\"_bool\":true,\"_id\":7,\"a\":1,\"b\":2,\"c\":3}");
+	}
+
+
+	@Test
+	public void testX() throws IOException
+	{
+		Document doc = new Document().fromJson(new String(DocumentNGTest.class.getResourceAsStream("trip.json").readAllBytes()));
+
+		Dictionary dic = Dictionary.of(doc);
+
+//		_Log.hexDump(dic.toByteArray(doc));
+
+		System.out.println(doc.toJson().length());
+		System.out.println(doc.toJson(false).length());
+		System.out.println(doc.toByteArray().length);
+		System.out.println(dic.toByteArray(doc).length + " +" + dic.writeExternal().length);
 	}
 }

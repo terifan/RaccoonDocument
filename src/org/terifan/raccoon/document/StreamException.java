@@ -10,4 +10,10 @@ public class StreamException extends RuntimeException
 	{
 		super(aMessage);
 	}
+
+
+	public StreamException(String aMessage, Throwable aCause)
+	{
+		super(aMessage, aCause);
+	}
 }

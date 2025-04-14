@@ -1,17 +1,15 @@
 package org.terifan.raccoon.document;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import org.terifan.raccoon.document.BinaryIterator.Value;
 
 
 public class StreamComparator
 {
 	public int compare(InputStream aInputStreamA, InputStream aInputStreamB) throws IOException
 	{
-		Object inA = new BinaryDecoder(aInputStreamA, false).unmarshal();
-		Object inB = new BinaryDecoder(aInputStreamB, false).unmarshal();
+		Object inA = new BinaryDecoder(aInputStreamA, null).unmarshal();
+		Object inB = new BinaryDecoder(aInputStreamB, null).unmarshal();
 
 		if (inA instanceof Document v1 && inB instanceof Document v2)
 		{
@@ -26,31 +24,31 @@ public class StreamComparator
 	}
 
 
-	public int compareId(InputStream aInputStreamA, InputStream aInputStreamB) throws IOException
-	{
-//		Object inA = new BinaryDecoder(aInputStreamA).unmarshal();
-//		Object inB = new BinaryDecoder(aInputStreamB).unmarshal();
+//	public int compareId(InputStream aInputStreamA, InputStream aInputStreamB) throws IOException
+//	{
+////		Object inA = new BinaryDecoder(aInputStreamA).unmarshal();
+////		Object inB = new BinaryDecoder(aInputStreamB).unmarshal();
+////
+////		if (inA instanceof Document)
+////		{
+////			Comparable a = ((Document)inA).get("_id");
+////			Comparable b = ((Document)inB).get("_id");
+////			return a.compareTo(b);
+////		}
+////
+////		return ((Array)inA).compareTo((Array)inB);
 //
-//		if (inA instanceof Document)
+//		BinaryVisitor it = new BinaryVisitor(aInputStreamA, true);
+//
+//		while (it.hasNext())
 //		{
-//			Comparable a = ((Document)inA).get("_id");
-//			Comparable b = ((Document)inB).get("_id");
-//			return a.compareTo(b);
+//			Value v = it.next();
+//
+//			System.out.println(v);
 //		}
 //
-//		return ((Array)inA).compareTo((Array)inB);
-
-		BinaryIterator it = new BinaryIterator(aInputStreamA, true);
-
-		while (it.hasNext())
-		{
-			Value v = it.next();
-
-			System.out.println(v);
-		}
-
-		return 0;
-	}
+//		return 0;
+//	}
 
 
 	public static void main(String... args)
@@ -62,7 +60,7 @@ public class StreamComparator
 			byte[] bin1 = doc1.toByteArray();
 			byte[] bin2 = doc2.toByteArray();
 
-			new StreamComparator().compareId(new ByteArrayInputStream(bin1), new ByteArrayInputStream(bin2));
+//			new StreamComparator().compareId(new ByteArrayInputStream(bin1), new ByteArrayInputStream(bin2));
 
 //			Document doc1 = Document.of("_id:1,name:bob,age:37");
 //			Document doc2 = Document.of("_id:2,name:eve,age:29");

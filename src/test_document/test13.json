@@ -1,0 +1,44 @@
+{
+	"_id": "634912143673b9b6785b71c8",
+	"index": 0,
+	"guid": "4166338b-1b8b-43a1-ad44-16aaf1d23ea6",
+	"isActive": false,
+	"balance": "$2,531.64",
+	"picture": "http://placehold.it/32x32",
+	"age": 36,
+	"eyeColor": "green",
+	"name": "Callie Camacho",
+	"gender": "female",
+	"company": "MAKINGWAY",
+	"email": "calliecamacho@makingway.com",
+	"phone": "+1 (957) 455-3203",
+	"address": "238 Carlton Avenue, Bynum, Nevada, 1341",
+	"about": "Occaecat pariatur Lorem est sunt commodo commodo eu laboris adipisicing. Ad velit excepteur tempor nisi aute ullamco tempor ut. Occaecat ex commodo pariatur cillum consequat sunt in fugiat magna. Ullamco et nisi occaecat esse laborum anim laborum.\r\n",
+	"registered": "2018-09-05T06:03:54 -02:00",
+	"latitude": -41.513794,
+	"longitude": 157.849996,
+	"tags": [
+		"officia",
+		"eiusmod",
+		"aliquip",
+		"velit",
+		"aliqua",
+		"dolor",
+		"in"
+	],
+	"friends": [{
+			"id": 0,
+			"name": "Agnes Rodriquez"
+		},
+		{
+			"id": 1,
+			"name": "Guerra Moss"
+		},
+		{
+			"id": 2,
+			"name": "Cohen Flores"
+		}
+	],
+	"greeting": "Hello, Callie Camacho! You have 3 unread messages.",
+	"favoriteFruit": "apple"
+}

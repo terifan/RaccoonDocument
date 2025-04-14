@@ -1,0 +1,2877 @@
+{
+  "event": {
+    "id": "968a2b28-475f-4f89-b528-3678b578e499",
+    "type": "order.delivery.ended.event",
+    "payload": {
+      "eventRegisteredDateTime": "2024-10-01T12:56:39.761+02:00",
+      "lines": [{
+        "orderLineId": "SKOM 1727780007415--start_trip"
+      }, {
+        "orderLineId": "SKOM - CRDEHAGSKOM40730 1727780007415-resource_vehicle"
+      }],
+      "locationIdentifier": {
+        "identifier": "terminal",
+        "domain": "party",
+        "authority": "lx3"
+      }
+    },
+    "dateTime": "2024-10-01T10:56:39.831Z",
+    "aggregateId": "DE-trip-SKOM 1727780007415",
+    "correlationId": "937bd120-ed07-468c-985b-46aff69f6408",
+    "headers": {},
+    "position": {
+      "longitude": 11.9729111,
+      "latitude": 57.7077464
+    },
+    "additionalInformation": {
+      "vehicleIdentifier": {
+        "identifier": "SBL69873",
+        "domain": "vehicle",
+        "authority": "lx3"
+      },
+      "userMetadata": {
+        "appPlatform": "web_browser",
+        "buildTime": "2024-10-01T08:59:38.802Z",
+        "browser": "Google Chrome",
+        "screen": "trip_execution"
+      }
+    },
+    "principal": {
+      "role": "deprecated",
+      "name": "Mikolaj",
+      "surname": "Skora",
+      "email": "",
+      "photos": [],
+      "partyId": "e947f44f-7947-4b51-acaa-b651e057321d",
+      "parentOrgCountryCode": "PL",
+      "rootParentOrgPartyId": "8808ebd8-57fa-48a4-a530-0210d25ce685",
+      "source": "local",
+      "userId": "12046dc0-e7a0-4325-8186-7e895ff3c841"
+    },
+    "version": 58
+  },
+  "tenant": "kn",
+  "projections": {
+    "trip": {
+      "_id": "DE-trip-SKOM 1727780007415",
+      "version": 58,
+      "assignments": [{
+        "assignmentId": "a80bb935-73c4-4026-8856-2a6fcbd4ca1c",
+        "assignee": {
+          "identifier": "e947f44f-7947-4b51-acaa-b651e057321d",
+          "domain": "party",
+          "authority": "lx3"
+        },
+        "assignedBy": {
+          "identifier": "ROADLOG",
+          "domain": "sending_application",
+          "authority": "lx3"
+        },
+        "assignmentDetails": {
+          "method": "assign"
+        },
+        "dateTime": 1727780055949
+      }, {
+        "assignmentId": "0fadd5ab-3069-481b-9046-8a97d9958336",
+        "assignee": {
+          "identifier": "6307faa4-25a9-4f3b-bad6-e814b0c2a9ad",
+          "domain": "party",
+          "authority": "lx3"
+        },
+        "assignedBy": {
+          "identifier": "ROADLOG",
+          "domain": "sending_application",
+          "authority": "lx3"
+        },
+        "assignmentDetails": {
+          "method": "assign"
+        },
+        "dateTime": 1727780055951
+      }],
+      "changeDateTime": 1727780200013,
+      "consignments": [{
+        "parties": {
+          "shippingLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "1XOzka 18.4-38 KNK 50 14 PR",
+              "domain": "SRF",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "6a45de6f-ec53-4ba5-a697-2d90131a6dfa",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          },
+          "deliveryLocation": {
+            "city": "Teyssieres",
+            "countryCode": "FR",
+            "identifiers": [{
+              "identifier": "GROSFRTEY001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1007386126",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "GROS BERNARD",
+            "zipOrPostalCode": "26220",
+            "id": "d60f2718-ca7e-4b11-8423-43cc07f7a2dd",
+            "addressLine": "395 CHEMIN DE COGOUTON",
+            "contacts": [{
+              "phone": "+33686114699",
+              "firstname": "GROS",
+              "lastname": "Bernard"
+            }]
+          },
+          "neutralShippingLocation": {
+            "name": "",
+            "zipOrPostalCode": "",
+            "id": "",
+            "city": "",
+            "countryCode": "",
+            "identifiers": [{
+              "identifier": "DEHAG",
+              "domain": "location_code",
+              "authority": "tenant"
+            }],
+            "addressLine": ""
+          },
+          "operationalParty": {
+            "name": "DEHAG",
+            "zipOrPostalCode": "",
+            "id": "397fdec3-e273-4a52-b629-9d7451c79b08",
+            "addressLine": "",
+            "city": "",
+            "countryCode": ""
+          }
+        },
+        "notes": [{
+          "note": "+33686114699",
+          "code": "CN"
+        }, {
+          "note": "782505002",
+          "code": "SH"
+        }],
+        "id": "5013247567-RWM004095620-SKOM 1727780007415",
+        "type": {
+          "identifier": "Groupage",
+          "domain": "article",
+          "authority": "lx3"
+        },
+        "loadingEquipments": [{
+          "quantity": {
+            "amount": 1,
+            "unit": {
+              "name": "PLT"
+            }
+          },
+          "id": "f07ed818-094f-4e3c-9879-96e4ba946321",
+          "identifiers": [{
+            "identifier": "00840349832002637322",
+            "domain": "sscc",
+            "authority": "lx3"
+          }],
+          "equipmentType": {
+            "identifier": "1XOzka 18.4-38 KNK 50  14 PR",
+            "domain": "equipment_type",
+            "authority": "lx3"
+          },
+          "dimensions": {
+            "outer": {
+              "width": {
+                "amount": 60,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "length": {
+                "amount": 120,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "height": {
+                "amount": 170,
+                "unit": {
+                  "name": "cm"
+                }
+              }
+            }
+          },
+          "measurements": {
+            "volume": {
+              "value": {
+                "amount": 1.224,
+                "unit": {
+                  "name": "cbm"
+                }
+              }
+            },
+            "ldm": {
+              "value": {
+                "amount": 0.3,
+                "unit": {
+                  "name": "m"
+                }
+              }
+            },
+            "gross_weight": {
+              "value": {
+                "amount": 115,
+                "unit": {
+                  "name": "kg"
+                }
+              }
+            }
+          }
+        }],
+        "identifiers": [{
+          "identifier": "5013247567",
+          "domain": "shipment_ref",
+          "authority": "lx3"
+        }, {
+          "identifier": "TIOR Sp. z o.o.",
+          "domain": "freight_payer",
+          "authority": "tenant"
+        }, {
+          "identifier": "1XOzka 18.4-38 KNK 50 14 PR",
+          "domain": "shipper_ref",
+          "authority": "tenant"
+        }, {
+          "identifier": "RWM004095620",
+          "domain": "message_reference",
+          "authority": "tenant"
+        }, {
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }, {
+          "identifier": "N",
+          "domain": "dangerous_goods",
+          "authority": "tenant"
+        }]
+      }, {
+        "parties": {
+          "shippingLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "75de1a75-5b29-4e43-a5e8-7d578d296b2c",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          },
+          "deliveryLocation": {
+            "city": "Borgosatollo",
+            "countryCode": "IT",
+            "identifiers": [{
+              "identifier": "TONYITBOR001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1007386583",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "TONY TYRES",
+            "zipOrPostalCode": "25010",
+            "id": "951c18b5-8360-49a1-935a-09ce95433936",
+            "addressLine": "VIA CARLO SIGNAROLI 49",
+            "contacts": [{
+              "phone": "+39 335 780 7995",
+              "firstname": "+39",
+              "lastname": "335 780 7995"
+            }]
+          },
+          "neutralShippingLocation": {
+            "name": "",
+            "zipOrPostalCode": "",
+            "id": "",
+            "city": "",
+            "countryCode": "",
+            "identifiers": [{
+              "identifier": "DEHAG",
+              "domain": "location_code",
+              "authority": "tenant"
+            }],
+            "addressLine": ""
+          },
+          "operationalParty": {
+            "name": "DEHAG",
+            "zipOrPostalCode": "",
+            "id": "a5ed287d-7999-4e74-9f01-3dbd062b8ea1",
+            "addressLine": "",
+            "city": "",
+            "countryCode": ""
+          }
+        },
+        "notes": [{
+          "note": "+39 335 780 7995",
+          "code": "CN"
+        }, {
+          "note": "782505002",
+          "code": "SH"
+        }],
+        "id": "5013249350-RWM004096183-SKOM 1727780007415",
+        "type": {
+          "identifier": "Groupage",
+          "domain": "article",
+          "authority": "lx3"
+        },
+        "loadingEquipments": [{
+          "quantity": {
+            "amount": 1,
+            "unit": {
+              "name": "PLT"
+            }
+          },
+          "id": "6880a356-3b0a-466e-b26f-71df5fd5f78f",
+          "identifiers": [{
+            "identifier": "00840349832002637704",
+            "domain": "sscc",
+            "authority": "lx3"
+          }],
+          "equipmentType": {
+            "identifier": "PREMIORRI 185/6514 Vimero 4SEASONS",
+            "domain": "equipment_type",
+            "authority": "lx3"
+          },
+          "dimensions": {
+            "outer": {
+              "width": {
+                "amount": 120,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "length": {
+                "amount": 120,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "height": {
+                "amount": 180,
+                "unit": {
+                  "name": "cm"
+                }
+              }
+            }
+          },
+          "measurements": {
+            "volume": {
+              "value": {
+                "amount": 2.592,
+                "unit": {
+                  "name": "cbm"
+                }
+              }
+            },
+            "ldm": {
+              "value": {
+                "amount": 0.6,
+                "unit": {
+                  "name": "m"
+                }
+              }
+            },
+            "gross_weight": {
+              "value": {
+                "amount": 330,
+                "unit": {
+                  "name": "kg"
+                }
+              }
+            }
+          }
+        }],
+        "identifiers": [{
+          "identifier": "5013249350",
+          "domain": "shipment_ref",
+          "authority": "lx3"
+        }, {
+          "identifier": "TIOR Sp. z o.o.",
+          "domain": "freight_payer",
+          "authority": "tenant"
+        }, {
+          "identifier": "RWM004096183",
+          "domain": "message_reference",
+          "authority": "tenant"
+        }, {
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }, {
+          "identifier": "N",
+          "domain": "dangerous_goods",
+          "authority": "tenant"
+        }]
+      }, {
+        "parties": {
+          "shippingLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "0424f0bf-ea3d-4ff0-8ba0-fea6cad67740",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          },
+          "deliveryLocation": {
+            "city": "Borgosatollo",
+            "countryCode": "IT",
+            "identifiers": [{
+              "identifier": "TONYITBOR001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1007386583",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "TONY TYRES",
+            "zipOrPostalCode": "25010",
+            "id": "74674bd1-24ee-40fa-a942-3cdd34856319",
+            "addressLine": "VIA CARLO SIGNAROLI 49",
+            "contacts": [{
+              "phone": "+39 335 780 7995",
+              "firstname": "+39",
+              "lastname": "335 780 7995"
+            }]
+          },
+          "neutralShippingLocation": {
+            "name": "",
+            "zipOrPostalCode": "",
+            "id": "",
+            "city": "",
+            "countryCode": "",
+            "identifiers": [{
+              "identifier": "DEHAG",
+              "domain": "location_code",
+              "authority": "tenant"
+            }],
+            "addressLine": ""
+          },
+          "operationalParty": {
+            "name": "DEHAG",
+            "zipOrPostalCode": "",
+            "id": "74860a73-d7d9-4e1d-9371-197a91e1d1bd",
+            "addressLine": "",
+            "city": "",
+            "countryCode": ""
+          }
+        },
+        "notes": [{
+          "note": "+39 335 780 7995",
+          "code": "CN"
+        }, {
+          "note": "782505002",
+          "code": "SH"
+        }],
+        "id": "5013249362-RWM004096210-SKOM 1727780007415",
+        "type": {
+          "identifier": "Groupage",
+          "domain": "article",
+          "authority": "lx3"
+        },
+        "loadingEquipments": [{
+          "quantity": {
+            "amount": 1,
+            "unit": {
+              "name": "EUP"
+            }
+          },
+          "id": "b74fb2a0-9dd7-4ca6-9906-69dc842c943a",
+          "identifiers": [{
+            "identifier": "00840349832002637711",
+            "domain": "sscc",
+            "authority": "lx3"
+          }],
+          "equipmentType": {
+            "identifier": "PREMIORRI 195/65R15 Vimero 4SEASON",
+            "domain": "equipment_type",
+            "authority": "lx3"
+          },
+          "dimensions": {
+            "outer": {
+              "width": {
+                "amount": 80,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "length": {
+                "amount": 120,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "height": {
+                "amount": 170,
+                "unit": {
+                  "name": "cm"
+                }
+              }
+            }
+          },
+          "measurements": {
+            "volume": {
+              "value": {
+                "amount": 1.632,
+                "unit": {
+                  "name": "cbm"
+                }
+              }
+            },
+            "ldm": {
+              "value": {
+                "amount": 0.4,
+                "unit": {
+                  "name": "m"
+                }
+              }
+            },
+            "gross_weight": {
+              "value": {
+                "amount": 180,
+                "unit": {
+                  "name": "kg"
+                }
+              }
+            }
+          }
+        }],
+        "identifiers": [{
+          "identifier": "5013249362",
+          "domain": "shipment_ref",
+          "authority": "lx3"
+        }, {
+          "identifier": "TIOR Sp. z o.o.",
+          "domain": "freight_payer",
+          "authority": "tenant"
+        }, {
+          "identifier": "RWM004096210",
+          "domain": "message_reference",
+          "authority": "tenant"
+        }, {
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }, {
+          "identifier": "N",
+          "domain": "dangerous_goods",
+          "authority": "tenant"
+        }]
+      }, {
+        "parties": {
+          "shippingLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "1xFirestone 380/85R28",
+              "domain": "SRF",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "eb7ceb79-f0d7-4879-91b3-06c83ad5805d",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          },
+          "deliveryLocation": {
+            "city": "Valence",
+            "countryCode": "FR",
+            "identifiers": [{
+              "identifier": "GIRAFRVAL001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1007389211",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "GIRAUD JULIEN",
+            "zipOrPostalCode": "16460",
+            "id": "344c4831-aca5-462e-b425-41217565dfa5",
+            "addressLine": "2 2 LA GAZILLIERE",
+            "contacts": [{
+              "phone": "+33649704468",
+              "firstname": "",
+              "lastname": "---"
+            }]
+          },
+          "neutralShippingLocation": {
+            "name": "",
+            "zipOrPostalCode": "",
+            "id": "",
+            "city": "",
+            "countryCode": "",
+            "identifiers": [{
+              "identifier": "DEHAG",
+              "domain": "location_code",
+              "authority": "tenant"
+            }],
+            "addressLine": ""
+          },
+          "operationalParty": {
+            "name": "DEHAG",
+            "zipOrPostalCode": "",
+            "id": "f16dbe77-f9c4-4c76-b0a2-54e6a6a865dd",
+            "addressLine": "",
+            "city": "",
+            "countryCode": ""
+          }
+        },
+        "notes": [{
+          "note": "+33649704468",
+          "code": "CN"
+        }],
+        "id": "5013260289-RWM004101179-SKOM 1727780007415",
+        "type": {
+          "identifier": "Groupage",
+          "domain": "article",
+          "authority": "lx3"
+        },
+        "loadingEquipments": [{
+          "quantity": {
+            "amount": 1,
+            "unit": {
+              "name": "PLT"
+            }
+          },
+          "id": "ee04393b-1daa-4711-816b-99fd62374d64",
+          "identifiers": [{
+            "identifier": "00840349832002642562",
+            "domain": "sscc",
+            "authority": "lx3"
+          }],
+          "equipmentType": {
+            "identifier": "1xFirestone 380/85R28",
+            "domain": "equipment_type",
+            "authority": "lx3"
+          },
+          "dimensions": {
+            "outer": {
+              "width": {
+                "amount": 40,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "length": {
+                "amount": 120,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "height": {
+                "amount": 140,
+                "unit": {
+                  "name": "cm"
+                }
+              }
+            }
+          },
+          "measurements": {
+            "volume": {
+              "value": {
+                "amount": 0.672,
+                "unit": {
+                  "name": "cbm"
+                }
+              }
+            },
+            "ldm": {
+              "value": {
+                "amount": 0.2,
+                "unit": {
+                  "name": "m"
+                }
+              }
+            },
+            "gross_weight": {
+              "value": {
+                "amount": 85,
+                "unit": {
+                  "name": "kg"
+                }
+              }
+            }
+          }
+        }],
+        "identifiers": [{
+          "identifier": "5013260289",
+          "domain": "shipment_ref",
+          "authority": "lx3"
+        }, {
+          "identifier": "TIOR Sp. z o.o.",
+          "domain": "freight_payer",
+          "authority": "tenant"
+        }, {
+          "identifier": "1xFirestone 380/85R28",
+          "domain": "shipper_ref",
+          "authority": "tenant"
+        }, {
+          "identifier": "RWM004101179",
+          "domain": "message_reference",
+          "authority": "tenant"
+        }, {
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }, {
+          "identifier": "N",
+          "domain": "dangerous_goods",
+          "authority": "tenant"
+        }]
+      }, {
+        "parties": {
+          "shippingLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "2xGoodyear 14.9-28",
+              "domain": "SRF",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "ba75fed1-4dc7-4158-ab71-c52c09c59dbe",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          },
+          "deliveryLocation": {
+            "city": "Courtelevant",
+            "countryCode": "FR",
+            "identifiers": [{
+              "identifier": "RWPNFRCOU001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1007389207",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "RW PNEUS LAVAL",
+            "zipOrPostalCode": "90100",
+            "id": "694c3e4a-4216-48d4-a9d2-d566035b4b87",
+            "addressLine": "6 6 RUE DE LEPUIX-NEUF",
+            "contacts": [{
+              "phone": "+33671411790",
+              "firstname": "",
+              "lastname": "---"
+            }]
+          },
+          "neutralShippingLocation": {
+            "name": "",
+            "zipOrPostalCode": "",
+            "id": "",
+            "city": "",
+            "countryCode": "",
+            "identifiers": [{
+              "identifier": "DEHAG",
+              "domain": "location_code",
+              "authority": "tenant"
+            }],
+            "addressLine": ""
+          },
+          "operationalParty": {
+            "name": "DEHAG",
+            "zipOrPostalCode": "",
+            "id": "6d8ddd5b-2681-49c7-8c5d-77a86d133667",
+            "addressLine": "",
+            "city": "",
+            "countryCode": ""
+          }
+        },
+        "notes": [{
+          "note": "+33671411790",
+          "code": "CN"
+        }],
+        "id": "5013260257-RWM004101210-SKOM 1727780007415",
+        "type": {
+          "identifier": "Groupage",
+          "domain": "article",
+          "authority": "lx3"
+        },
+        "loadingEquipments": [{
+          "quantity": {
+            "amount": 1,
+            "unit": {
+              "name": "PLT"
+            }
+          },
+          "id": "921f6ee1-70cc-4203-a6d8-0620e620822d",
+          "identifiers": [{
+            "identifier": "00840349832002642586",
+            "domain": "sscc",
+            "authority": "lx3"
+          }],
+          "equipmentType": {
+            "identifier": "2xGoodyear 14.9-28",
+            "domain": "equipment_type",
+            "authority": "lx3"
+          },
+          "dimensions": {
+            "outer": {
+              "width": {
+                "amount": 80,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "length": {
+                "amount": 120,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "height": {
+                "amount": 140,
+                "unit": {
+                  "name": "cm"
+                }
+              }
+            }
+          },
+          "measurements": {
+            "volume": {
+              "value": {
+                "amount": 1.344,
+                "unit": {
+                  "name": "cbm"
+                }
+              }
+            },
+            "ldm": {
+              "value": {
+                "amount": 0.4,
+                "unit": {
+                  "name": "m"
+                }
+              }
+            },
+            "gross_weight": {
+              "value": {
+                "amount": 125,
+                "unit": {
+                  "name": "kg"
+                }
+              }
+            }
+          }
+        }],
+        "identifiers": [{
+          "identifier": "5013260257",
+          "domain": "shipment_ref",
+          "authority": "lx3"
+        }, {
+          "identifier": "TIOR Sp. z o.o.",
+          "domain": "freight_payer",
+          "authority": "tenant"
+        }, {
+          "identifier": "2xGoodyear 14.9-28",
+          "domain": "shipper_ref",
+          "authority": "tenant"
+        }, {
+          "identifier": "RWM004101210",
+          "domain": "message_reference",
+          "authority": "tenant"
+        }, {
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }, {
+          "identifier": "N",
+          "domain": "dangerous_goods",
+          "authority": "tenant"
+        }]
+      }, {
+        "parties": {
+          "shippingLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "2xOzka 480/70-34",
+              "domain": "SRF",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "6f88213d-e249-4186-bdd4-b7266fcafe5e",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          },
+          "deliveryLocation": {
+            "city": "Aurach Am Hongar",
+            "countryCode": "AT",
+            "identifiers": [{
+              "identifier": "SCHAATAUR001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004944119",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "1",
+              "domain": "N7L",
+              "authority": "tenant"
+            }],
+            "name": "Schachinger Sabine",
+            "zipOrPostalCode": "4861",
+            "id": "4db537dd-c1a0-46c6-96eb-c96982a79fa2",
+            "addressLine": "Illingbuch 10",
+            "contacts": []
+          },
+          "neutralShippingLocation": {
+            "name": "",
+            "zipOrPostalCode": "",
+            "id": "",
+            "city": "",
+            "countryCode": "",
+            "identifiers": [{
+              "identifier": "DEHAG",
+              "domain": "location_code",
+              "authority": "tenant"
+            }],
+            "addressLine": ""
+          },
+          "operationalParty": {
+            "name": "DEHAG",
+            "zipOrPostalCode": "",
+            "id": "dd4484cc-675a-4b64-adb4-2753fe69658f",
+            "addressLine": "",
+            "city": "",
+            "countryCode": ""
+          }
+        },
+        "notes": [{
+          "note": "+436763498680",
+          "code": "CN"
+        }],
+        "id": "5013260233-RWM004101234-SKOM 1727780007415",
+        "type": {
+          "identifier": "Groupage",
+          "domain": "article",
+          "authority": "lx3"
+        },
+        "loadingEquipments": [{
+          "quantity": {
+            "amount": 1,
+            "unit": {
+              "name": "PLT"
+            }
+          },
+          "id": "8110e959-0866-47ae-ba35-13a2562d67dd",
+          "identifiers": [{
+            "identifier": "00840349832002642593",
+            "domain": "sscc",
+            "authority": "lx3"
+          }],
+          "equipmentType": {
+            "identifier": "2xOzka 480/70-34",
+            "domain": "equipment_type",
+            "authority": "lx3"
+          },
+          "dimensions": {
+            "outer": {
+              "width": {
+                "amount": 80,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "length": {
+                "amount": 120,
+                "unit": {
+                  "name": "cm"
+                }
+              },
+              "height": {
+                "amount": 160,
+                "unit": {
+                  "name": "cm"
+                }
+              }
+            }
+          },
+          "measurements": {
+            "volume": {
+              "value": {
+                "amount": 1.536,
+                "unit": {
+                  "name": "cbm"
+                }
+              }
+            },
+            "ldm": {
+              "value": {
+                "amount": 0.4,
+                "unit": {
+                  "name": "m"
+                }
+              }
+            },
+            "gross_weight": {
+              "value": {
+                "amount": 260,
+                "unit": {
+                  "name": "kg"
+                }
+              }
+            }
+          }
+        }],
+        "identifiers": [{
+          "identifier": "5013260233",
+          "domain": "shipment_ref",
+          "authority": "lx3"
+        }, {
+          "identifier": "TIOR Sp. z o.o.",
+          "domain": "freight_payer",
+          "authority": "tenant"
+        }, {
+          "identifier": "1",
+          "domain": "consignee_ref",
+          "authority": "tenant"
+        }, {
+          "identifier": "2xOzka 480/70-34",
+          "domain": "shipper_ref",
+          "authority": "tenant"
+        }, {
+          "identifier": "RWM004101234",
+          "domain": "message_reference",
+          "authority": "tenant"
+        }, {
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }, {
+          "identifier": "N",
+          "domain": "dangerous_goods",
+          "authority": "tenant"
+        }]
+      }],
+      "createDateTime": 1727780056117,
+      "groupedStops": [],
+      "id": "DE-trip-SKOM 1727780007415",
+      "identifiers": [{
+        "identifier": "SKOM 1727780007415",
+        "domain": "trip",
+        "authority": "lx3"
+      }, {
+        "identifier": "Truck",
+        "domain": "vehicle_type",
+        "authority": "tenant"
+      }, {
+        "identifier": "DEHAG01",
+        "domain": "logical_sender",
+        "authority": "tenant"
+      }, {
+        "identifier": "DEHAG",
+        "domain": "parent_logical_sender",
+        "authority": "tenant"
+      }, {
+        "identifier": "SKOM",
+        "domain": "name",
+        "authority": "lx3"
+      }, {
+        "identifier": "DE_POC",
+        "domain": "customer",
+        "authority": "lx3"
+      }, {
+        "identifier": "ROADLOG",
+        "domain": "sending_application",
+        "authority": "tenant"
+      }, {
+        "identifier": "KNRLG01",
+        "domain": "physical_sender",
+        "authority": "tenant"
+      }, {
+        "identifier": "WWDPP01 KNXLG01",
+        "domain": "physical_receiver",
+        "authority": "tenant"
+      }, {
+        "identifier": "false",
+        "domain": "is_adr",
+        "authority": "tenant"
+      }, {
+        "identifier": "SKOM 1727780007415",
+        "domain": "tour_number",
+        "authority": "tenant"
+      }, {
+        "identifier": "SKOM - CRDEHAGSKOM40730 1727780007415",
+        "domain": "voyage_number",
+        "authority": "tenant"
+      }, {
+        "identifier": "DESURD",
+        "domain": "driver_code",
+        "authority": "tenant"
+      }, {
+        "identifier": "C",
+        "domain": "trip_type",
+        "authority": "tenant"
+      }, {
+        "identifier": "5013247567",
+        "domain": "tracking_number",
+        "authority": "tenant"
+      }],
+      "integrationSource": {
+        "sendingSystemTransactionId": "",
+        "receivedDateTime": 1727780009760,
+        "transmittedDateTime": 1727780007000,
+        "sendingSystem": "ROADLOG",
+        "sendingPartner": "kn"
+      },
+      "name": "SKOM",
+      "orderLines": [{
+        "id": "SKOM 1727780007415--accept_trip",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          },
+          "delivered": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "accept_trip",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {},
+        "status": "executed",
+        "timeIntervals": {
+          "deliveryDate": {
+            "actual": {
+              "value": {
+                "end": "2024-10-01T12:56:38.546+02:00"
+              },
+              "type": "date_time"
+            }
+          }
+        },
+        "milestones": [{
+          "orderLineId": "SKOM 1727780007415--accept_trip",
+          "type": "executed",
+          "author": "Mikolaj Skora",
+          "additionalInformation": {
+            "vehicleIdentifier": null,
+            "userMetadata": {
+              "appPlatform": "web_browser",
+              "buildTime": "2024-10-01T08:59:38.802Z",
+              "browser": "Google Chrome"
+            }
+          },
+          "eventRegisteredDateTime": "2024-10-01T12:56:38.546+02:00",
+          "position": {
+            "longitude": 11.9729111,
+            "latitude": 57.7077464
+          }
+        }]
+      }, {
+        "id": "SKOM 1727780007415--start_trip",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          },
+          "delivered": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "start_trip",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {},
+        "status": "executed",
+        "timeIntervals": {
+          "deliveryDate": {
+            "actual": {
+              "value": {
+                "end": "2024-10-01T12:56:39.761+02:00"
+              },
+              "type": "date_time"
+            }
+          }
+        },
+        "milestones": [{
+          "orderLineId": "SKOM 1727780007415--start_trip",
+          "type": "executed",
+          "author": "Mikolaj Skora",
+          "additionalInformation": {
+            "vehicleIdentifier": {
+              "identifier": "SBL69873",
+              "domain": "vehicle",
+              "authority": "lx3"
+            },
+            "userMetadata": {
+              "appPlatform": "web_browser",
+              "buildTime": "2024-10-01T08:59:38.802Z",
+              "browser": "Google Chrome",
+              "screen": "trip_execution"
+            }
+          },
+          "eventRegisteredDateTime": "2024-10-01T12:56:39.761+02:00",
+          "position": {
+            "longitude": 11.9729111,
+            "latitude": 57.7077464
+          }
+        }]
+      }, {
+        "id": "SKOM 1727780007415-5013247567-load-PCK-stop",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "stop",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {
+          "deliveryLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "1XOzka 18.4-38 KNK 50 14 PR",
+              "domain": "SRF",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "8ee6eec4-c059-4b5c-acbe-0df94ca93e8a",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          }
+        },
+        "status": "new",
+        "timeIntervals": {
+          "shippingDate": {
+            "planned": {
+              "format": "time_interval",
+              "value": {
+                "start": "2024-08-23T11:00:00.000+0200",
+                "end": "2024-08-23T17:00:00.000+0200"
+              },
+              "duration": 21600000
+            }
+          }
+        },
+        "notes": [{
+          "note": "782505002",
+          "code": "info_1"
+        }],
+        "identifiers": [{
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }],
+        "orderLines": [{
+          "id": "SKOM 1727780007415-5013247567-load-PCK-register_arrival",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "register_arrival",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013247567-RWM004095620-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "0c84e82a-5ebd-464c-8c33-362327202796"
+          },
+          "status": "new"
+        }, {
+          "id": "SKOM 1727780007415-5013247567-load-PCK-load_consignment",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "load_consignment",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013247567-RWM004095620-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "dc7846d1-0be2-48b8-9a45-1b745c173366"
+          },
+          "status": "new",
+          "orderLines": [{
+            "id": "SKOM 1727780007415-5013247567-load-PCK-complete_loading",
+            "quantity": {
+              "requested": {
+                "amount": 1,
+                "unit": {
+                  "name": "pcs"
+                }
+              }
+            },
+            "productType": {
+              "identifier": "complete_loading",
+              "domain": "order",
+              "authority": "lx3"
+            },
+            "parties": {},
+            "timeIntervals": {},
+            "productInstance": {
+              "productIdentifier": {
+                "identifier": "5013247567-RWM004095620-SKOM 1727780007415",
+                "domain": "consignment",
+                "authority": "lx3"
+              },
+              "service": {
+                "type": "c"
+              },
+              "id": "619cd84f-ab49-4f26-a6d7-90bbef66b881"
+            },
+            "status": "new",
+            "orderLines": [{
+              "id": "SKOM 1727780007415-5013247567-load-PCK-collect_signature_consignor",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_consignor",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013247567-load-PCK-collect_signature_driver",
+              "quantity": {
+                "requested": {
+                  "amount": 0,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_driver",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013247567-load-PCK-scan_parcels",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "scan_parcels",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }]
+          }]
+        }]
+      }, {
+        "id": "SKOM 1727780007415-5013249350-load-PCK-stop",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "stop",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {
+          "deliveryLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "2be52cb6-61f8-4352-a53c-f2c15cb1190c",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          }
+        },
+        "status": "new",
+        "timeIntervals": {
+          "shippingDate": {
+            "planned": {
+              "format": "time_interval",
+              "value": {
+                "start": "2024-08-23T12:00:00.000+0200",
+                "end": "2024-08-23T18:00:00.000+0200"
+              },
+              "duration": 21600000
+            }
+          }
+        },
+        "notes": [{
+          "note": "782505002",
+          "code": "info_1"
+        }],
+        "identifiers": [{
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }],
+        "orderLines": [{
+          "id": "SKOM 1727780007415-5013249350-load-PCK-register_arrival",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "register_arrival",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013249350-RWM004096183-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "53b48fc4-d847-4124-838d-e449743f4193"
+          },
+          "status": "new"
+        }, {
+          "id": "SKOM 1727780007415-5013249350-load-PCK-load_consignment",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "load_consignment",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013249350-RWM004096183-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "62e61980-ca96-47d3-b638-0f024d261394"
+          },
+          "status": "new",
+          "orderLines": [{
+            "id": "SKOM 1727780007415-5013249350-load-PCK-complete_loading",
+            "quantity": {
+              "requested": {
+                "amount": 1,
+                "unit": {
+                  "name": "pcs"
+                }
+              }
+            },
+            "productType": {
+              "identifier": "complete_loading",
+              "domain": "order",
+              "authority": "lx3"
+            },
+            "parties": {},
+            "timeIntervals": {},
+            "productInstance": {
+              "productIdentifier": {
+                "identifier": "5013249350-RWM004096183-SKOM 1727780007415",
+                "domain": "consignment",
+                "authority": "lx3"
+              },
+              "service": {
+                "type": "c"
+              },
+              "id": "c81f57e5-454b-474d-b7f6-98e4d7b81279"
+            },
+            "status": "new",
+            "orderLines": [{
+              "id": "SKOM 1727780007415-5013249350-load-PCK-collect_signature_consignor",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_consignor",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013249350-load-PCK-collect_signature_driver",
+              "quantity": {
+                "requested": {
+                  "amount": 0,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_driver",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013249350-load-PCK-scan_parcels",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "scan_parcels",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }]
+          }]
+        }]
+      }, {
+        "id": "SKOM 1727780007415-5013249362-load-PCK-stop",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "stop",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {
+          "deliveryLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "6b9a4f89-1231-4b4b-9000-bf5cfe03e5d4",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          }
+        },
+        "status": "new",
+        "timeIntervals": {
+          "shippingDate": {
+            "planned": {
+              "format": "time_interval",
+              "value": {
+                "start": "2024-08-23T12:00:00.000+0200",
+                "end": "2024-08-23T18:00:00.000+0200"
+              },
+              "duration": 21600000
+            }
+          }
+        },
+        "notes": [{
+          "note": "782505002",
+          "code": "info_1"
+        }],
+        "identifiers": [{
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }],
+        "orderLines": [{
+          "id": "SKOM 1727780007415-5013249362-load-PCK-register_arrival",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "register_arrival",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013249362-RWM004096210-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "0da0c16b-15f6-49c2-9a3e-d2c7c179318c"
+          },
+          "status": "new"
+        }, {
+          "id": "SKOM 1727780007415-RWM004096210-load-PCK-EUP-euro_pallet_exchange",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "euro_pallet_exchange",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "identifiers": [{
+            "identifier": "EUP",
+            "domain": "exchange_type",
+            "authority": "tenant"
+          }, {
+            "identifier": "RWM004096210",
+            "domain": "message_reference",
+            "authority": "tenant"
+          }],
+          "status": "new",
+          "orderLines": [{
+            "id": "SKOM 1727780007415-euro_pallet_exchange-RWM004096210-load-PCK-EUP-pallets_picked_up",
+            "quantity": {
+              "requested": {
+                "amount": 1,
+                "unit": {
+                  "name": "pcs"
+                }
+              }
+            },
+            "productType": {
+              "identifier": "pallets_picked_up",
+              "domain": "order",
+              "authority": "lx3"
+            },
+            "parties": {},
+            "timeIntervals": {},
+            "status": "new"
+          }, {
+            "id": "SKOM 1727780007415-euro_pallet_exchange-RWM004096210-load-PCK-EUP-pallets_delivered",
+            "quantity": {
+              "requested": {
+                "amount": 1,
+                "unit": {
+                  "name": "pcs"
+                }
+              }
+            },
+            "productType": {
+              "identifier": "pallets_delivered",
+              "domain": "order",
+              "authority": "lx3"
+            },
+            "parties": {},
+            "timeIntervals": {},
+            "status": "new"
+          }]
+        }, {
+          "id": "SKOM 1727780007415-5013249362-load-PCK-load_consignment",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "load_consignment",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013249362-RWM004096210-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "7376ae26-5779-4ab8-bd24-3e0e49af489c"
+          },
+          "status": "new",
+          "orderLines": [{
+            "id": "SKOM 1727780007415-5013249362-load-PCK-complete_loading",
+            "quantity": {
+              "requested": {
+                "amount": 1,
+                "unit": {
+                  "name": "pcs"
+                }
+              }
+            },
+            "productType": {
+              "identifier": "complete_loading",
+              "domain": "order",
+              "authority": "lx3"
+            },
+            "parties": {},
+            "timeIntervals": {},
+            "productInstance": {
+              "productIdentifier": {
+                "identifier": "5013249362-RWM004096210-SKOM 1727780007415",
+                "domain": "consignment",
+                "authority": "lx3"
+              },
+              "service": {
+                "type": "c"
+              },
+              "id": "8ce8d1a3-85e2-4a11-83e7-e907bbdc2807"
+            },
+            "status": "new",
+            "orderLines": [{
+              "id": "SKOM 1727780007415-5013249362-load-PCK-collect_signature_consignor",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_consignor",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013249362-load-PCK-collect_signature_driver",
+              "quantity": {
+                "requested": {
+                  "amount": 0,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_driver",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013249362-load-PCK-scan_parcels",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "scan_parcels",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }]
+          }]
+        }]
+      }, {
+        "id": "SKOM 1727780007415-5013260289-load-PCK-stop",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "stop",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {
+          "deliveryLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "1xFirestone 380/85R28",
+              "domain": "SRF",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "65e595e1-c711-43ed-9135-6c4144b8c590",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          }
+        },
+        "status": "new",
+        "timeIntervals": {
+          "shippingDate": {
+            "planned": {
+              "format": "time_interval",
+              "value": {
+                "start": "2024-08-23T10:00:00.000+0200",
+                "end": "2024-08-23T17:00:00.000+0200"
+              },
+              "duration": 25200000
+            }
+          }
+        },
+        "identifiers": [{
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }],
+        "orderLines": [{
+          "id": "SKOM 1727780007415-5013260289-load-PCK-register_arrival",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "register_arrival",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013260289-RWM004101179-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "0232fc7a-7d62-415e-bd8f-e2e6e247dea3"
+          },
+          "status": "new"
+        }, {
+          "id": "SKOM 1727780007415-5013260289-load-PCK-load_consignment",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "load_consignment",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013260289-RWM004101179-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "832c301b-808d-4bb1-9166-47ac35dd3bf0"
+          },
+          "status": "new",
+          "orderLines": [{
+            "id": "SKOM 1727780007415-5013260289-load-PCK-complete_loading",
+            "quantity": {
+              "requested": {
+                "amount": 1,
+                "unit": {
+                  "name": "pcs"
+                }
+              }
+            },
+            "productType": {
+              "identifier": "complete_loading",
+              "domain": "order",
+              "authority": "lx3"
+            },
+            "parties": {},
+            "timeIntervals": {},
+            "productInstance": {
+              "productIdentifier": {
+                "identifier": "5013260289-RWM004101179-SKOM 1727780007415",
+                "domain": "consignment",
+                "authority": "lx3"
+              },
+              "service": {
+                "type": "c"
+              },
+              "id": "0a5d6a98-fe01-4f12-8548-145315a04b1e"
+            },
+            "status": "new",
+            "orderLines": [{
+              "id": "SKOM 1727780007415-5013260289-load-PCK-collect_signature_consignor",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_consignor",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013260289-load-PCK-collect_signature_driver",
+              "quantity": {
+                "requested": {
+                  "amount": 0,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_driver",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013260289-load-PCK-scan_parcels",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "scan_parcels",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }]
+          }]
+        }]
+      }, {
+        "id": "SKOM 1727780007415-5013260257-load-PCK-stop",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "stop",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {
+          "deliveryLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "2xGoodyear 14.9-28",
+              "domain": "SRF",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "85b7ff95-3b07-4347-b271-274fc638e67d",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          }
+        },
+        "status": "new",
+        "timeIntervals": {
+          "shippingDate": {
+            "planned": {
+              "format": "time_interval",
+              "value": {
+                "start": "2024-08-23T11:00:00.000+0200",
+                "end": "2024-08-23T17:00:00.000+0200"
+              },
+              "duration": 21600000
+            }
+          }
+        },
+        "identifiers": [{
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }],
+        "orderLines": [{
+          "id": "SKOM 1727780007415-5013260257-load-PCK-register_arrival",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "register_arrival",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013260257-RWM004101210-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "33dc9a38-9b10-4989-ae4c-e38d4ca46887"
+          },
+          "status": "new"
+        }, {
+          "id": "SKOM 1727780007415-5013260257-load-PCK-load_consignment",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "load_consignment",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013260257-RWM004101210-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "6012fbfa-4083-475c-865b-389afd23a20d"
+          },
+          "status": "new",
+          "orderLines": [{
+            "id": "SKOM 1727780007415-5013260257-load-PCK-complete_loading",
+            "quantity": {
+              "requested": {
+                "amount": 1,
+                "unit": {
+                  "name": "pcs"
+                }
+              }
+            },
+            "productType": {
+              "identifier": "complete_loading",
+              "domain": "order",
+              "authority": "lx3"
+            },
+            "parties": {},
+            "timeIntervals": {},
+            "productInstance": {
+              "productIdentifier": {
+                "identifier": "5013260257-RWM004101210-SKOM 1727780007415",
+                "domain": "consignment",
+                "authority": "lx3"
+              },
+              "service": {
+                "type": "c"
+              },
+              "id": "8e04fe71-599a-4a16-9126-b49fc4ebff6b"
+            },
+            "status": "new",
+            "orderLines": [{
+              "id": "SKOM 1727780007415-5013260257-load-PCK-collect_signature_consignor",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_consignor",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013260257-load-PCK-collect_signature_driver",
+              "quantity": {
+                "requested": {
+                  "amount": 0,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_driver",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013260257-load-PCK-scan_parcels",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "scan_parcels",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }]
+          }]
+        }]
+      }, {
+        "id": "SKOM 1727780007415-5013260233-load-PCK-stop",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "stop",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {
+          "deliveryLocation": {
+            "city": "Glogoczow",
+            "countryCode": "PL",
+            "identifiers": [{
+              "identifier": "TIORPLGLO001",
+              "domain": "party",
+              "authority": "tenant"
+            }, {
+              "identifier": "1004006560",
+              "domain": "customer",
+              "authority": "tenant"
+            }, {
+              "identifier": "2xOzka 480/70-34",
+              "domain": "SRF",
+              "authority": "tenant"
+            }],
+            "name": "TIOR Sp. z o.o.",
+            "zipOrPostalCode": "32-444",
+            "id": "e7557f4c-ad44-4585-baa4-d7308ee9d55d",
+            "addressLine": "Glogoczow 760",
+            "contacts": [{
+              "firstname": "ÅUKASZ",
+              "phone": "782505002",
+              "email": "lsikora@premiorri.eu",
+              "lastname": "SIKORA"
+            }]
+          }
+        },
+        "status": "new",
+        "timeIntervals": {
+          "shippingDate": {
+            "planned": {
+              "format": "time_interval",
+              "value": {
+                "start": "2024-08-23T11:00:00.000+0200",
+                "end": "2024-08-23T17:00:00.000+0200"
+              },
+              "duration": 21600000
+            }
+          }
+        },
+        "identifiers": [{
+          "identifier": "PICKUP",
+          "domain": "trucking_type",
+          "authority": "tenant"
+        }],
+        "orderLines": [{
+          "id": "SKOM 1727780007415-5013260233-load-PCK-register_arrival",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "register_arrival",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013260233-RWM004101234-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "980930fa-1924-4836-8ab1-37f7c0c0b451"
+          },
+          "status": "new"
+        }, {
+          "id": "SKOM 1727780007415-5013260233-load-PCK-load_consignment",
+          "quantity": {
+            "requested": {
+              "amount": 1,
+              "unit": {
+                "name": "pcs"
+              }
+            }
+          },
+          "productType": {
+            "identifier": "load_consignment",
+            "domain": "order",
+            "authority": "lx3"
+          },
+          "parties": {},
+          "timeIntervals": {},
+          "productInstance": {
+            "productIdentifier": {
+              "identifier": "5013260233-RWM004101234-SKOM 1727780007415",
+              "domain": "consignment",
+              "authority": "lx3"
+            },
+            "service": {
+              "type": "c"
+            },
+            "id": "03413aec-415f-4113-af1f-4ad371f7c8c0"
+          },
+          "status": "new",
+          "orderLines": [{
+            "id": "SKOM 1727780007415-5013260233-load-PCK-complete_loading",
+            "quantity": {
+              "requested": {
+                "amount": 1,
+                "unit": {
+                  "name": "pcs"
+                }
+              }
+            },
+            "productType": {
+              "identifier": "complete_loading",
+              "domain": "order",
+              "authority": "lx3"
+            },
+            "parties": {},
+            "timeIntervals": {},
+            "productInstance": {
+              "productIdentifier": {
+                "identifier": "5013260233-RWM004101234-SKOM 1727780007415",
+                "domain": "consignment",
+                "authority": "lx3"
+              },
+              "service": {
+                "type": "c"
+              },
+              "id": "2d471f5d-9b72-4e1f-abae-d9730bcdb90c"
+            },
+            "status": "new",
+            "orderLines": [{
+              "id": "SKOM 1727780007415-5013260233-load-PCK-collect_signature_consignor",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_consignor",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013260233-load-PCK-collect_signature_driver",
+              "quantity": {
+                "requested": {
+                  "amount": 0,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "collect_signature_driver",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }, {
+              "id": "SKOM 1727780007415-5013260233-load-PCK-scan_parcels",
+              "quantity": {
+                "requested": {
+                  "amount": 1,
+                  "unit": {
+                    "name": "pcs"
+                  }
+                }
+              },
+              "productType": {
+                "identifier": "scan_parcels",
+                "domain": "order",
+                "authority": "lx3"
+              },
+              "parties": {},
+              "timeIntervals": {},
+              "status": "new"
+            }]
+          }]
+        }]
+      }, {
+        "id": "SKOM 1727780007415--end_trip",
+        "quantity": {
+          "requested": {
+            "amount": 1,
+            "unit": {
+              "name": "pcs"
+            }
+          }
+        },
+        "productType": {
+          "identifier": "end_trip",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {},
+        "status": "new",
+        "timeIntervals": {}
+      }, {
+        "id": "SKOM - CRDEHAGSKOM40730 1727780007415-resource_vehicle",
+        "quantity": {},
+        "productType": {
+          "identifier": "resource_vehicle",
+          "domain": "order",
+          "authority": "lx3"
+        },
+        "parties": {},
+        "status": "executed",
+        "timeIntervals": {
+          "shippingDate": {
+            "requested": {
+              "format": "time_interval",
+              "value": {
+                "start": "2024-08-23T11:00:00.000+0200",
+                "end": "2024-08-23T17:00:00.000+0200"
+              },
+              "duration": 21600000
+            }
+          },
+          "deliveryDate": {
+            "requested": {
+              "format": "time_interval",
+              "value": {
+                "start": "2024-08-23T08:00:00.000+0200",
+                "end": "2024-08-23T16:00:00.000+0200"
+              },
+              "duration": 28800000
+            },
+            "actual": {
+              "value": {
+                "end": "2024-10-01T12:56:39.761+02:00"
+              },
+              "type": "date_time"
+            }
+          },
+          "orderDate": {
+            "requested": {
+              "format": "date_time",
+              "value": "2024-10-01"
+            }
+          }
+        },
+        "resources": [{
+          "name": "",
+          "id": "DE-SBL69873",
+          "type": {
+            "identifier": "Truck",
+            "domain": "vehicle",
+            "authority": "tenant"
+          },
+          "identifiers": [{
+            "identifier": "SBL69873",
+            "domain": "license_plate",
+            "authority": "tenant"
+          }]
+        }],
+        "productInstance": {
+          "productIdentifier": {
+            "identifier": "DE-SBL69873",
+            "domain": "resource_vehicle",
+            "authority": "lx3"
+          }
+        },
+        "milestones": [{
+          "orderLineId": "SKOM - CRDEHAGSKOM40730 1727780007415-resource_vehicle",
+          "type": "executed",
+          "author": "Mikolaj Skora",
+          "additionalInformation": {
+            "vehicleIdentifier": {
+              "identifier": "SBL69873",
+              "domain": "vehicle",
+              "authority": "lx3"
+            },
+            "userMetadata": {
+              "appPlatform": "web_browser",
+              "buildTime": "2024-10-01T08:59:38.802Z",
+              "browser": "Google Chrome",
+              "screen": "trip_execution"
+            }
+          },
+          "eventRegisteredDateTime": "2024-10-01T12:56:39.761+02:00",
+          "position": {
+            "longitude": 11.9729111,
+            "latitude": 57.7077464
+          }
+        }]
+      }],
+      "parties": {
+        "orderInitiator": {
+          "name": "",
+          "zipOrPostalCode": "",
+          "id": "",
+          "addressLine": "",
+          "city": "",
+          "countryCode": ""
+        },
+        "serviceProvider": {
+          "city": "Imielin",
+          "countryCode": "PL",
+          "identifiers": [{
+            "identifier": "FHULPLIMI002",
+            "domain": "party",
+            "authority": "tenant"
+          }, {
+            "identifier": "1001754623",
+            "domain": "customer",
+            "authority": "tenant"
+          }],
+          "name": "F.H.U. Laos Lucyna Sitko",
+          "zipOrPostalCode": "41-407",
+          "id": "cdf7f488-b7b6-4795-88b2-2a86cb680d84",
+          "addressLine": "ul. Podmiejska 51",
+          "contacts": [{
+            "phone": "604401866",
+            "firstname": "Mikolaj",
+            "lastname": "Skora"
+          }]
+        },
+        "shippingLocation": {
+          "name": "DEHAG",
+          "zipOrPostalCode": "",
+          "id": "528ca132-c114-4968-ac7d-32eda72b182a",
+          "addressLine": "",
+          "city": "",
+          "countryCode": ""
+        },
+        "deliveryLocation": {
+          "name": "",
+          "zipOrPostalCode": "",
+          "id": "faff8c36-12a5-4f3b-be7c-ee19cc70c5b7",
+          "addressLine": "",
+          "city": "",
+          "countryCode": ""
+        },
+        "managingParty": {
+          "city": "",
+          "countryCode": "",
+          "identifiers": [{
+            "identifier": "DEHAG",
+            "domain": "branch_code",
+            "authority": "tenant"
+          }, {
+            "identifier": "PLKN",
+            "domain": "company_code",
+            "authority": "tenant"
+          }],
+          "name": "",
+          "zipOrPostalCode": "",
+          "id": "",
+          "addressLine": "",
+          "contacts": [{
+            "phone": "604401866",
+            "firstname": "Mikolaj",
+            "lastname": "Skora"
+          }]
+        }
+      },
+      "status": "executing",
+      "subType": {
+        "identifier": "groupage",
+        "domain": "trip_type",
+        "authority": "tenant"
+      },
+      "timeIntervals": {
+        "shippingDate": {
+          "requested": {
+            "format": "time_interval",
+            "value": {
+              "start": "2024-08-23T11:00:00.000+0200",
+              "end": "2024-08-23T17:00:00.000+0200"
+            }
+          }
+        },
+        "deliveryDate": {
+          "requested": {
+            "format": "time_interval",
+            "value": {
+              "start": "2024-08-23T08:00:00.000+0200",
+              "end": "2024-08-23T16:00:00.000+0200"
+            }
+          }
+        },
+        "orderDate": {
+          "requested": {
+            "format": "date_time",
+            "value": "2024-10-01"
+          }
+        }
+      },
+      "type": {
+        "identifier": "trip",
+        "domain": "order",
+        "authority": "lx3"
+      },
+      "milestones": [{
+        "eventRegisteredDateTime": "2024-10-01T10:56:38.680Z",
+        "deviation": "",
+        "remark": "",
+        "type": "confirmed",
+        "author": "Mikolaj Skora",
+        "additionalInformation": {
+          "vehicleIdentifier": null
+        },
+        "position": {
+          "longitude": 11.9729111,
+          "latitude": 57.7077464
+        }
+      }, {
+        "eventRegisteredDateTime": "2024-10-01T10:56:39.817Z",
+        "deviation": "",
+        "remark": "",
+        "type": "started",
+        "author": "Mikolaj Skora",
+        "additionalInformation": {
+          "vehicleIdentifier": {
+            "identifier": "SBL69873",
+            "domain": "vehicle",
+            "authority": "lx3"
+          },
+          "userMetadata": {
+            "appPlatform": "web_browser",
+            "buildTime": "2024-10-01T08:59:38.802Z",
+            "browser": "Google Chrome",
+            "screen": "trip_execution"
+          }
+        },
+        "position": {
+          "longitude": 11.9729111,
+          "latitude": 57.7077464
+        },
+        "userId": "12046dc0-e7a0-4325-8186-7e895ff3c841"
+      }]
+    }
+  }
+}

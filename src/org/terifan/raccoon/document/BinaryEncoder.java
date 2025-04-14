@@ -7,6 +7,35 @@ import java.util.function.Function;
 import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
 import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
 
+// +--order{}        <-- 0
+//   +--a
+//   +--b
+//   +--orderLines[]
+//      +--0{}        <-- 1
+//      |  +--a
+//      |  +--b
+//      |  +--orderDetails[]
+//      |     +--0{}        <-- 2
+//      |        +--a
+//      |        +--b
+//      |     +--1{}        <-- 3
+//      |        +--a
+//      |        +--b
+//      +--1{}        <-- 4
+//         +--a
+//         +--b
+//         +--orderDetails[]
+//            +--0{}        <-- 5
+//               +--a
+//               +--b
+//            +--1{}        <-- 6
+//               +--a
+//               +--b
+
+// same keys
+// same keys/values
+
+// 
 
 class BinaryEncoder implements AutoCloseable
 {
@@ -31,6 +60,13 @@ class BinaryEncoder implements AutoCloseable
 		mOutputStream = aOutputStream;
 		mFilter = aFilter;
 		mDictionary = aDictionary;
+	}
+
+
+	void standalone() throws IOException
+	{
+		mChecksum = new MurmurHash3(VERSION);
+		writeToken(BinaryCodec.DICTIONARY, VERSION);
 	}
 
 
@@ -123,7 +159,18 @@ class BinaryEncoder implements AutoCloseable
 
 			for (int i = offset; i < elementCount; i++, runLen++)
 			{
-				BinaryCodec nextType = BinaryCodec.identify(aArray.get(i));
+				Object value = aArray.get(i);
+
+				BinaryCodec nextType;
+				if (mDictionary != null && mDictionary.encode(value) != null)
+				{
+					nextType = BinaryCodec.DICTIONARY;
+				}
+				else
+				{
+					nextType = BinaryCodec.identify(value);
+				}
+
 				if (type != nextType && type != null)
 				{
 					break;
@@ -156,7 +203,7 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	private void writeToken(BinaryCodec aType, int aValue) throws IOException
+	void writeToken(BinaryCodec aType, int aValue) throws IOException
 	{
 		writeInterleaved(aType.ordinal(), aValue);
 	}
