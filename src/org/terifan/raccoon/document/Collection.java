@@ -22,11 +22,12 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.zip.InflaterInputStream;
 
 
 public abstract class Collection<K, R> implements Externalizable, Serializable
@@ -146,7 +147,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public abstract boolean same(R aOther);
 
 
-	public abstract Iterable<K> keySet();
+	public abstract Set<K> keySet();
 
 
 	public abstract boolean containsKey(K aKey);
@@ -166,7 +167,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	abstract Object remove(K aKey);
 
 
-	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum);
+	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum, ReferenceMap aLinkedList);
 
 
 	@SuppressWarnings("unchecked")
@@ -939,15 +940,15 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	@Override
 	public int hashCode()
 	{
-		return hashCode(new MurmurHash3(0)).getValue();
+		return hashCode(new MurmurHash3(0), new ReferenceMap()).getValue();
 	}
 
 
-	void hashCode(MurmurHash3 aChecksum, Object aValue)
+	void hashCode(MurmurHash3 aChecksum, Object aValue, ReferenceMap aLinkedList)
 	{
 		if (aValue instanceof Collection v)
 		{
-			v.hashCode(aChecksum);
+			v.hashCode(aChecksum, aLinkedList);
 		}
 		else if (aValue instanceof CharSequence v)
 		{
@@ -955,7 +956,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		}
 		else if (aValue instanceof byte[] v)
 		{
-			aChecksum.updateBytes(v, 0, v.length);
+			aChecksum.updateBytes(v);
 		}
 		else
 		{
@@ -1055,6 +1056,11 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public String toJson(boolean aCompact)
 	{
 		return new JSONEncoder().marshal(this, aCompact, false, false, new StringBuilder()).toString();
+	}
+
+	public String toJson(boolean aCompact, boolean aApostrophes)
+	{
+		return new JSONEncoder().marshal(this, aCompact, false, aApostrophes, new StringBuilder()).toString();
 	}
 
 
@@ -1243,7 +1249,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	/**
 	 * Return a binary representation of this object.
 	 */
-	public byte[] toByteArray(Function<Object, Boolean> aFilter)
+	public byte[] toByteArray(Function<Path, Boolean> aFilter)
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (BinaryEncoder encoder = new BinaryEncoder(baos, aFilter))
@@ -1358,11 +1364,18 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	@SuppressWarnings("unchecked")
 	public R reduce()
 	{
-		ArrayList<K> keySet = new ArrayList<>();
-		for (K key : keySet())
-		{
-			keySet.add(key);
-		}
+//		ReferenceMap references = new ReferenceMap();
+		HashMap<Collection,Collection> references = new HashMap<>();
+
+		reduce(references);
+
+		return (R)this;
+	}
+
+
+	private void reduce(HashMap<Collection,Collection> references)
+	{
+		ArrayList<K> keySet = new ArrayList<>(keySet());
 
 		for (int i = size(); --i >= 0;)
 		{
@@ -1374,15 +1387,23 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 			else if (value instanceof Collection v)
 			{
-				v.reduce();
-				if (v.isEmpty())
+				if (references.containsKey(v))
 				{
-					remove(key);
+					putImpl(key, references.get(v));
+				}
+				else
+				{
+					references.put(v, v);
+
+					v.reduce(references);
+
+					if (v.isEmpty())
+					{
+						remove(key);
+					}
 				}
 			}
 		}
-
-		return (R)this;
 	}
 
 

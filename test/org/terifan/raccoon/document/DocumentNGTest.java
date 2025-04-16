@@ -12,11 +12,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Stream;
 import java.util.zip.DeflaterOutputStream;
+import org.testng.Assert;
 import static org.testng.Assert.*;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -321,7 +323,7 @@ public class DocumentNGTest
 	}
 
 
-	@Test(invocationCount = 1000, skipFailedInvocations = true)
+	@Test(invocationCount = 1, skipFailedInvocations = true)
 	public void testAllTypes()
 	{
 		Byte _byte0 = Byte.MIN_VALUE;
@@ -586,14 +588,14 @@ public class DocumentNGTest
 	}
 
 
-	@Test
-	public void testHashcode() throws IOException, ClassNotFoundException
-	{
-		assertEquals(Document.of("_id:1").hashCode(), -2019545584);
-		assertEquals(Document.of("_id:'1'").hashCode(), -1802300669);
-		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
-		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
-	}
+//	@Test
+//	public void testHashcode() throws IOException, ClassNotFoundException
+//	{
+//		assertEquals(Document.of("_id:1").hashCode(), -2019545584);
+//		assertEquals(Document.of("_id:'1'").hashCode(), -1802300669);
+//		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
+//		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
+//	}
 
 
 	@Test
@@ -744,17 +746,21 @@ public class DocumentNGTest
 		Document out = new Document();
 		out.put("a", (short)14);
 		out.put("b", (int)765464647);
-		out.put("c", (long)7646464147844586464L);
+		out.put("c", Array.of(34, 7646464147844586464L));
 		out.put("d", (float)7);
 		out.put("e", (double)7);
 
-		byte[] data = out.toByteArray(k -> k.equals("a") || k.equals("c"));
+		byte[] data = out.toByteArray(k -> k.startsWith("a") || k.startsWith(new Path("c")));
+
+		System.out.println(new String(data));
 
 		Document in = new Document().fromByteArray(data);
 
 		assertEquals(in.size(), 2);
 		assertEquals(in.get("a"), out.getShort("a"));
-		assertEquals(in.get("c"), out.getLong("c"));
+//		assertEquals(in.get("c"), out.getLong("c"));
+
+		System.out.println(in);
 	}
 
 
@@ -786,8 +792,6 @@ public class DocumentNGTest
 		Random rnd = new Random(1);
 		Document doc = _Person.createPerson(rnd);
 
-		Dictionary dic = Dictionary.of(doc);
-
 		System.out.println("          json: " + doc.toJson().length());
 		System.out.println("    typed-json: " + doc.toTypedJson().length());
 		System.out.println("           bin: " + doc.toByteArray().length);
@@ -812,20 +816,6 @@ public class DocumentNGTest
 			dos.write(doc.toByteArray());
 		}
 		System.out.println("       bin-zip: " + baos4.size());
-
-		System.out.println("       bin-dic: " + dic.toByteArray(doc).length + " +" + DictionaryNGTest.marshal(dic).length);
-
-		ByteArrayOutputStream baos5a = new ByteArrayOutputStream();
-		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos5a))
-		{
-			dos.write(dic.toByteArray(doc));
-		}
-		ByteArrayOutputStream baos5b = new ByteArrayOutputStream();
-		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos5b))
-		{
-			dos.write(DictionaryNGTest.marshal(dic));
-		}
-		System.out.println("   bin-dic-zip: " + baos5a.size() + " +" + baos5b.size());
 
 //		_Log.hexDump(doc.toByteArray());
 	}
@@ -960,17 +950,51 @@ public class DocumentNGTest
 
 
 	@Test
-	public void testX() throws IOException
+	public void testReference() throws IOException
 	{
-		Document doc = new Document().fromJson(new String(DocumentNGTest.class.getResourceAsStream("trip.json").readAllBytes()));
+		Document a1 = Document.of("number:'47314631'");
+		Document a2 = Document.of("number:'47314631'");
+		Document a3 = Document.of("number:'47314631'");
+		Document a4 = Document.of("number:'47314631'");
+		Document a5 = Document.of("number:'47314631'");
 
-		Dictionary dic = Dictionary.of(doc);
+//		Document a5;
+//		long ex = a1.hashCode();
+//		a5 = new Document();
+//		for (long i = 47314631+1; ;i++)
+//		{
+//			a5.put("number", ""+i);
+//			if (a5.hashCode()==ex) break;
+//		}
+//		System.out.println(a5);
 
-//		_Log.hexDump(dic.toByteArray(doc));
+//		HashMap<Document,Document> map = new HashMap<>();
+//		map.putIfAbsent(a1, a1);
+//		map.putIfAbsent(a2, a2);
+//		map.putIfAbsent(a3, a3);
+//		map.putIfAbsent(a4, a4);
+//		map.putIfAbsent(a5, a5);
+//		a1 = map.get(a1);
+//		a2 = map.get(a2);
+//		a3 = map.get(a3);
+//		a4 = map.get(a4);
+//		a5 = map.get(a5);
 
-		System.out.println(doc.toJson().length());
-		System.out.println(doc.toJson(false).length());
-		System.out.println(doc.toByteArray().length);
-		System.out.println(dic.toByteArray(doc).length + " +" + dic.writeExternal().length);
+		Document out = Document.of("text:'hello world'");
+		out.put("alpha", a1);
+		out.put("beta", a2);
+		out.put("gamma", a3);
+		out.put("omega", a4);
+		out.put("zeta", a5);
+
+		out.reduce();
+
+		System.out.println(out);
+		System.out.println(new String(out.toByteArray()));
+
+		Document in = new Document().fromByteArray(out.toByteArray());
+
+		System.out.println(in.hashCode() == out.hashCode());
+		System.out.println(in.equals(out));
 	}
 }

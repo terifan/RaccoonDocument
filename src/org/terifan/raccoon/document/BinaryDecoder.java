@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
 import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryCodec.TERMINATOR;
@@ -17,8 +16,7 @@ public class BinaryDecoder
 	private MurmurHash3 mChecksum;
 	private InputStream mInputStream;
 	private Visitor mVisitor;
-
-	Dictionary mDictionary;
+	private final ReferenceMap mReferences;
 
 
 	BinaryDecoder(InputStream aInputStream)
@@ -31,6 +29,7 @@ public class BinaryDecoder
 	{
 		mInputStream = aInputStream;
 		mVisitor = aVisitor;
+		mReferences = new ReferenceMap();
 	}
 
 
@@ -42,9 +41,15 @@ public class BinaryDecoder
 		switch (token.type)
 		{
 			case DOCUMENT:
-				return readDocument(path, new Document(), VisitorResult.CONTINUE);
+				Document d = new Document();
+				mReferences.register(d);
+				readDocument(path, d, VisitorResult.CONTINUE);
+				return d;
 			case ARRAY:
-				return readArray(path, new Array(), VisitorResult.CONTINUE);
+				Array a = new Array();
+				mReferences.register(a);
+				readArray(path, a, VisitorResult.CONTINUE);
+				return a;
 			case TERMINATOR:
 				return token.type;
 			default:
@@ -53,31 +58,35 @@ public class BinaryDecoder
 	}
 
 
-	@SuppressWarnings("unchecked")
-	Object unmarshal(Class aType) throws IOException
-	{
-		try
-		{
-			Token token = readToken();
-			Path path = new Path();
-
-			switch (token.type)
-			{
-				case DOCUMENT:
-					return readDocument(path, ((Constructor<Document>)aType.getConstructor()).newInstance(), VisitorResult.CONTINUE);
-				case ARRAY:
-					return readArray(path, ((Constructor<Array>)aType.getConstructor()).newInstance(), VisitorResult.CONTINUE);
-				case TERMINATOR:
-					return token.type;
-				default:
-					return readValue(path, token.type, VisitorResult.CONTINUE);
-			}
-		}
-		catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e)
-		{
-			throw new IOException(e);
-		}
-	}
+//	@SuppressWarnings("unchecked")
+//	Object unmarshal(Class aType) throws IOException
+//	{
+//		try
+//		{
+//			Token token = readToken();
+//			Path path = new Path();
+//
+//			switch (token.type)
+//			{
+//				case DOCUMENT:
+//					Document d = ((Constructor<Document>)aType.getConstructor()).newInstance();
+//					mReferences.register(d);
+//					return readDocument(path, d, VisitorResult.CONTINUE);
+//				case ARRAY:
+//					Array a = ((Constructor<Array>)aType.getConstructor()).newInstance();
+//					mReferences.register(a);
+//					return readArray(path, a, VisitorResult.CONTINUE);
+//				case TERMINATOR:
+//					return token.type;
+//				default:
+//					return readValue(path, token.type, VisitorResult.CONTINUE);
+//			}
+//		}
+//		catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e)
+//		{
+//			throw new IOException(e);
+//		}
+//	}
 
 
 	void unmarshal(Collection aContainer) throws IOException
@@ -96,6 +105,7 @@ public class BinaryDecoder
 				throw new StreamException("Stream corrupted.");
 			}
 
+			mReferences.register(v);
 			readDocument(path, v, VisitorResult.CONTINUE);
 		}
 		else if (aContainer instanceof Array v)
@@ -109,6 +119,7 @@ public class BinaryDecoder
 				throw new StreamException("Stream corrupted.");
 			}
 
+			mReferences.register(v);
 			readArray(path, v, VisitorResult.CONTINUE);
 		}
 		else
@@ -163,64 +174,56 @@ public class BinaryDecoder
 				break;
 			}
 
-			String key;
-			if (mDictionary != null && (token.value & 1) == 1)
-			{
-				key = (String)mDictionary.decode(token.value / 2);
-			}
-			else
-			{
-				key = readUTF(token.value / 2);
-			}
+			String key = readUTF(token.value);
 
 			aPath.enter(key);
 
-			if (mVisitor != null)
-			{
-				if (skipSiblings)
-				{
-					Object value = readValue(aPath, token.type, aState);
-				}
-				else
-				{
-					VisitorResult result = mVisitor.preVisit(aPath);
-
-					if (result == VisitorResult.TERMINATE)
-					{
-						aPath.state = VisitorResult.TERMINATE;
-						return aDocument;
-					}
-					else if (result == VisitorResult.SKIP_SIBLINGS)
-					{
-						skipSiblings = true;
-						aPath.state = VisitorResult.SKIP_SUBTREE;
-					}
-
-					Object value = readValue(aPath, token.type, result == VisitorResult.SKIP ? VisitorResult.SKIP_SUBTREE : aState);
-
-					if (aPath.state == VisitorResult.TERMINATE)
-					{
-						return aDocument;
-					}
-
-					if (!skipSiblings && result != VisitorResult.SKIP)
-					{
-						aDocument.putImpl(key, value);
-						result = mVisitor.postVisit(aPath, value);
-
-						if (result == VisitorResult.TERMINATE)
-						{
-							aPath.state = VisitorResult.TERMINATE;
-							return aDocument;
-						}
-						else if (result == VisitorResult.SKIP_SIBLINGS)
-						{
-							skipSiblings = true;
-						}
-					}
-				}
-			}
-			else
+//			if (mVisitor != null)
+//			{
+//				if (skipSiblings)
+//				{
+//					Object value = readValue(aPath, token.type, aState);
+//				}
+//				else
+//				{
+//					VisitorResult result = mVisitor.preVisit(aPath);
+//
+//					if (result == VisitorResult.TERMINATE)
+//					{
+//						aPath.state = VisitorResult.TERMINATE;
+//						return aDocument;
+//					}
+//					else if (result == VisitorResult.SKIP_SIBLINGS)
+//					{
+//						skipSiblings = true;
+//						aPath.state = VisitorResult.SKIP_SUBTREE;
+//					}
+//
+//					Object value = readValue(aPath, token.type, result == VisitorResult.SKIP ? VisitorResult.SKIP_SUBTREE : aState);
+//
+//					if (aPath.state == VisitorResult.TERMINATE)
+//					{
+//						return aDocument;
+//					}
+//
+//					if (!skipSiblings && result != VisitorResult.SKIP)
+//					{
+//						aDocument.putImpl(key, value);
+//						result = mVisitor.postVisit(aPath, value);
+//
+//						if (result == VisitorResult.TERMINATE)
+//						{
+//							aPath.state = VisitorResult.TERMINATE;
+//							return aDocument;
+//						}
+//						else if (result == VisitorResult.SKIP_SIBLINGS)
+//						{
+//							skipSiblings = true;
+//						}
+//					}
+//				}
+//			}
+//			else
 			{
 				Object value = readValue(aPath, token.type, aState);
 				aDocument.putImpl(key, value);
@@ -263,9 +266,17 @@ public class BinaryDecoder
 		switch (aType)
 		{
 			case DOCUMENT:
-				return readDocument(aPath, new Document(), aState);
+				Document d = new Document();
+				mReferences.register(d);
+				readDocument(aPath, d, aState);
+				return d;
 			case ARRAY:
-				return readArray(aPath, new Array(), aState);
+				Array a = new Array();
+				mReferences.register(a);
+				readArray(aPath, a, aState);
+				return a;
+			case REFERENCE:
+				return mReferences.get((int)aType.decoder.decode(this, aPath, aState));
 			default:
 				return aType.decoder.decode(this, aPath, aState);
 		}
@@ -473,73 +484,6 @@ public class BinaryDecoder
 
 
 		VisitorResult postVisit(Path aPath, Object aValue);
-	}
-
-
-	public static class Path
-	{
-		private final static long serialVersionUID = 1L;
-
-		ArrayList<String> mElements = new ArrayList<>();
-
-		VisitorResult state;
-
-
-		private void enter(String aKey)
-		{
-			mElements.addLast(aKey);
-		}
-
-
-		private void exit()
-		{
-			mElements.removeLast();
-		}
-
-
-		public int size()
-		{
-			return mElements.size();
-		}
-
-
-		@Override
-		public String toString()
-		{
-//			return state + " " + mElements.toString();
-			return mElements.toString();
-		}
-
-
-		public boolean matches(String... aKeys)
-		{
-			if (aKeys.length > mElements.size())
-			{
-				return false;
-			}
-
-			for (int i = 0; i < aKeys.length; i++)
-			{
-				if (!mElements.get(i).matches(aKeys[i]))
-				{
-					return false;
-				}
-			}
-			return true;
-		}
-
-
-		public boolean startsWith(String... aKeys)
-		{
-			for (int i = 0; i < aKeys.length && i < mElements.size(); i++)
-			{
-				if (!mElements.get(i).matches(aKeys[i]))
-				{
-					return false;
-				}
-			}
-			return true;
-		}
 	}
 
 

@@ -9,7 +9,6 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
-import org.terifan.raccoon.document.BinaryDecoder.Path;
 import org.terifan.raccoon.document.BinaryDecoder.VisitorResult;
 
 
@@ -17,119 +16,119 @@ enum BinaryCodec
 {
 	TERMINATOR(0),
 	DOCUMENT(1,
-		(aEncoder, aValue) -> aEncoder.writeDocument((Document)aValue),
+		(aEncoder, aPath, aValue) -> aEncoder.writeDocument((Document)aValue, aPath),
 		(aDecoder, aPath, aState) -> aDecoder.readDocument(aPath, new Document(), aState)
 	),
 	ARRAY(2,
-		(aEncoder, aValue) -> aEncoder.writeArray((Array)aValue),
+		(aEncoder, aPath, aValue) -> aEncoder.writeArray((Array)aValue, aPath),
 		(aDecoder, aPath, aState) -> aDecoder.readArray(aPath, new Array(), aState)
 	),
-	/** type: org.terifan.raccoon.document.ObjectId */
-	OBJECTID(3,
-		(aEncoder, aValue) -> aEncoder.writeBytes(((ObjectId)aValue).toByteArray()),
-		(aDecoder, aPath, aState) -> {return aState.isSkip() ? aDecoder.skipBytes(ObjectId.LENGTH) : ObjectId.fromByteArray(aDecoder.readBytes(new byte[ObjectId.LENGTH]));}
-	),
-	INT(4,
-		(aEncoder, aValue) -> aEncoder.writeVarint((Integer)aValue),
+	REFERENCE(3,
+		(aEncoder, aPath, aValue) -> {System.out.println(aValue);aEncoder.writeVarint((int)aValue);},
 		(aDecoder, aPath, aState) -> (int)aDecoder.readVarint()
 	),
-	DOUBLE(5,
-		(aEncoder, aValue) -> aEncoder.writeLong(Double.doubleToLongBits((Double)aValue)),
-		(aDecoder, aPath, aState) -> Double.longBitsToDouble(aDecoder.readLong())
+	/** type: org.terifan.raccoon.document.ObjectId */
+	OBJECTID(4,
+		(aEncoder, aPath, aValue) -> aEncoder.writeBytes(((ObjectId)aValue).toByteArray()),
+		(aDecoder, aPath, aState) -> {return aState.isSkip() ? aDecoder.skipBytes(ObjectId.LENGTH) : ObjectId.fromByteArray(aDecoder.readBytes(new byte[ObjectId.LENGTH]));}
 	),
-	BOOLEAN(6,
-		(aEncoder, aValue) -> aEncoder.writeVarint((Boolean)aValue ? 1 : 0),
-		(aDecoder, aPath, aState) -> aDecoder.readVarint() == 1
-	),
-	STRING(7,
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(aValue.toString().length()).writeUTF(aValue.toString()),
+	STRING(5,
+		(aEncoder, aPath, aValue) -> aEncoder.writeUnsignedVarint(aValue.toString().length()).writeUTF(aValue.toString()),
 		(aDecoder, aPath, aState) -> aDecoder.readUTF((int)aDecoder.readUnsignedVarint())
 	),
-	NULL(8,
-		(aEncoder, aValue) -> {},
+	INT(6,
+		(aEncoder, aPath, aValue) -> aEncoder.writeVarint((Integer)aValue),
+		(aDecoder, aPath, aState) -> (int)aDecoder.readVarint()
+	),
+	DOUBLE(7,
+		(aEncoder, aPath, aValue) -> aEncoder.writeLong(Double.doubleToLongBits((Double)aValue)),
+		(aDecoder, aPath, aState) -> Double.longBitsToDouble(aDecoder.readLong())
+	),
+	BOOLEAN(8,
+		(aEncoder, aPath, aValue) -> aEncoder.writeVarint((Boolean)aValue ? 1 : 0),
+		(aDecoder, aPath, aState) -> aDecoder.readVarint() == 1
+	),
+	NULL(9,
+		(aEncoder, aPath, aValue) -> {},
 		(aDecoder, aPath, aState) -> null
 	),
-	BYTE(9,
-		(aEncoder, aValue) -> aEncoder.writeByte(0xff & (Byte)aValue),
+	BYTE(10,
+		(aEncoder, aPath, aValue) -> aEncoder.writeByte(0xff & (Byte)aValue),
 		(aDecoder, aPath, aState) -> (byte)aDecoder.readByte()
 	),
-	SHORT(10,
-		(aEncoder, aValue) -> aEncoder.writeVarint((Short)aValue),
+	SHORT(11,
+		(aEncoder, aPath, aValue) -> aEncoder.writeVarint((Short)aValue),
 		(aDecoder, aPath, aState) -> (short)aDecoder.readVarint()
 	),
-	LONG(11,
-		(aEncoder, aValue) -> aEncoder.writeVarint((Long)aValue),
+	LONG(12,
+		(aEncoder, aPath, aValue) -> aEncoder.writeVarint((Long)aValue),
 		(aDecoder, aPath, aState) -> aDecoder.readVarint()
 	),
-	FLOAT(12,
-		(aEncoder, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
+	FLOAT(13,
+		(aEncoder, aPath, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
 		(aDecoder, aPath, aState) -> Float.intBitsToFloat((int)aDecoder.readInt())
 	),
 	/** type: byte[] */
-	BINARY(13,
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint(((byte[])aValue).length).writeBytes((byte[])aValue),
+	BINARY(14,
+		(aEncoder, aPath, aValue) -> aEncoder.writeUnsignedVarint(((byte[])aValue).length).writeBytes((byte[])aValue),
 		(aDecoder, aPath, aState) -> aDecoder.readBytes(new byte[(int)aDecoder.readUnsignedVarint()])
 	),
 	/** type: java.util.UUID */
-	UUID(14,
-		(aEncoder, aValue) -> aEncoder.writeLong(((UUID)aValue).getMostSignificantBits()).writeLong(((UUID)aValue).getLeastSignificantBits()),
+	UUID(15,
+		(aEncoder, aPath, aValue) -> aEncoder.writeLong(((UUID)aValue).getMostSignificantBits()).writeLong(((UUID)aValue).getLeastSignificantBits()),
 		(aDecoder, aPath, aState) -> new java.util.UUID(aDecoder.readLong(), aDecoder.readLong())
 	),
 	/** type: java.time.LocalDateTime */
-	DATETIME(15,
-		(aEncoder, aValue) -> aEncoder.writeInt(localDateToNumber(((LocalDateTime)aValue).toLocalDate())).writeLong(localTimeToNumber(((LocalDateTime)aValue).toLocalTime())),
+	DATETIME(16,
+		(aEncoder, aPath, aValue) -> aEncoder.writeInt(localDateToNumber(((LocalDateTime)aValue).toLocalDate())).writeLong(localTimeToNumber(((LocalDateTime)aValue).toLocalTime())),
 		(aDecoder, aPath, aState) -> LocalDateTime.of(numberToLocalDate((int)aDecoder.readInt()), numberToLocalTime(aDecoder.readLong()))
 	),
 	/** type: java.time.LocalDate */
-	DATE(16,
-		(aEncoder, aValue) -> aEncoder.writeInt(localDateToNumber((LocalDate)aValue)),
+	DATE(17,
+		(aEncoder, aPath, aValue) -> aEncoder.writeInt(localDateToNumber((LocalDate)aValue)),
 		(aDecoder, aPath, aState) -> numberToLocalDate(aDecoder.readInt())
 	),
 	/** type: java.time.LocalTime */
-	TIME(17,
-		(aEncoder, aValue) -> aEncoder.writeLong(localTimeToNumber((LocalTime)aValue)),
+	TIME(18,
+		(aEncoder, aPath, aValue) -> aEncoder.writeLong(localTimeToNumber((LocalTime)aValue)),
 		(aDecoder, aPath, aState) -> numberToLocalTime(aDecoder.readLong())
 	),
 	/** type: java.time.OffsetDateTime */
-	OFFSETDATETIME(18,
-		(aEncoder, aValue) -> aEncoder.writeInt(localDateToNumber(((OffsetDateTime)aValue).toLocalDate())).writeLong(localTimeToNumber(((OffsetDateTime)aValue).toLocalTime())).writeVarint(((OffsetDateTime)aValue).getOffset().getTotalSeconds()),
+	OFFSETDATETIME(19,
+		(aEncoder, aPath, aValue) -> aEncoder.writeInt(localDateToNumber(((OffsetDateTime)aValue).toLocalDate())).writeLong(localTimeToNumber(((OffsetDateTime)aValue).toLocalTime())).writeVarint(((OffsetDateTime)aValue).getOffset().getTotalSeconds()),
 		(aDecoder, aPath, aState) -> OffsetDateTime.of(numberToLocalDate((int)aDecoder.readInt()), numberToLocalTime(aDecoder.readLong()), ZoneOffset.ofTotalSeconds((int)aDecoder.readVarint()))
 	),
 	/** type: java.lang.BigDecimal */
-	DECIMAL(19,
-		(aEncoder, aValue) -> writeDecimal(aEncoder, (BigDecimal)aValue),
+	DECIMAL(20,
+		(aEncoder, aPath, aValue) -> writeDecimal(aEncoder, (BigDecimal)aValue),
 		(aDecoder, aPath, aState) -> readDecimal(aDecoder)
 	),
-	CHAR(20,
-		(aEncoder, aValue) -> aEncoder.writeVarint((Character)aValue),
+	CHAR(21,
+		(aEncoder, aPath, aValue) -> aEncoder.writeVarint((Character)aValue),
 		(aDecoder, aPath, aState) -> (char)aDecoder.readVarint()
 	),
-	DICTIONARY(21,
-		(aEncoder, aValue) -> aEncoder.writeVarint(aEncoder.mDictionary.encode(aValue)),
-		(aDecoder, aPath, aState) -> aDecoder.mDictionary.decode(aDecoder.readVarint())
-	),
 	ZERO_INT(22,
-		(aEncoder, aValue) -> {},
+		(aEncoder, aPath, aValue) -> {},
 		(aDecoder, aPath, aState) -> 0
 	),
 	ZERO_LONG(23,
-		(aEncoder, aValue) -> {},
+		(aEncoder, aPath, aValue) -> {},
 		(aDecoder, aPath, aState) -> 0L
 	),
 	ZERO_DOUBLE(24,
-		(aEncoder, aValue) -> {},
+		(aEncoder, aPath, aValue) -> {},
 		(aDecoder, aPath, aState) -> 0.0
 	),
 	ZERO_FLOAT(25,
-		(aEncoder, aValue) -> {},
+		(aEncoder, aPath, aValue) -> {},
 		(aDecoder, aPath, aState) -> 0f
 	),
 	ZERO_BYTE(26,
-		(aEncoder, aValue) -> {},
+		(aEncoder, aPath, aValue) -> {},
 		(aDecoder, aPath, aState) -> (byte)0
 	),
 	ZERO_SHORT(27,
-		(aEncoder, aValue) -> {},
+		(aEncoder, aPath, aValue) -> {},
 		(aDecoder, aPath, aState) -> (short)0
 	)
 //	/** fixed size encoding of a Short value */
@@ -235,7 +234,7 @@ enum BinaryCodec
 	@FunctionalInterface
 	static interface Encoder
 	{
-		void encode(BinaryEncoder aEncoder, Object aValue) throws IOException;
+		void encode(BinaryEncoder aEncoder, Path aPath, Object aValue) throws IOException;
 	}
 
 

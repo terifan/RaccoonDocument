@@ -31,9 +31,9 @@ class JSONEncoder
 			switch (aContainer)
 			{
 				case Document v ->
-					marshalDocument(v, true);
+					marshalDocument(v, new ReferenceMap(), true);
 				case Array v ->
-					marshalArray(v);
+					marshalArray(v, new ReferenceMap());
 				default ->
 					throw new IllegalArgumentException();
 			}
@@ -47,14 +47,23 @@ class JSONEncoder
 	}
 
 
-	private void marshalDocument(Document aDocument) throws IOException
+	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap) throws IOException
 	{
-		marshalDocument(aDocument, true);
+		marshalDocument(aDocument, aReferenceMap, true);
 	}
 
 
-	private void marshalDocument(Document aDocument, boolean aNewLineOnClose) throws IOException
+	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, boolean aNewLineOnClose) throws IOException
 	{
+		if (aReferenceMap.contains(aDocument))
+		{
+			print("null");
+			warn("A cyclic reference was encountered during evaluation");
+			return;
+		}
+
+		aReferenceMap.add(aDocument);
+
 		int size = aDocument.size();
 
 		if (size == 0)
@@ -86,7 +95,7 @@ class JSONEncoder
 		{
 			print(mQuote + escapeString(entry.getKey()) + mQuote + ": ");
 
-			marshal(entry.getValue());
+			marshal(entry.getValue(), aReferenceMap);
 
 			if (--size > 0)
 			{
@@ -106,11 +115,22 @@ class JSONEncoder
 			indent(-1);
 			print("}");
 		}
+
+		aReferenceMap.remove(aDocument);
 	}
 
 
-	private void marshalArray(Array aArray) throws IOException
+	private void marshalArray(Array aArray, ReferenceMap aReferenceMap) throws IOException
 	{
+		if (aReferenceMap.contains(aArray))
+		{
+			print("null");
+			warn("A cyclic reference was encountered during evaluation");
+			return;
+		}
+
+		aReferenceMap.add(aArray);
+
 		int size = aArray.size();
 
 		if (size == 0)
@@ -147,7 +167,7 @@ class JSONEncoder
 		{
 			if (first)
 			{
-				marshalDocument((Document)value, false);
+				marshalDocument((Document)value, aReferenceMap, false);
 
 				if (--size > 0)
 				{
@@ -156,7 +176,7 @@ class JSONEncoder
 			}
 			else
 			{
-				marshal(value);
+				marshal(value, aReferenceMap);
 
 				if (--size > 0)
 				{
@@ -182,27 +202,29 @@ class JSONEncoder
 			indent(-1);
 			println("]");
 		}
+
+		aReferenceMap.remove(aArray);
 	}
 
 
-	private void marshal(Object aValue) throws IOException
+	private void marshal(Object aValue, ReferenceMap aReferenceMap) throws IOException
 	{
 		if (aValue instanceof Document v)
 		{
-			marshalDocument(v);
+			marshalDocument(v, aReferenceMap);
 		}
 		else if (aValue instanceof Array v)
 		{
-			marshalArray(v);
+			marshalArray(v, aReferenceMap);
 		}
 		else
 		{
-			marshalValue(aValue);
+			marshalValue(aValue, aReferenceMap);
 		}
 	}
 
 
-	private void marshalValue(Object aValue) throws IOException
+	private void marshalValue(Object aValue, ReferenceMap aReferenceMap) throws IOException
 	{
 		if (aValue instanceof String v)
 		{
@@ -372,5 +394,11 @@ class JSONEncoder
 			aText = aText.substring(0, aText.length() - 1);
 		}
 		return aText;
+	}
+
+
+	protected void warn(String aMessage)
+	{
+		System.err.println(aMessage);
 	}
 }

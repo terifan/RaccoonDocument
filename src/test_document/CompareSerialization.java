@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import org.terifan.raccoon.document.Array;
 import org.terifan.raccoon.document.Collection;
-import org.terifan.raccoon.document.Dictionary;
 import org.terifan.raccoon.document.Document;
 import org.terifan.raccoon.document.Support;
 
@@ -59,11 +58,8 @@ public class CompareSerialization
 		String json = aCollection.toJson();
 		byte[] bin = aCollection.toByteArray();
 
-		Dictionary dic = Dictionary.of(aCollection);
 		byte[] binzip = Support.zip(bin);
 		byte[] zipjson = Support.zip(json.getBytes(StandardCharsets.UTF_8));
-		byte[] bindic = dic.toByteArray(aCollection);
-		byte[] bindiczip = Support.zip(bindic);
 
 		for (int i = 0; i < 100; i++)
 		{
@@ -90,10 +86,6 @@ public class CompareSerialization
 
 		System.out.printf("%12.3f ", (t1 - t0) / 1000.0);
 		System.out.printf("%12.3f ", (t2 - t1) / 1000.0);
-
-		System.out.printf("%12d ", bindic.length + dic.writeExternal().length);
-		System.out.printf("%12d ", bindiczip.length + Support.zip(dic.writeExternal()).length);
-		System.out.printf("%12d ", dic.writeExternal().length);
 
 		System.out.println();
 	}

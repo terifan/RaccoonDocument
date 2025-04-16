@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
@@ -159,9 +160,9 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	public ArrayList<String> keySet()
+	public Set<String> keySet()
 	{
-		return new ArrayList<>(mValues.keySet());
+		return mValues.keySet();
 	}
 
 
@@ -213,15 +214,26 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	MurmurHash3 hashCode(MurmurHash3 aChecksum)
+	MurmurHash3 hashCode(MurmurHash3 aChecksum, ReferenceMap aLinkedList)
 	{
-		aChecksum.updateInt(861720859 ^ size()); // == "document".hashCode()
+		aChecksum.updateInt("document".hashCode());
+		aChecksum.updateInt(size());
+
+		if (aLinkedList.contains(this))
+		{
+			aChecksum.updateInt(aLinkedList.indexOf(this));
+			return aChecksum;
+		}
+
+		aLinkedList.add(this);
 
 		mValues.entrySet().forEach(entry ->
 		{
 			aChecksum.updateUTF8(entry.getKey());
-			super.hashCode(aChecksum, entry.getValue());
+			super.hashCode(aChecksum, entry.getValue(), aLinkedList);
 		});
+
+		aLinkedList.remove(this);
 
 		return aChecksum;
 	}
