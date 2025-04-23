@@ -316,7 +316,7 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 			return aChecksum;
 		}
 
-		aLinkedList.add(this);
+		aLinkedList.add(this, null);
 
 		mValues.forEach(value -> super.hashCode(aChecksum, value, aLinkedList));
 

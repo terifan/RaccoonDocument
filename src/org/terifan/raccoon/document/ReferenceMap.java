@@ -5,34 +5,38 @@ import java.util.ArrayList;
 
 class ReferenceMap
 {
-	private ArrayList<Collection> mList;
+	private ArrayList<Collection> mKeys;
+	private ArrayList<String> mPaths;
 
 
 	ReferenceMap()
 	{
-		mList = new ArrayList<>();
+		mKeys = new ArrayList<>();
+		mPaths = new ArrayList<>();
 	}
 
 
 	Collection get(int aIndex)
 	{
-		return mList.get(aIndex);
+		return mKeys.get(aIndex);
 	}
 
 
-	void add(Collection aCollection)
+	void add(Collection aCollection, String aValue)
 	{
-		mList.add(aCollection);
+		mKeys.add(aCollection);
+		mPaths.add(aValue);
 	}
 
 
-	void remove(Collection aCollection)
+	void remove(Collection aKey)
 	{
-		for (int i = 0; i < mList.size(); i++)
+		for (int i = 0; i < mKeys.size(); i++)
 		{
-			if (mList.get(i) == aCollection)
+			if (mKeys.get(i) == aKey)
 			{
-				mList.remove(i);
+				mKeys.remove(i);
+				mPaths.remove(i);
 				return;
 			}
 		}
@@ -42,28 +46,29 @@ class ReferenceMap
 	/**
 	 * @return true if instance already was registered
 	 */
-	boolean register(Collection aCollection)
+	boolean register(Collection aKey, String aValue)
 	{
-		if (contains(aCollection))
+		if (contains(aKey))
 		{
 			return true;
 		}
-		mList.add(aCollection);
+		mKeys.add(aKey);
+		mPaths.add(aValue);
 		return false;
 	}
 
 
-	boolean contains(Collection aCollection)
+	boolean contains(Collection aKey)
 	{
-		return indexOf(aCollection) != -1;
+		return indexOf(aKey) != -1;
 	}
 
 
-	int indexOf(Collection aCollection)
+	int indexOf(Collection aKey)
 	{
-		for (int i = 0; i < mList.size(); i++)
+		for (int i = 0; i < mKeys.size(); i++)
 		{
-			if (mList.get(i) == aCollection)
+			if (mKeys.get(i) == aKey)
 			{
 				return i;
 			}
@@ -72,9 +77,22 @@ class ReferenceMap
 	}
 
 
+	String get(Collection aKey)
+	{
+		for (int i = 0; i < mKeys.size(); i++)
+		{
+			if (mKeys.get(i) == aKey)
+			{
+				return mPaths.get(i);
+			}
+		}
+		return null;
+	}
+
+
 	@Override
 	public String toString()
 	{
-		return "ReferenceMap{" + "size=" + mList.size() + '}';
+		return "ReferenceMap{" + "size=" + mKeys.size() + '}';
 	}
 }

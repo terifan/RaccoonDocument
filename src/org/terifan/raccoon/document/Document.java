@@ -225,7 +225,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 			return aChecksum;
 		}
 
-		aLinkedList.add(this);
+		aLinkedList.add(this, null);
 
 		mValues.entrySet().forEach(entry ->
 		{

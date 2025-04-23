@@ -55,8 +55,13 @@ public class Path
 	@Override
 	public String toString()
 	{
-//		return state + " " + mElements.toString();
-		return mNodes.toString();
+		StringBuilder sb = new StringBuilder();
+		if (mNodes.isEmpty())sb.append("/");
+		for (Object o : mNodes)
+		{
+			sb.append("/" + o);
+		}
+		return sb.toString();
 	}
 
 

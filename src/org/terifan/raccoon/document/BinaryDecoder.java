@@ -42,12 +42,12 @@ public class BinaryDecoder
 		{
 			case DOCUMENT:
 				Document d = new Document();
-				mReferences.register(d);
+				mReferences.register(d, path.toString());
 				readDocument(path, d, VisitorResult.CONTINUE);
 				return d;
 			case ARRAY:
 				Array a = new Array();
-				mReferences.register(a);
+				mReferences.register(a, path.toString());
 				readArray(path, a, VisitorResult.CONTINUE);
 				return a;
 			case TERMINATOR:
@@ -105,7 +105,7 @@ public class BinaryDecoder
 				throw new StreamException("Stream corrupted.");
 			}
 
-			mReferences.register(v);
+			mReferences.register(v, path.toString());
 			readDocument(path, v, VisitorResult.CONTINUE);
 		}
 		else if (aContainer instanceof Array v)
@@ -119,7 +119,7 @@ public class BinaryDecoder
 				throw new StreamException("Stream corrupted.");
 			}
 
-			mReferences.register(v);
+			mReferences.register(v, path.toString());
 			readArray(path, v, VisitorResult.CONTINUE);
 		}
 		else
@@ -267,12 +267,12 @@ public class BinaryDecoder
 		{
 			case DOCUMENT:
 				Document d = new Document();
-				mReferences.register(d);
+				mReferences.register(d, aPath.toString());
 				readDocument(aPath, d, aState);
 				return d;
 			case ARRAY:
 				Array a = new Array();
-				mReferences.register(a);
+				mReferences.register(a, aPath.toString());
 				readArray(aPath, a, aState);
 				return a;
 			case REFERENCE:

@@ -45,19 +45,20 @@ class BinaryEncoder implements AutoCloseable
 			writeToken(type, getChecksumValue());
 		}
 
+		Path path = new Path();
 		if (aObject instanceof Document v)
 		{
-			mReferences.register(v);
-			writeDocument(v, new Path());
+			mReferences.register(v, "");
+			writeDocument(v, path);
 		}
 		else if (aObject instanceof Array v)
 		{
-			mReferences.register(v);
-			writeArray(v, new Path());
+			mReferences.register(v, "");
+			writeArray(v, path);
 		}
 		else
 		{
-			writeValue(type, aObject, new Path());
+			writeValue(type, aObject, path);
 		}
 
 		System.out.println(mReferences);
@@ -77,7 +78,7 @@ class BinaryEncoder implements AutoCloseable
 				Object value = entry.getValue();
 				BinaryCodec type = BinaryCodec.identify(value);
 
-				if (value instanceof Collection v && mReferences.register(v))
+				if (value instanceof Collection v && mReferences.register(v, aPath.toString()))
 				{
 					value = mReferences.indexOf(v);
 					type = BinaryCodec.REFERENCE;
@@ -112,7 +113,7 @@ class BinaryEncoder implements AutoCloseable
 				Object value = aArray.get(j);
 				BinaryCodec nextType = BinaryCodec.identify(value);
 
-				if ((type == null || type == BinaryCodec.REFERENCE) && value instanceof Collection v && mReferences.register(v))
+				if ((type == null || type == BinaryCodec.REFERENCE) && value instanceof Collection v && mReferences.register(v, aPath.toString()))
 				{
 					value = mReferences.indexOf(v);
 					nextType = BinaryCodec.REFERENCE;

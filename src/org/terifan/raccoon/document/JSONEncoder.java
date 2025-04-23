@@ -31,9 +31,9 @@ class JSONEncoder
 			switch (aContainer)
 			{
 				case Document v ->
-					marshalDocument(v, new ReferenceMap(), true);
+					marshalDocument(v, new ReferenceMap(), new Path(), true);
 				case Array v ->
-					marshalArray(v, new ReferenceMap());
+					marshalArray(v, new ReferenceMap(), new Path());
 				default ->
 					throw new IllegalArgumentException();
 			}
@@ -47,22 +47,22 @@ class JSONEncoder
 	}
 
 
-	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap) throws IOException
+	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, Path aPath) throws IOException
 	{
-		marshalDocument(aDocument, aReferenceMap, true);
+		marshalDocument(aDocument, aReferenceMap, aPath, true);
 	}
 
 
-	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, boolean aNewLineOnClose) throws IOException
+	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, Path aPath, boolean aNewLineOnClose) throws IOException
 	{
 		if (aReferenceMap.contains(aDocument))
 		{
-			print("null");
-			warn("A cyclic reference was encountered during evaluation");
+			printReference(aReferenceMap, aDocument);
+			warn("A cyclic reference was encountered during evaluation: " + aPath);
 			return;
 		}
 
-		aReferenceMap.add(aDocument);
+		aReferenceMap.add(aDocument, aPath.toString());
 
 		int size = aDocument.size();
 
@@ -95,7 +95,9 @@ class JSONEncoder
 		{
 			print(mQuote + escapeString(entry.getKey()) + mQuote + ": ");
 
-			marshal(entry.getValue(), aReferenceMap);
+			aPath.enter(entry.getKey());
+			marshal(entry.getValue(), aReferenceMap, aPath);
+			aPath.exit();
 
 			if (--size > 0)
 			{
@@ -120,16 +122,22 @@ class JSONEncoder
 	}
 
 
-	private void marshalArray(Array aArray, ReferenceMap aReferenceMap) throws IOException
+	private void printReference(ReferenceMap aReferenceMap, Collection aKey) throws IOException
+	{
+		print("$reference(" + aReferenceMap.get(aKey) + ")");
+	}
+
+
+	private void marshalArray(Array aArray, ReferenceMap aReferenceMap, Path aPath) throws IOException
 	{
 		if (aReferenceMap.contains(aArray))
 		{
-			print("null");
-			warn("A cyclic reference was encountered during evaluation");
+			printReference(aReferenceMap, aArray);
+			warn("A cyclic reference was encountered during evaluation: " + aPath);
 			return;
 		}
 
-		aReferenceMap.add(aArray);
+		aReferenceMap.add(aArray, aPath.toString());
 
 		int size = aArray.size();
 
@@ -163,11 +171,13 @@ class JSONEncoder
 			indent(1);
 		}
 
-		for (Object value : aArray)
+		for (int i = 0; i < aArray.size(); i++)
 		{
+			Object value = aArray.get(i);
+			aPath.enter(i);
 			if (first)
 			{
-				marshalDocument((Document)value, aReferenceMap, false);
+				marshalDocument((Document)value, aReferenceMap, aPath, false);
 
 				if (--size > 0)
 				{
@@ -176,13 +186,14 @@ class JSONEncoder
 			}
 			else
 			{
-				marshal(value, aReferenceMap);
+				marshal(value, aReferenceMap, aPath);
 
 				if (--size > 0)
 				{
 					print(", ", false);
 				}
 			}
+			aPath.exit();
 
 			first = false;
 		}
@@ -207,24 +218,24 @@ class JSONEncoder
 	}
 
 
-	private void marshal(Object aValue, ReferenceMap aReferenceMap) throws IOException
+	private void marshal(Object aValue, ReferenceMap aReferenceMap, Path aPath) throws IOException
 	{
 		if (aValue instanceof Document v)
 		{
-			marshalDocument(v, aReferenceMap);
+			marshalDocument(v, aReferenceMap, aPath);
 		}
 		else if (aValue instanceof Array v)
 		{
-			marshalArray(v, aReferenceMap);
+			marshalArray(v, aReferenceMap, aPath);
 		}
 		else
 		{
-			marshalValue(aValue, aReferenceMap);
+			marshalValue(aValue, aReferenceMap, aPath);
 		}
 	}
 
 
-	private void marshalValue(Object aValue, ReferenceMap aReferenceMap) throws IOException
+	private void marshalValue(Object aValue, ReferenceMap aReferenceMap, Path aPath) throws IOException
 	{
 		if (aValue instanceof String v)
 		{
@@ -399,6 +410,6 @@ class JSONEncoder
 
 	protected void warn(String aMessage)
 	{
-		System.err.println(aMessage);
+		System.err.println("JSONEncoder: " + aMessage);
 	}
 }
