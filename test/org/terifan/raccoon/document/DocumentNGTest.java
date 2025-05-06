@@ -6,19 +6,18 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.Random;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Stream;
 import java.util.zip.DeflaterOutputStream;
-import org.testng.Assert;
 import static org.testng.Assert.*;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -410,13 +409,16 @@ public class DocumentNGTest
 		Document dstDoc = unmarshalledBin.get("doc");
 		Array dstArr = unmarshalledBin.get("arr");
 
-		Document unmarshalledJson = new Document().fromJson(json, true);
+		Document unmarshalledJson = new JSONDecoder(false, true).unmarshal(new StringReader(json), new Document());
 		Document dstDocJson = unmarshalledJson.get("doc");
 		Array dstArrJson = unmarshalledJson.get("arr");
 
-		Document unmarshalledText = new Document().fromJson(text, true);
+		Document unmarshalledText = new JSONDecoder(false, true).unmarshal(new StringReader(text), new Document());
 		Document dstDocText = unmarshalledText.get("doc");
 		Array dstArrText = unmarshalledText.get("arr");
+
+		System.out.println(unmarshalledJson.keySet());
+		System.out.println(srcDoc.keySet());
 
 		assertEquals(unmarshalledBin, srcDoc);
 		assertEquals(unmarshalledJson, srcDoc);
@@ -596,8 +598,6 @@ public class DocumentNGTest
 //		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
 //		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
 //	}
-
-
 	@Test
 	public void testInterleaved() throws IOException, ClassNotFoundException
 	{
@@ -770,6 +770,11 @@ public class DocumentNGTest
 		Document d = Document.of("{a:[1],b:[],c:[{}],d:[{x:1},[null],{}],e:null}");
 		assertEquals(d.toJson(), "{\"a\":[1],\"b\":[],\"c\":[{}],\"d\":[{\"x\":1},[null],{}],\"e\":null}");
 		assertEquals(d.reduce().toJson(), "{\"a\":[1],\"d\":[{\"x\":1}]}");
+
+		Document e = new Document().put("a", Document.of("z:1")).put("b", Document.of("z:1"));
+		assertNotSame(e.get("a"), e.get("b"));
+		e.reduce();
+		assertSame(e.get("a"), e.get("b"));
 	}
 
 
@@ -882,9 +887,9 @@ public class DocumentNGTest
 		Document doc = new Document()
 			.put("name", "bob")
 			.putIfAbsent("address", key -> new Document()
-				.put("street", "Big road")
-				.put("city", "Smallville")
-				.put("country", "Americastan")
+			.put("street", "Big road")
+			.put("city", "Smallville")
+			.put("country", "Americastan")
 			)
 			.put("info", Array.of("fatty")
 				.addWithCondition("weirdo", key -> gender == null)
@@ -895,11 +900,9 @@ public class DocumentNGTest
 			.fromJson("color:red,shape:round")
 			.putWithCondition("gender", gender, value -> value != null)
 			.putWhenCondition("catapult", key -> gender == null, key -> Document.of("when:now!"))
-			.append("name", "johnson")
-			;
+			.append("name", "johnson");
 
 //		System.out.println(doc);
-
 		assertEquals(doc.toString(), "{\"name\":[\"bob\",\"johnson\"],\"address\":{\"street\":\"Big road\",\"city\":\"Smallville\",\"country\":\"Americastan\"},\"info\":[\"fatty\",\"weirdo\"],\"number\":[-1,-2,-3],\"color\":\"red\",\"shape\":\"round\",\"catapult\":{\"when\":\"now!\"}}");
 	}
 
@@ -915,7 +918,6 @@ public class DocumentNGTest
 		Document doc = new Document().fromByteArray(data);
 
 //		System.out.println(doc);
-
 //		assertEquals(in, out);
 	}
 
@@ -923,7 +925,7 @@ public class DocumentNGTest
 	@Test
 	public void testClone() throws IOException
 	{
-		Document doc = Document.of("a:1,b:{c:2},d:[3,4]").put("arr", Array.of(1,2,3));
+		Document doc = Document.of("a:1,b:{c:2},d:[3,4]").put("arr", Array.of(1, 2, 3));
 
 		Document other = doc.clone();
 
@@ -967,7 +969,6 @@ public class DocumentNGTest
 //			if (a5.hashCode()==ex) break;
 //		}
 //		System.out.println(a5);
-
 //		HashMap<Document,Document> map = new HashMap<>();
 //		map.putIfAbsent(a1, a1);
 //		map.putIfAbsent(a2, a2);
@@ -979,7 +980,6 @@ public class DocumentNGTest
 //		a3 = map.get(a3);
 //		a4 = map.get(a4);
 //		a5 = map.get(a5);
-
 		Document out = Document.of("text:'hello world'");
 		out.put("alpha", a1);
 		out.put("beta", a2);

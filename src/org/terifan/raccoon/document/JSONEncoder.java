@@ -6,25 +6,35 @@ import static org.terifan.raccoon.document.SupportedTypes.escapeChar;
 import static org.terifan.raccoon.document.SupportedTypes.escapeString;
 
 
-class JSONEncoder
+public class JSONEncoder
 {
 	private Appendable mAppendable;
 	private boolean mTyped;
 	private boolean mCompact;
 	private boolean mNewLine;
 	private boolean mFirst;
+	private boolean mReferenceSharedObjects;
 	private char mQuote;
 	private int mIndent;
+	private String mIntentSymbol;
 
 
-	public Appendable marshal(Collection aContainer, boolean aCompact, boolean aTyped, boolean aApostrophes, Appendable aAppendable)
+	public JSONEncoder(boolean aCompact, boolean aTyped, boolean aApostrophes, boolean aReferenceSharedObjects)
+	{
+		mCompact = aCompact;
+		mTyped = aTyped;
+		mQuote = aApostrophes ? '\'' : '\"';
+		mReferenceSharedObjects = aReferenceSharedObjects;
+
+		mIntentSymbol = "\t";
+	}
+
+
+	public Appendable marshal(Collection aContainer, Appendable aAppendable)
 	{
 		mAppendable = aAppendable;
 		mNewLine = false;
-		mCompact = aCompact;
-		mTyped = aTyped;
 		mFirst = true;
-		mQuote = aApostrophes ? '\'' : '\"';
 
 		try
 		{
@@ -118,13 +128,16 @@ class JSONEncoder
 			print("}");
 		}
 
-		aReferenceMap.remove(aDocument);
+		if (!mReferenceSharedObjects)
+		{
+			aReferenceMap.remove(aDocument);
+		}
 	}
 
 
 	private void printReference(ReferenceMap aReferenceMap, Collection aKey) throws IOException
 	{
-		print("$reference(" + aReferenceMap.get(aKey) + ")");
+		print(mQuote + "$reference(" + aReferenceMap.get(aKey) + ")" + mQuote);
 	}
 
 
@@ -214,7 +227,10 @@ class JSONEncoder
 			println("]");
 		}
 
-		aReferenceMap.remove(aArray);
+		if (!mReferenceSharedObjects)
+		{
+			aReferenceMap.remove(aArray);
+		}
 	}
 
 
@@ -391,7 +407,7 @@ class JSONEncoder
 			mAppendable.append("\n");
 			for (int i = 0; i < mIndent; i++)
 			{
-				mAppendable.append("\t");
+				mAppendable.append(mIntentSymbol);
 			}
 			mNewLine = false;
 		}

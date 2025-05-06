@@ -361,6 +361,10 @@ public class Document extends Collection<String, Document> implements Externaliz
 	 */
 	public static Document of(String aJSON)
 	{
+		if (!aJSON.startsWith("{"))
+		{
+			aJSON = "{" + aJSON + "}";
+		}
 		return new Document().fromJson(aJSON);
 	}
 

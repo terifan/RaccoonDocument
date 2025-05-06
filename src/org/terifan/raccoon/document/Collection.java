@@ -10,6 +10,7 @@ import java.io.ObjectOutput;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -35,8 +36,20 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	private final static long serialVersionUID = 1L;
 
 
-	public final Serializer serialize(){ return new Serializer();};
-	public final Deserializer deserialize(){ return  new Deserializer();};
+	public final Serializer serialize()
+	{
+		return new Serializer();
+	}
+
+
+	;
+	public final Deserializer deserialize()
+	{
+		return new Deserializer();
+	}
+
+
+	;
 
 	public class Serializer
 	{
@@ -44,50 +57,74 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		{
 			return new SerializerJson();
 		}
+
+
 		public SerializerBinary asBinary()
 		{
 			return new SerializerBinary();
 		}
 	}
 
+
 	public class SerializerJson
 	{
 		private boolean mIndent;
 		private boolean mTypes;
+
+
 		public SerializerJson withIndents(boolean b)
 		{
 			mIndent = b;
 			return this;
 		}
+
+
 		public SerializerJson withTypes(boolean b)
 		{
 			mTypes = b;
 			return this;
 		}
+
+
 		public void to(OutputStream aOutputStream) throws IOException
 		{
 			if (mTypes)
-			aOutputStream.write(Collection.this.toTypedJson(!mIndent).getBytes(StandardCharsets.UTF_8));
+			{
+				aOutputStream.write(Collection.this.toTypedJson(!mIndent).getBytes(StandardCharsets.UTF_8));
+			}
 			else
-			aOutputStream.write(Collection.this.toJson(!mIndent).getBytes(StandardCharsets.UTF_8));
+			{
+				aOutputStream.write(Collection.this.toJson(!mIndent).getBytes(StandardCharsets.UTF_8));
+			}
 		}
+
+
 		public void to(Appendable aAppendable)
 		{
 			if (mTypes)
-			Collection.this.toTypedJson(aAppendable, !mIndent);
+			{
+				Collection.this.toTypedJson(aAppendable, !mIndent);
+			}
 			else
-			Collection.this.toJson(aAppendable, !mIndent);
+			{
+				Collection.this.toJson(aAppendable, !mIndent);
+			}
 		}
+
+
 		public byte[] toByteArray()
 		{
 			return null;
 		}
+
+
 		@Override
 		public String toString()
 		{
 			return "";
 		}
 	}
+
 
 	public class SerializerTypedJson
 	{
@@ -96,6 +133,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		}
 	}
 
+
 	public class SerializerBinary
 	{
 		public void to(OutputStream aOutputStream)
@@ -103,17 +141,21 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		}
 	}
 
+
 	public class Deserializer
 	{
 		public DeserializerJson asJson()
 		{
 			return new DeserializerJson();
 		}
+
+
 		public DeserializerBinary asBinary()
 		{
 			return new DeserializerBinary();
 		}
 	}
+
 
 	public class DeserializerBinary
 	{
@@ -121,6 +163,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		{
 		}
 	}
+
 
 	public static class DeserializerJson
 	{
@@ -971,7 +1014,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	@Override
 	public String toString()
 	{
-		return new JSONEncoder().marshal(this, true, true, false, new StringBuilder()).toString();
+		return new JSONEncoder(true, true, false, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -980,24 +1023,18 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public R fromJson(String aJson)
 	{
-		return fromJson(aJson, false);
-	}
-
-
-	/**
-	 * @param aRestoreByteShortValues if true low numeric values will be unmarshalled as either Byte or Short; [default] if false Integer.
-	 */
-	@SuppressWarnings("unchecked")
-	public R fromJson(String aJson, boolean aRestoreByteShortValues)
-	{
-		return (R)new JSONDecoder().setRestoreByteShortValues(aRestoreByteShortValues).unmarshal(aJson, this);
+		if (!aJson.startsWith("{"))
+		{
+			aJson = "{" + aJson + "}";
+		}
+		return (R)new JSONDecoder(false, false).unmarshal(new StringReader(aJson), this);
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public R fromJson(Reader aJson)
 	{
-		return (R)new JSONDecoder().unmarshal(aJson, this);
+		return (R)new JSONDecoder(false, false).unmarshal(aJson, this);
 	}
 
 
@@ -1006,24 +1043,18 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public static <T extends Collection> T parseJson(String aJson)
 	{
-		return new JSONDecoder().unmarshal(aJson, null);
-	}
-
-
-	/**
-	 * @param aRestoreByteShortValues if true low numeric values will be unmarshalled as either Byte or Short; [default] if false Integer.
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends Collection> T parseJson(String aJson, boolean aRestoreByteShortValues)
-	{
-		return (T)new JSONDecoder().setRestoreByteShortValues(aRestoreByteShortValues).unmarshal(aJson, null);
+		if (!aJson.startsWith("{"))
+		{
+			aJson = "{" + aJson + "}";
+		}
+		return new JSONDecoder(false, false).unmarshal(new StringReader(aJson), null);
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public static <T extends Collection> T parseJson(Reader aJson)
 	{
-		return (T)new JSONDecoder().unmarshal(aJson, null);
+		return (T)new JSONDecoder(false, false).unmarshal(aJson, null);
 	}
 
 
@@ -1034,7 +1065,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public String toJson()
 	{
-		return new JSONEncoder().marshal(this, true, false, false, new StringBuilder()).toString();
+		return new JSONEncoder(true, false, false, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1043,7 +1074,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public String toTypedJson()
 	{
-		return new JSONEncoder().marshal(this, true, true, false, new StringBuilder()).toString();
+		return new JSONEncoder(true, true, false, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1055,12 +1086,13 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public String toJson(boolean aCompact)
 	{
-		return new JSONEncoder().marshal(this, aCompact, false, false, new StringBuilder()).toString();
+		return new JSONEncoder(aCompact, false, false, false).marshal(this, new StringBuilder()).toString();
 	}
+
 
 	public String toJson(boolean aCompact, boolean aApostrophes)
 	{
-		return new JSONEncoder().marshal(this, aCompact, false, aApostrophes, new StringBuilder()).toString();
+		return new JSONEncoder(aCompact, false, aApostrophes, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1069,7 +1101,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public String toTypedJson(boolean aCompact)
 	{
-		return new JSONEncoder().marshal(this, aCompact, true, false, new StringBuilder()).toString();
+		return new JSONEncoder(aCompact, true, false, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1081,7 +1113,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public Appendable toJson(Appendable aAppendable)
 	{
-		return new JSONEncoder().marshal(this, true, false, false, aAppendable);
+		return new JSONEncoder(true, false, false, false).marshal(this, aAppendable);
 	}
 
 
@@ -1090,7 +1122,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public Appendable toTypedJson(Appendable aAppendable)
 	{
-		return new JSONEncoder().marshal(this, true, true, false, aAppendable);
+		return new JSONEncoder(true, true, false, false).marshal(this, aAppendable);
 	}
 
 
@@ -1102,7 +1134,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public Appendable toJson(Appendable aAppendable, boolean aCompact)
 	{
-		return new JSONEncoder().marshal(this, aCompact, false, false, aAppendable);
+		return new JSONEncoder(aCompact, false, false, false).marshal(this, aAppendable);
 	}
 
 
@@ -1111,7 +1143,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public Appendable toTypedJson(Appendable aAppendable, boolean aCompact)
 	{
-		return new JSONEncoder().marshal(this, aCompact, true, false, aAppendable);
+		return new JSONEncoder(aCompact, true, false, false).marshal(this, aAppendable);
 	}
 
 
@@ -1357,23 +1389,21 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 
 	/**
-	 * Recursively visits all child elements removing empty Documents or Arrays, or null values.
+	 * Recursively visits all child elements removing empty Documents/Arrays and null values and replacing equal Documents/Arrays with
+	 * shared instances.
 	 *
 	 * @return this Document
 	 */
 	@SuppressWarnings("unchecked")
 	public R reduce()
 	{
-//		ReferenceMap references = new ReferenceMap();
-		HashMap<Collection,Collection> references = new HashMap<>();
-
+		HashMap<Collection, Collection> references = new HashMap<>();
 		reduce(references);
-
 		return (R)this;
 	}
 
 
-	private void reduce(HashMap<Collection,Collection> references)
+	private void reduce(HashMap<Collection, Collection> aReferences)
 	{
 		ArrayList<K> keySet = new ArrayList<>(keySet());
 
@@ -1387,19 +1417,28 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 			else if (value instanceof Collection v)
 			{
-				if (references.containsKey(v))
+				if (aReferences.containsKey(v))
 				{
-					putImpl(key, references.get(v));
+					Collection tmp = aReferences.get(v);
+					if (tmp != null)
+					{
+						putImpl(key, tmp);
+					}
 				}
 				else
 				{
-					references.put(v, v);
+					aReferences.put(v, null); // prevent cycles
 
-					v.reduce(references);
+					v.reduce(aReferences);
 
 					if (v.isEmpty())
 					{
+						aReferences.remove(v);
 						remove(key);
+					}
+					else
+					{
+						aReferences.put(v, v);
 					}
 				}
 			}
