@@ -81,13 +81,13 @@ public class SignerNGTest
 
 		String data = new Signer(secret).toSignedString(encodingMessage, encodingHeader);
 
-		System.out.println(data);
+//		System.out.println(data);
 
 		Document decodedHeader = new Document();
 		Document decodedMessage = new Signer(secret).fromSignedString(data, decodedHeader);
 
-		System.out.println(decodedHeader);
-		System.out.println(decodedMessage);
+//		System.out.println(decodedHeader);
+//		System.out.println(decodedMessage);
 
 		assertEquals(decodedHeader.get("by"), "bobby");
 		assertEquals(decodedMessage, encodingMessage);
@@ -106,7 +106,7 @@ public class SignerNGTest
 
 		Document h = new Document();
 		new Signer(secret).fromSignedByteArray(data, h);
-		System.out.println(h);
+//		System.out.println(h);
 	}
 
 

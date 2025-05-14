@@ -16,7 +16,7 @@ class YMLEncoder
 	private boolean mPendingLineBreak;
 
 
-	public String marshal(KeyValueContainer aValue)
+	public String marshal(Collection aValue)
 	{
 		mBuffer = new StringBuilder();
 

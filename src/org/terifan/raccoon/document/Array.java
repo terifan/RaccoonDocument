@@ -8,7 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 
-public class Array extends KeyValueContainer<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
+public class Array extends Collection<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
 
@@ -250,6 +250,12 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
+//	public <T extends Iterable> T iterable()
+//	{
+//		return (T)mValues;
+//	}
+
+
 	@Override
 	public Iterable<Integer> keySet()
 	{
@@ -351,7 +357,7 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	/**
 	 * Create an array of item provided including primitives and arrays.
 	 *
-	 * @param aValues an array of objects
+	 * @param aValue an array of objects
 	 * @return an array
 	 */
 	@SuppressWarnings("unchecked")
@@ -555,6 +561,18 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
+	public <T> T[] asArrayOf(Class<T> aClass)
+	{
+		int sz = size();
+		Object arr = java.lang.reflect.Array.newInstance(aClass, sz);
+		for (int i = 0; i < sz; i++)
+		{
+			java.lang.reflect.Array.set(arr, i, get(i));
+		}
+		return (T[])arr;
+	}
+
+
 	public void forEach(BiConsumer<Integer, Object> aAction)
 	{
 		for (int i = 0; i < mValues.size(); i++)
@@ -564,10 +582,10 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
-	public int[] asInts()
+	public int[] asIntArray()
 	{
 		int[] values = new int[size()];
-		for (int i = 0; i < size(); i++)
+		for (int i = 0; i < values.length; i++)
 		{
 			values[i] = getInt(i);
 		}
@@ -575,14 +593,58 @@ public class Array extends KeyValueContainer<Integer, Array> implements Iterable
 	}
 
 
-	public long[] asLongs()
+	public long[] asLongArray()
 	{
 		long[] values = new long[size()];
-		for (int i = 0; i < size(); i++)
+		for (int i = 0; i < values.length; i++)
 		{
 			values[i] = getLong(i);
 		}
 		return values;
+	}
+
+
+	public double[] asDoubleArray()
+	{
+		double[] values = new double[size()];
+		for (int i = 0; i < values.length; i++)
+		{
+			values[i] = getDouble(i);
+		}
+		return values;
+	}
+
+
+	public String[] asStringArray()
+	{
+		String[] values = new String[size()];
+		for (int i = 0; i < values.length; i++)
+		{
+			values[i] = getString(i);
+		}
+		return values;
+	}
+
+
+	public Document[] asDocumentArray()
+	{
+		Document[] values = new Document[size()];
+		for (int i = 0; i < values.length; i++)
+		{
+			values[i] = getDocument(i);
+		}
+		return values;
+	}
+
+
+	public <T> T[] as()
+	{
+		Document[] values = new Document[size()];
+		for (int i = 0; i < values.length; i++)
+		{
+			values[i] = getDocument(i);
+		}
+		return (T[])values;
 	}
 
 

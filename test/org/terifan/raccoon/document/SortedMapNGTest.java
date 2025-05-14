@@ -1,6 +1,5 @@
 package org.terifan.raccoon.document;
 
-import test_document.SortedMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;

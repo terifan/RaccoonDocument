@@ -2,15 +2,9 @@ package org.terifan.raccoon.document;
 
 import java.io.IOException;
 import java.io.PushbackReader;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.util.Base64;
-import java.util.UUID;
 
 
 class JSONDecoder
@@ -27,39 +21,73 @@ class JSONDecoder
 
 
 	@SuppressWarnings("unchecked")
-	public <T extends KeyValueContainer> T unmarshal(String aJSON, T aContainer)
+	public <T extends Collection> T unmarshal(String aJSON, T aContainer)
 	{
 		aJSON = aJSON.trim();
-
-		try
+		if (aContainer == null)
 		{
-			if (aContainer instanceof Document v)
+			if (aJSON.startsWith("{"))
 			{
-				if (!aJSON.startsWith("{"))
-				{
-					aJSON = "{" + aJSON + "}";
-				}
-
-				mReader = new PushbackReader(new StringReader(aJSON), 1);
-				mReader.read();
-
-				return (T)readDocument(v);
-			}
-			else if (aContainer instanceof Array v)
-			{
-				if (!aJSON.startsWith("["))
-				{
-					aJSON = "[" + aJSON + "]";
-				}
-
-				mReader = new PushbackReader(new StringReader(aJSON), 1);
-				mReader.read();
-
-				return (T)readArray(v);
+				aContainer = (T)new Document();
 			}
 			else
 			{
-				throw new IllegalArgumentException();
+				aContainer = (T)new Array();
+			}
+		}
+		else if (aContainer instanceof Document)
+		{
+			if (!aJSON.startsWith("{"))
+			{
+				aJSON = "{" + aJSON + "}";
+			}
+		}
+		else
+		{
+			if (!aJSON.startsWith("["))
+			{
+				aJSON = "[" + aJSON + "]";
+			}
+		}
+		return unmarshal(new StringReader(aJSON), aContainer);
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public <T extends Collection> T unmarshal(Reader aJSON, T aContainer)
+	{
+		mReader = new PushbackReader(aJSON, 1);
+
+		try
+		{
+			if (aContainer == null)
+			{
+				int c = mReader.read();
+				if (c == '{')
+				{
+					aContainer = (T)new Document();
+				}
+				else
+				{
+					aContainer = (T)new Array();
+				}
+				mReader.unread(c);
+			}
+
+			switch (aContainer)
+			{
+				case Document v ->
+				{
+					mReader.read();
+					return (T)readDocument(v);
+				}
+				case Array v ->
+				{
+					mReader.read();
+					return (T)readArray(v);
+				}
+				default ->
+					throw new IllegalArgumentException();
 			}
 		}
 		catch (IOException e)

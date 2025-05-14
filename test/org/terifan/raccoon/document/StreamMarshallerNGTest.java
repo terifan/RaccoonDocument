@@ -93,35 +93,35 @@ public class StreamMarshallerNGTest
 			enc.write(Array.of(0xcccccccc,0xdddddddd,0xeeeeeeee,0xeeeeeeee));
 		}
 
-		System.out.println(baos.size());
+//		System.out.println(baos.size());
 
-		_Log.hexDump(baos.toByteArray());
+//		_Log.hexDump(baos.toByteArray());
 		}
 
 		{
 		Document doc = Document.of("0:3,1:2,2:1,3:0,4:32768,5:31264,6:21679,7:[26161,0,0],8:71,9:[0x88888888,0x99999999,0xaaaaaaaa,0xbbbbbbbb],10:[0xcccccccc,0xdddddddd,0xeeeeeeee,0xeeeeeeee]");
 
-		System.out.println(doc.toByteArray().length);
+//		System.out.println(doc.toByteArray().length);
 
-		_Log.hexDump(doc.toByteArray());
+//		_Log.hexDump(doc.toByteArray());
 		}
 
 		{
 		Document doc = Document.of("a:3,b:2,c:1,d:0,e:32768,f:31264,g:21679,h:[26161,0,0],i:71,j:[0x88888888,0x99999999,0xaaaaaaaa,0xbbbbbbbb],k:[0xcccccccc,0xdddddddd,0xeeeeeeee,0xeeeeeeee]");
 
-		System.out.println(doc.toByteArray().length);
+//		System.out.println(doc.toByteArray().length);
 
-		_Log.hexDump(doc.toByteArray());
+//		_Log.hexDump(doc.toByteArray());
 		}
 
 		{
 		Array doc = Array.of(Array.of(3,2,1,0),32768,31264,21679,Array.of(26161),71,Array.of(0x88888888,0x99999999,0xaaaaaaaa,0xbbbbbbbb),Array.of(0xcccccccc,0xdddddddd,0xeeeeeeee,0xeeeeeeee));
 
-		System.out.println(doc.toByteArray().length);
+//		System.out.println(doc.toByteArray().length);
 
-		_Log.hexDump(doc.toByteArray());
+//		_Log.hexDump(doc.toByteArray());
 
-		System.out.println(doc.toTypedJson());
+//		System.out.println(doc.toTypedJson());
 		}
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -148,9 +148,9 @@ public class StreamMarshallerNGTest
 			enc.writeInt(0xeeeeeeee);
 		}
 
-		System.out.println(baos.size());
+//		System.out.println(baos.size());
 
-		_Log.hexDump(baos.toByteArray());
+//		_Log.hexDump(baos.toByteArray());
 	}
 
 

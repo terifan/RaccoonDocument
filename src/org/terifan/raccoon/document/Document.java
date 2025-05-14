@@ -2,44 +2,25 @@ package org.terifan.raccoon.document;
 
 import java.io.Externalizable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
 
-public class Document extends KeyValueContainer<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
+public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
 
-	/**
-	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining normal
-	 * order. E.g. order of keys: [_id, _alpha, 0, A, a]
-	 */
-	public final static Comparator<String> COMPARATOR = (p, q) ->
-	{
-		boolean S = "_id".equals(p);
-		boolean T = "_id".equals(q);
-		if (S || T)
-		{
-			return S && !T ? -1 : T && !S ? 1 : 0;
-		}
-		boolean P = !p.isEmpty() && p.charAt(0) == '_';
-		boolean Q = !q.isEmpty() && q.charAt(0) == '_';
-		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
-	};
-
-	private TreeMap<String, Object> mValues;
-//	private final SortedMap<String, Object> mValues;
+	private LinkedHashMap<String, Object> mValues;
 
 
 	public Document()
 	{
-		mValues = new TreeMap<>(COMPARATOR);
-//		mValues = new SortedMap<>(COMPARATOR);
+		mValues = new LinkedHashMap<>();
 	}
 
 
@@ -59,13 +40,48 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "unchecked"})
 	public <T> T get(String aKey, T aDefaultValue)
 	{
 		Object v = getImpl(aKey);
 		if (v == null)
 		{
 			return aDefaultValue;
+		}
+		if (aDefaultValue != null && v instanceof Number w && aDefaultValue.getClass() != v.getClass())
+		{
+			if (aDefaultValue instanceof Integer)
+			{
+				return (T)(Integer)w.intValue();
+			}
+			if (aDefaultValue instanceof Long)
+			{
+				return (T)(Long)w.longValue();
+			}
+			if (aDefaultValue instanceof Double)
+			{
+				return (T)(Double)w.doubleValue();
+			}
+			if (aDefaultValue instanceof Float)
+			{
+				return (T)(Float)w.floatValue();
+			}
+			if (aDefaultValue instanceof String)
+			{
+				return (T)v.toString();
+			}
+			if (aDefaultValue instanceof Short)
+			{
+				return (T)(Short)w.shortValue();
+			}
+			if (aDefaultValue instanceof Byte)
+			{
+				return (T)(Byte)w.byteValue();
+			}
+		}
+		if (aDefaultValue instanceof Boolean && !(v instanceof Boolean))
+		{
+			return (T)Boolean.valueOf(v.toString());
 		}
 		return (T)v;
 	}
@@ -117,6 +133,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 
 	/**
 	 * Remove an element with a key
+	 *
 	 * @return the value stored with that key or null if no value
 	 */
 	@Override
@@ -154,7 +171,7 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 	}
 
 
-	public Collection<Object> values()
+	public java.util.Collection<Object> values()
 	{
 		return mValues.values();
 	}
@@ -286,7 +303,8 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 		try
 		{
 			Document doc = (Document)super.clone();
-			doc.mValues = new TreeMap<>();
+//			doc.mValues = new TreeMap<>();
+			doc.mValues = new LinkedHashMap<>();
 			return doc.fromByteArray(toByteArray());
 		}
 		catch (CloneNotSupportedException e)
@@ -447,5 +465,42 @@ public class Document extends KeyValueContainer<String, Document> implements Ext
 		}
 		mValues.put(aKey, v);
 		return (T)this;
+	}
+
+	/**
+	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining keys
+	 * according to their lexicographical order. E.g. order of keys: [_id, _alpha, 123, Banana, ape]
+	 */
+	public final static Comparator<String> STANDARD_COMPARATOR = (p, q) ->
+	{
+		boolean P = !p.isEmpty() && p.charAt(0) == '_'; // p.startsWith("_");
+		boolean Q = !q.isEmpty() && q.charAt(0) == '_'; // q.startsWith("_");
+		boolean S = P && "_id".equals(p);
+		boolean T = Q && "_id".equals(q);
+		if (S || T)
+		{
+			return S && !T ? -1 : T && !S ? 1 : 0;
+		}
+		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
+	};
+
+
+	/**
+	 * Sort keys in the Document according to the STANDARD_COMPARATOR.
+	 * @see STANDARD_COMPARATOR
+	 * @return this Document
+	 */
+	public Document sort()
+	{
+		return sort(STANDARD_COMPARATOR);
+	}
+
+
+	public Document sort(Comparator<String> aComparator)
+	{
+		TreeMap<String, Object> tmp = new TreeMap<>(aComparator);
+		tmp.putAll(mValues);
+		mValues = new LinkedHashMap<>(tmp);
+		return this;
 	}
 }

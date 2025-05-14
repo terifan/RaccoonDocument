@@ -14,16 +14,32 @@ import java.util.zip.InflaterInputStream;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+/*
+    iss (issuer): Issuer of the JWT
+    sub (subject): Subject of the JWT (the user)
+    aud (audience): Recipient for which the JWT is intended
+    exp (expiration time): Time after which the JWT expires
+    nbf (not before time): Time before which the JWT must not be accepted for processing
+    iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
+    jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
+*/
 
+/**
+ * The Signer class performs JWT (JSON Web Token) compatible encoding, decoding and verification of a document.
+ *
+ * String message = new Signer("secret").toSignedString(Document.of("id:123"));
+ */
 public class Signer
 {
-	private final Function<Document, byte[]> mSecret;
+	private final Function<Document, byte[]> mSecretProvider;
 	private Algorithm mAlgorithm;
 
 
 	public enum Algorithm
 	{
-		HS256, HS384, HS512
+		HS256, HS384, HS512,
+		/** unsupported by JWT */
+		MD5_HMAC
 	}
 
 
@@ -39,14 +55,14 @@ public class Signer
 	}
 
 
-	public Signer(Function<Document, byte[]> aSecret)
+	public Signer(Function<Document, byte[]> aSecretProvider)
 	{
-		if (aSecret == null)
+		if (aSecretProvider == null)
 		{
 			throw new IllegalArgumentException();
 		}
 
-		mSecret = aSecret;
+		mSecretProvider = aSecretProvider;
 		mAlgorithm = Algorithm.HS256;
 	}
 
@@ -65,8 +81,6 @@ public class Signer
 
 	/**
 	 * Return an encoded signed string representation of this Document. The format is identical to a JWT token.
-	 *
-	 * @param aSecret secret passphrase used when signing the message
 	 */
 	public String toSignedString(Document aMessage)
 	{
@@ -83,49 +97,59 @@ public class Signer
 	 *
 	 * note: if the header contains an "alg" field that will algorithm is used when signing a message.
 	 *
-	 * @param aSecret secret passphrase used when signing the message
-	 * @param aHeader a custom header document.
+	 * @param aHeader an optional custom header document
 	 */
 	public String toSignedString(Document aMessage, Document aHeader)
 	{
 		aHeader = new Document().putAll(aHeader).putIfAbsent("alg", k -> mAlgorithm.name());
 
-		byte[] headerBytes = aHeader.toJson(true).getBytes(StandardCharsets.UTF_8);
-		byte[] payloadBytes = aMessage.toJson(true).getBytes(StandardCharsets.UTF_8);
+		byte[] headerBytes = aHeader.toJson().getBytes(StandardCharsets.UTF_8);
+		byte[] payloadBytes = aMessage.toJson().getBytes(StandardCharsets.UTF_8);
 
 		Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
-		byte[] header = encoder.encodeToString(headerBytes).getBytes(StandardCharsets.UTF_8);
-		byte[] payload = encoder.encodeToString(payloadBytes).getBytes(StandardCharsets.UTF_8);
+		String headerBase64 = encoder.encodeToString(headerBytes);
+		String payloadBase64 = encoder.encodeToString(payloadBytes);
 
-		byte[] sign = sign(aHeader, header, payload);
+		headerBytes = headerBase64.getBytes(StandardCharsets.UTF_8);
+		payloadBytes = payloadBase64.getBytes(StandardCharsets.UTF_8);
 
-		return new String(header) + "." + new String(payload) + "." + encoder.encodeToString(sign);
+		byte[] sign = sign(aHeader, headerBytes, payloadBytes);
+
+		return headerBase64 + "." + payloadBase64 + "." + encoder.encodeToString(sign);
 	}
 
 
 	/**
 	 * Decode an encoded signed string representation of a Document.
 	 *
-	 * @param aSecret secret used when signing the message
 	 * @param aMessage a three part base64 encoded and signed message
 	 * @return this document with the content of the message decoded
 	 */
 	public Document fromSignedString(String aMessage)
 	{
-		return fromSignedString(aMessage, null);
+		return fromSignedStringImpl(aMessage, null);
 	}
 
 
 	/**
 	 * Decode an encoded signed string representation of a Document.
 	 *
-	 * @param aSecretProvider Function returning the secret used when signing the message. The function receive the decoded header of the
-	 * message.
 	 * @param aMessage a three part base64 encoded and signed message
 	 * @param oDecodedHeader if not null then the header of the signed message will be returned in this Document
 	 * @return this document with the content of the message decoded
 	 */
 	public Document fromSignedString(String aMessage, Document oDecodedHeader)
+	{
+		if (oDecodedHeader == null)
+		{
+			throw new IllegalArgumentException("oDecodedHeader is null");
+		}
+
+		return fromSignedStringImpl(aMessage, oDecodedHeader);
+	}
+
+
+	private Document fromSignedStringImpl(String aMessage, Document oDecodedHeader)
 	{
 		if (!aMessage.matches("[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}\\.[0-9A-Za-z\\-\\_]{0,}"))
 		{
@@ -157,8 +181,6 @@ public class Signer
 
 	/**
 	 * Return a signed compressed binary representation of this Document. Signing algorithm is HS256.
-	 *
-	 * @param aSecret secret used when signing the message
 	 */
 	public byte[] toSignedByteArray(Document aMessage)
 	{
@@ -171,7 +193,6 @@ public class Signer
 	 *
 	 * note: if the header contains an "alg" field that will algorithm is used when signing a message.
 	 *
-	 * @param aSecret secret used when signing the message
 	 * @param aHeader an optional custom header document.
 	 */
 	public byte[] toSignedByteArray(Document aMessage, Document aHeader)
@@ -187,18 +208,36 @@ public class Signer
 
 
 	/**
-	 * Decode a signed binary representation of a Document without checking the signature.
+	 * Decode a signed binary representation of a Document.
 	 *
-	 * @param aMessage a three part base64 encoded and signed message
+	 * @param aMessage a singed binary message
 	 * @return this document with the content of the message decoded
 	 */
 	public Document fromSignedByteArray(byte[] aMessage)
 	{
-		return fromSignedByteArray(aMessage, null);
+		return fromSignedByteArrayImpl(aMessage, null);
 	}
 
 
+	/**
+	 * Decode a signed binary representation of a Document.
+	 *
+	 * @param aMessage a singed binary message
+	 * @param oDecodedHeader a Document that with receive all header elements, must not be null
+	 * @return this document with the content of the message decoded
+	 */
 	public Document fromSignedByteArray(byte[] aMessage, Document oDecodedHeader)
+	{
+		if (oDecodedHeader == null)
+		{
+			throw new IllegalArgumentException("oDecodedHeader is null");
+		}
+
+		return fromSignedByteArrayImpl(aMessage, oDecodedHeader);
+	}
+
+
+	private Document fromSignedByteArrayImpl(byte[] aMessage, Document oDecodedHeader)
 	{
 		Array chunks = new Array().fromByteArray(aMessage);
 
@@ -282,26 +321,14 @@ public class Signer
 
 		try
 		{
-			alg = switch (alg)
-			{
-				case "HS256" ->
-					"HmacSHA256";
-				case "HS384" ->
-					"HmacSHA384";
-				case "HS512" ->
-					"HmacSHA512";
-				default ->
-					alg;
-			};
-
-			byte[] secret = mSecret.apply(aHeader);
+			byte[] secret = mSecretProvider.apply(aHeader);
 
 			if (secret == null || secret.length == 0)
 			{
 				throw new IllegalArgumentException(secret == null ? "Signature is null" : "Signature is empty");
 			}
 
-			Mac mac = Mac.getInstance(alg);
+			Mac mac = createMac(alg);
 			mac.init(new SecretKeySpec(secret, mac.getAlgorithm()));
 			return mac;
 		}
@@ -313,5 +340,24 @@ public class Signer
 		{
 			throw new SignerException("Failed to create signature", e);
 		}
+	}
+
+
+	protected Mac createMac(String aAlgorithm) throws NoSuchAlgorithmException
+	{
+		String impl = switch (aAlgorithm)
+		{
+			case "HS256" ->
+				"HmacSHA256";
+			case "HS384" ->
+				"HmacSHA384";
+			case "HS512" ->
+				"HmacSHA512";
+			case "MD5_HMAC" ->
+				"HmacMD5";
+			default ->
+				aAlgorithm;
+		};
+		return Mac.getInstance(impl);
 	}
 }

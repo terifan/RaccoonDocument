@@ -8,11 +8,10 @@ import java.util.function.Function;
 
 /**
  * Read or write values to the underlying stream. The SupportedTypes enum specifies the support types by the StreamMarshaller.
- * <p/>
+ * <p>
  * This class maintains a running checksum of data written and each token contain a 4 bit checksum value.
- * <p/>
- * <
- * pre>
+ * </p>
+ * <pre>
  * 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
  *		try (StreamMarshaller enc = new StreamMarshaller(baos))
  *		{
@@ -55,7 +54,7 @@ public class StreamMarshaller implements AutoCloseable
 	public StreamMarshaller(InputStream aInputStream)
 	{
 		mInputStream = aInputStream;
-		mDecoder = new BinaryDecoder(aInputStream, false);
+		mDecoder = new BinaryDecoder(aInputStream, null);
 	}
 
 

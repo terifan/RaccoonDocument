@@ -1,5 +1,6 @@
 package org.terifan.raccoon.document;
 
+import java.io.IOException;
 import java.util.Map.Entry;
 import static org.terifan.raccoon.document.SupportedTypes.escapeChar;
 import static org.terifan.raccoon.document.SupportedTypes.escapeString;
@@ -7,7 +8,7 @@ import static org.terifan.raccoon.document.SupportedTypes.escapeString;
 
 class JSONEncoder
 {
-	private StringBuilder mBuffer;
+	private Appendable mAppendable;
 	private boolean mTyped;
 	private boolean mCompact;
 	private boolean mNewLine;
@@ -16,39 +17,43 @@ class JSONEncoder
 	private int mIndent;
 
 
-	public String marshal(KeyValueContainer aContainer, boolean aCompact, boolean aTyped, boolean aApostrophes)
+	public Appendable marshal(Collection aContainer, boolean aCompact, boolean aTyped, boolean aApostrophes, Appendable aAppendable)
 	{
-		mBuffer = new StringBuilder();
+		mAppendable = aAppendable;
 		mNewLine = false;
 		mCompact = aCompact;
 		mTyped = aTyped;
 		mFirst = true;
 		mQuote = aApostrophes ? '\'' : '\"';
 
-		if (aContainer instanceof Document v)
+		try
 		{
-			marshalDocument(v, true);
+			switch (aContainer)
+			{
+				case Document v ->
+					marshalDocument(v, true);
+				case Array v ->
+					marshalArray(v);
+				default ->
+					throw new IllegalArgumentException();
+			}
 		}
-		else if (aContainer instanceof Array v)
+		catch (IOException e)
 		{
-			marshalArray(v);
-		}
-		else
-		{
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Failed to marshal JSON", e);
 		}
 
-		return mBuffer.toString();
+		return aAppendable;
 	}
 
 
-	private void marshalDocument(Document aDocument)
+	private void marshalDocument(Document aDocument) throws IOException
 	{
 		marshalDocument(aDocument, true);
 	}
 
 
-	private void marshalDocument(Document aDocument, boolean aNewLineOnClose)
+	private void marshalDocument(Document aDocument, boolean aNewLineOnClose) throws IOException
 	{
 		int size = aDocument.size();
 
@@ -104,7 +109,7 @@ class JSONEncoder
 	}
 
 
-	private void marshalArray(Array aArray)
+	private void marshalArray(Array aArray) throws IOException
 	{
 		int size = aArray.size();
 
@@ -120,7 +125,7 @@ class JSONEncoder
 
 		for (int i = 0; shortArray && i < aArray.size(); i++)
 		{
-			shortArray = !(aArray.get(i) instanceof KeyValueContainer) && !(aArray.get(i) instanceof String);
+			shortArray = !(aArray.get(i) instanceof Collection) && !(aArray.get(i) instanceof String);
 		}
 
 		if (special)
@@ -180,7 +185,7 @@ class JSONEncoder
 	}
 
 
-	private void marshal(Object aValue)
+	private void marshal(Object aValue) throws IOException
 	{
 		if (aValue instanceof Document v)
 		{
@@ -197,7 +202,7 @@ class JSONEncoder
 	}
 
 
-	private void marshalValue(Object aValue)
+	private void marshalValue(Object aValue) throws IOException
 	{
 		if (aValue instanceof String v)
 		{
@@ -232,13 +237,13 @@ class JSONEncoder
 	}
 
 
-	public void print(Object aText)
+	public void print(Object aText) throws IOException
 	{
 		print(aText, true);
 	}
 
 
-	public void print(Object aText, boolean aIndent)
+	public void print(Object aText, boolean aIndent) throws IOException
 	{
 		String text = formatString(aText);
 
@@ -256,18 +261,18 @@ class JSONEncoder
 			printIndent();
 		}
 
-		mBuffer.append(text);
+		mAppendable.append(text);
 		mFirst = false;
 	}
 
 
-	public void println(Object aText)
+	public void println(Object aText) throws IOException
 	{
 		println(aText, true);
 	}
 
 
-	public void println(Object aText, boolean aIndent)
+	public void println(Object aText, boolean aIndent) throws IOException
 	{
 		String text = formatString(aText);
 
@@ -285,7 +290,7 @@ class JSONEncoder
 			printIndent();
 		}
 
-		mBuffer.append(text);
+		mAppendable.append(text);
 		mNewLine = true;
 	}
 
@@ -346,14 +351,14 @@ class JSONEncoder
 	}
 
 
-	private void printIndent()
+	private void printIndent() throws IOException
 	{
 		if (mNewLine && !mCompact)
 		{
-			mBuffer.append("\n");
+			mAppendable.append("\n");
 			for (int i = 0; i < mIndent; i++)
 			{
-				mBuffer.append("\t");
+				mAppendable.append("\t");
 			}
 			mNewLine = false;
 		}
