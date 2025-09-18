@@ -16,7 +16,7 @@ public class BinaryDecoder
 	private MurmurHash3 mChecksum;
 	private InputStream mInputStream;
 	private Visitor mVisitor;
-	private final ReferenceMap mReferences;
+//	private final ReferenceMap mReferences;
 
 
 	BinaryDecoder(InputStream aInputStream)
@@ -29,31 +29,31 @@ public class BinaryDecoder
 	{
 		mInputStream = aInputStream;
 		mVisitor = aVisitor;
-		mReferences = new ReferenceMap();
+//		mReferences = new ReferenceMap();
 	}
 
 
 	Object unmarshal() throws IOException
 	{
 		Token token = readToken();
-		Path path = new Path();
+		State state = new State(null, null);
 
 		switch (token.type)
 		{
 			case DOCUMENT:
 				Document d = new Document();
-				mReferences.register(d, path.toString());
-				readDocument(path, d, VisitorResult.CONTINUE);
+//				mReferences.register(d, state.toString());
+				readDocument(state, d, VisitorResult.CONTINUE);
 				return d;
 			case ARRAY:
 				Array a = new Array();
-				mReferences.register(a, path.toString());
-				readArray(path, a, VisitorResult.CONTINUE);
+//				mReferences.register(a, state.toString());
+				readArray(state, a, VisitorResult.CONTINUE);
 				return a;
 			case TERMINATOR:
 				return token.type;
 			default:
-				return readValue(path, token.type, VisitorResult.CONTINUE);
+				return readValue(state, token.type, VisitorResult.CONTINUE);
 		}
 	}
 
@@ -92,7 +92,7 @@ public class BinaryDecoder
 	void unmarshal(Collection aContainer) throws IOException
 	{
 		Token token = readToken();
-		Path path = new Path();
+		State state = new State(null, null);
 
 		if (aContainer instanceof Document v)
 		{
@@ -105,8 +105,7 @@ public class BinaryDecoder
 				throw new StreamException("Stream corrupted.");
 			}
 
-			mReferences.register(v, path.toString());
-			readDocument(path, v, VisitorResult.CONTINUE);
+			readDocument(state, v, VisitorResult.CONTINUE);
 		}
 		else if (aContainer instanceof Array v)
 		{
@@ -119,8 +118,8 @@ public class BinaryDecoder
 				throw new StreamException("Stream corrupted.");
 			}
 
-			mReferences.register(v, path.toString());
-			readArray(path, v, VisitorResult.CONTINUE);
+//			mReferences.register(v, state.toString());
+			readArray(state, v, VisitorResult.CONTINUE);
 		}
 		else
 		{
@@ -158,9 +157,9 @@ public class BinaryDecoder
 	}
 
 
-	Document readDocument(Path aPath, Document aDocument, VisitorResult aState) throws IOException
+	Document readDocument(State aState, Document aDocument, VisitorResult aResult) throws IOException
 	{
-		boolean skipSiblings = aState == VisitorResult.SKIP_SUBTREE;
+		boolean skipSiblings = aResult == VisitorResult.SKIP_SUBTREE;
 
 		for (;;)
 		{
@@ -176,32 +175,32 @@ public class BinaryDecoder
 
 			String key = readUTF(token.value);
 
-			aPath.enter(key);
+			aState.enter(key);
 
 //			if (mVisitor != null)
 //			{
 //				if (skipSiblings)
 //				{
-//					Object value = readValue(aPath, token.type, aState);
+//					Object value = readValue(aState, token.type, aState);
 //				}
 //				else
 //				{
-//					VisitorResult result = mVisitor.preVisit(aPath);
+//					VisitorResult result = mVisitor.preVisit(aState);
 //
 //					if (result == VisitorResult.TERMINATE)
 //					{
-//						aPath.state = VisitorResult.TERMINATE;
+//						aState.state = VisitorResult.TERMINATE;
 //						return aDocument;
 //					}
 //					else if (result == VisitorResult.SKIP_SIBLINGS)
 //					{
 //						skipSiblings = true;
-//						aPath.state = VisitorResult.SKIP_SUBTREE;
+//						aState.state = VisitorResult.SKIP_SUBTREE;
 //					}
 //
-//					Object value = readValue(aPath, token.type, result == VisitorResult.SKIP ? VisitorResult.SKIP_SUBTREE : aState);
+//					Object value = readValue(aState, token.type, result == VisitorResult.SKIP ? VisitorResult.SKIP_SUBTREE : aState);
 //
-//					if (aPath.state == VisitorResult.TERMINATE)
+//					if (aState.state == VisitorResult.TERMINATE)
 //					{
 //						return aDocument;
 //					}
@@ -209,11 +208,11 @@ public class BinaryDecoder
 //					if (!skipSiblings && result != VisitorResult.SKIP)
 //					{
 //						aDocument.putImpl(key, value);
-//						result = mVisitor.postVisit(aPath, value);
+//						result = mVisitor.postVisit(aState, value);
 //
 //						if (result == VisitorResult.TERMINATE)
 //						{
-//							aPath.state = VisitorResult.TERMINATE;
+//							aState.state = VisitorResult.TERMINATE;
 //							return aDocument;
 //						}
 //						else if (result == VisitorResult.SKIP_SIBLINGS)
@@ -225,18 +224,18 @@ public class BinaryDecoder
 //			}
 //			else
 			{
-				Object value = readValue(aPath, token.type, aState);
+				Object value = readValue(aState, token.type, aResult);
 				aDocument.putImpl(key, value);
 			}
 
-			aPath.exit();
+			aState.exit();
 		}
 
 		return aDocument;
 	}
 
 
-	Array readArray(Path aPath, Array aArray, VisitorResult aState) throws IOException
+	Array readArray(State aState, Array aArray, VisitorResult aResult) throws IOException
 	{
 		for (;;)
 		{
@@ -253,7 +252,7 @@ public class BinaryDecoder
 
 			for (int i = 0; i < token.value; i++)
 			{
-				aArray.add(readValue(aPath, token.type, aState));
+				aArray.add(readValue(aState, token.type, aResult));
 			}
 		}
 
@@ -261,24 +260,24 @@ public class BinaryDecoder
 	}
 
 
-	private Object readValue(Path aPath, BinaryCodec aType, VisitorResult aState) throws IOException
+	private Object readValue(State aState, BinaryCodec aType, VisitorResult aResult) throws IOException
 	{
 		switch (aType)
 		{
 			case DOCUMENT:
 				Document d = new Document();
-				mReferences.register(d, aPath.toString());
-				readDocument(aPath, d, aState);
+//				mReferences.register(d, aState.toString());
+				readDocument(aState, d, aResult);
 				return d;
 			case ARRAY:
 				Array a = new Array();
-				mReferences.register(a, aPath.toString());
-				readArray(aPath, a, aState);
+//				mReferences.register(a, aState.toString());
+				readArray(aState, a, aResult);
 				return a;
-			case REFERENCE:
-				return mReferences.get((int)aType.decoder.decode(this, aPath, aState));
+//			case REFERENCE:
+//				return mReferences.get((int)aType.decoder.decode(this, aState, aResult));
 			default:
-				return aType.decoder.decode(this, aPath, aState);
+				return aType.decoder.decode(this, aState, aResult);
 		}
 	}
 
@@ -471,19 +470,19 @@ public class BinaryDecoder
 
 	public static interface Visitor
 	{
-		default VisitorResult preVisit(Path aPath)
+		default VisitorResult preVisit(State aState)
 		{
 			return VisitorResult.CONTINUE;
 		}
 
 
-		default Object valueProxy(Path aPath, Object aValue)
+		default Object valueProxy(State aState, Object aValue)
 		{
 			return aValue;
 		}
 
 
-		VisitorResult postVisit(Path aPath, Object aValue);
+		VisitorResult postVisit(State aState, Object aValue);
 	}
 
 

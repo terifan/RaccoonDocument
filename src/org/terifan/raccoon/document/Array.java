@@ -728,4 +728,169 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 	{
 		return aKey < size();
 	}
+
+
+	@Override
+	public boolean visit(String aPath, Visitor aVisitor)
+	{
+		while (aPath.startsWith("/"))
+		{
+			aPath = aPath.substring(1);
+		}
+
+		try (Logger lg = enter("visit ARR", "path: " + aPath))
+		{
+			int i = aPath.indexOf('/');
+			int j = aPath.indexOf("[");
+
+			if (j == 0)
+			{
+				return evaluatePathExpression(aPath, aVisitor);
+			}
+
+			if (i == -1 && j == -1)
+			{
+				if (aPath.isEmpty())
+				{
+					return aVisitor.visit(this, this);
+				}
+				if (aPath.equals("*"))
+				{
+					for (Object v : this)
+					{
+						if (!aVisitor.visit(this, v))
+						{
+							return false;
+						}
+					}
+				}
+				else if (aPath.matches("[0-9]+"))
+				{
+					return aVisitor.visit(this, ((Array)this).get(Integer.valueOf(aPath)));
+				}
+				else
+				{
+					int _i = 0;
+					for (Object item : this)
+					{
+						try (Logger lg1 = enter("visit", (_i++) + ":"))
+						{
+							if (_visit(item, aPath, aVisitor))
+							{
+								return false;
+							}
+						}
+					}
+				}
+				return true;
+			}
+
+			String path, remain;
+
+			if (i == -1 && j > 0 || j != -1 && j < i)
+			{
+				path = aPath.substring(0, j);
+				remain = aPath.substring(j + 1);
+
+				System.out.println(path);
+				System.out.println(remain);
+
+				if (path.equals("*"))
+				{
+					for (Object item : values())
+					{
+						String r = remain;
+						if (item instanceof Collection c)
+						{
+							r = c.evaluate(remain);
+						}
+						if (r != null && _visit(item, r, aVisitor))
+						{
+							return false;
+						}
+					}
+				}
+				else if (path.matches("[0-9]*"))
+				{
+					Object item = get(Integer.valueOf(path));
+					if (_visit(item, remain, aVisitor))
+					{
+						return false;
+					}
+				}
+				else
+				{
+					int _i = 0;
+					for (Object item : this)
+					{
+						try (Logger lg1 = enter("visit", (_i++) + ": " + item))
+						{
+							String r = remain;
+
+							if (item instanceof Collection c)
+							{
+								r = c.evaluate(remain);
+							}
+
+							if (r != null && _visit(item, r, aVisitor))
+							{
+//								return false;
+							}
+
+						}
+					}
+				}
+			}
+			else
+			{
+				if (j != -1 && (i == -1 || j < i))
+				{
+					path = aPath.substring(0, j);
+					remain = aPath.substring(j);
+				}
+				else
+				{
+					path = aPath.substring(0, i);
+					remain = aPath.substring(i + 1);
+				}
+
+				log("path=" + path + ", remain=" + remain + ", this=" + this);
+
+				if (path.equals("*"))
+				{
+					for (Object item : this)
+					{
+						if (_visit(item, remain, aVisitor))
+						{
+							return false;
+						}
+					}
+				}
+				else if (path.matches("[0-9]*"))
+				{
+					Object item = get(Integer.valueOf(path));
+					if (_visit(item, remain, aVisitor))
+					{
+						return false;
+					}
+				}
+				else
+				{
+					int _i = 0;
+					for (Object item : this)
+					{
+						try (Logger lg1 = enter("visit", (_i++) + ": " + item))
+						{
+							if (_visit(item, aPath, aVisitor))
+							{
+								return false;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return true;
+	}
 }

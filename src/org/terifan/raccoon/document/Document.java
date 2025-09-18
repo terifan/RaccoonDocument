@@ -41,7 +41,10 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	@SuppressWarnings({"unchecked", "unchecked"})
+	@SuppressWarnings(
+	{
+		"unchecked", "unchecked"
+	})
 	public <T> T get(String aKey, T aDefaultValue)
 	{
 		Object v = getImpl(aKey);
@@ -503,6 +506,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 	/**
 	 * Sort keys in the Document according to the STANDARD_COMPARATOR.
+	 *
 	 * @see STANDARD_COMPARATOR
 	 * @return this Document
 	 */
@@ -518,5 +522,161 @@ public class Document extends Collection<String, Document> implements Externaliz
 		tmp.putAll(mValues);
 		mValues = new LinkedHashMap<>(tmp);
 		return this;
+	}
+
+
+	@Override
+	public boolean visit(String aPath, Visitor aVisitor)
+	{
+		while (aPath.startsWith("/"))
+		{
+			aPath = aPath.substring(1);
+		}
+
+		try (Logger lg = enter("visit DOC", "path: " + aPath + " " + this))
+		{
+			int i = aPath.indexOf('/');
+			int j = aPath.indexOf("[");
+
+			if (j == 0)
+			{
+				return evaluatePathExpression(aPath, aVisitor);
+			}
+
+			if (i == -1 && j == -1)
+			{
+				if (aPath.isEmpty())
+				{
+					return aVisitor.visit(this, this);
+				}
+				if (aPath.equals("*"))
+				{
+					Iterable it;
+					if (this instanceof Document v)
+					{
+						it = v.values();
+					}
+					else
+					{
+						it = (Iterable)this;
+					}
+					for (Object v : it)
+					{
+						if (!aVisitor.visit(this, v))
+						{
+							return false;
+						}
+					}
+				}
+				else
+				{
+					Object item = get(aPath);
+					return aVisitor.visit(this, item);
+				}
+				return true;
+			}
+
+			String path, remain;
+
+			if (i == -1 && j > 0 || j != -1 && j < i)
+			{
+				path = aPath.substring(0, j);
+				remain = aPath.substring(j + 1);
+
+				System.out.println(path);
+				System.out.println(remain);
+
+				if (path.equals("*"))
+				{
+					for (Object item : values())
+					{
+						String r = remain;
+						if (item instanceof Collection c)
+						{
+							r = c.evaluate(remain);
+						}
+						if (r != null && _visit(item, r, aVisitor))
+						{
+							return false;
+						}
+					}
+				}
+				else
+				{
+					Object item = get(path);
+
+					if (item instanceof Array v)
+					{
+						boolean match = false;
+						int _i = 0;
+						for (Object child : v)
+						{
+							try (Logger lg1 = enter("visit", (_i++) + ": " + child))
+							{
+								String r = remain;
+
+								if (child instanceof Collection c)
+								{
+									r = c.evaluate(remain);
+								}
+
+								if (r != null)
+								{
+									match |= _visit(child, r, aVisitor);
+								}
+							}
+						}
+						return match;
+					}
+					else if (item instanceof Document v)
+					{
+						remain = v.evaluate(remain);
+
+						if (remain == null)
+						{
+							return false;
+						}
+
+						return _visit(item, remain, aVisitor);
+					}
+				}
+			}
+			else
+			{
+				if (j != -1 && (i == -1 || j < i))
+				{
+					path = aPath.substring(0, j);
+					remain = aPath.substring(j);
+				}
+				else
+				{
+					path = aPath.substring(0, i);
+					remain = aPath.substring(i + 1);
+				}
+				//
+				log(path + " // " + remain + " // " + this);
+				//
+				if (path.equals("*"))
+				{
+					for (Object item : values())
+					{
+						if (_visit(item, remain, aVisitor))
+						{
+							return false;
+						}
+					}
+				}
+				else
+				{
+					Object item = get(path);
+					if (_visit(item, remain, aVisitor))
+					{
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
 	}
 }

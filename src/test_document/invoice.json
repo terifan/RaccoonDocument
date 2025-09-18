@@ -614,7 +614,7 @@
 					"alternatives": []
 				},
 				"taxAmount": {
-					"amount": 0,
+					"amount": 10.35,
 					"currency": {
 						"name": "GBP"
 					},
@@ -639,7 +639,7 @@
 					"alternatives": []
 				},
 				"taxAmount": {
-					"amount": 0,
+					"amount": "50.30",
 					"currency": {
 						"name": "GBP"
 					},

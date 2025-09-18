@@ -1,28 +1,55 @@
 package org.terifan.raccoon.document;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.function.Function;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
 
 
+// zip(
+//   words
+// )
+// zip(
+//   formats
+// )
+// document
+//   document
+//     value
+//     document
+//       value
+//     value
+//   value
+//   array
+//     document
+//       value
+//       value
+//     document
+//       value
+//       value
 class BinaryEncoder implements AutoCloseable
 {
 	final static int VERSION = 1;
 
-	private MurmurHash3 mChecksum;
 	private OutputStream mOutputStream;
 	private final byte[] mWriteBuffer = new byte[8];
 	private final Function<Path, Boolean> mFilter;
-	private final ReferenceMap mReferences;
+	private final HashMap<String, Integer> mValues;
+	private final HashMap<String, Integer> mFormats;
 
 
 	public BinaryEncoder(OutputStream aOutputStream, Function<Path, Boolean> aFilter)
 	{
 		mOutputStream = aOutputStream;
 		mFilter = aFilter;
-		mReferences = new ReferenceMap();
+		mValues = new HashMap<>();
+		mFormats = new HashMap<>();
 	}
 
 
@@ -35,61 +62,99 @@ class BinaryEncoder implements AutoCloseable
 			throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
 		}
 
-		if (mChecksum == null)
-		{
-			mChecksum = new MurmurHash3(VERSION);
-			writeToken(type, VERSION);
-		}
-		else
-		{
-			writeToken(type, getChecksumValue());
-		}
+		writeToken(type, VERSION);
 
-		Path path = new Path();
+		State state = new State(null, null);
 		if (aObject instanceof Document v)
 		{
-			mReferences.register(v, "");
-			writeDocument(v, path);
+			writeDocument(v, state);
 		}
 		else if (aObject instanceof Array v)
 		{
-			mReferences.register(v, "");
-			writeArray(v, path);
+			writeArray(v, state);
 		}
 		else
 		{
-			writeValue(type, aObject, path);
+			writeValue(type, aObject, state);
 		}
 
-		System.out.println(mReferences);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (DataOutputStream dos = new DataOutputStream(new DeflaterOutputStream(baos, new Deflater(Deflater.DEFAULT_COMPRESSION))))
+//		try (DataOutputStream dos = new DataOutputStream(baos))
+		{
+			dos.writeShort(mValues.size());
+			for (Entry<String, Integer> entry : mValues.entrySet())
+			{
+				dos.writeInt(entry.getKey().length());
+				dos.writeUTF(entry.getKey());
+			}
+		}
+
+		writeVarint(baos.size());
+		writeBytes(baos.toByteArray());
+
+		baos = new ByteArrayOutputStream();
+		try (DataOutputStream dos = new DataOutputStream(new DeflaterOutputStream(baos, new Deflater(Deflater.DEFAULT_COMPRESSION))))
+//		try (DataOutputStream dos = new DataOutputStream(baos))
+		{
+			dos.writeShort(mFormats.size());
+			for (Entry<String, Integer> entry : mFormats.entrySet())
+			{
+				dos.writeInt(entry.getKey().length());
+				dos.write(Base64.getDecoder().decode(entry.getKey()));
+			}
+		}
+
+		writeVarint(baos.size());
+		writeBytes(baos.toByteArray());
+
+		System.out.println("values=" + mValues.size());
+		System.out.println("formats=" + mFormats.size());
 	}
 
 
-	BinaryEncoder writeDocument(Document aDocument, Path aPath) throws IOException
+	BinaryEncoder writeDocument(Document aDocument, State aState) throws IOException
 	{
+		ByteArrayOutputStream format = new ByteArrayOutputStream();
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
 			String key = entry.getKey();
+			Object value = entry.getValue();
+			BinaryCodec type = BinaryCodec.identify(value);
+			format.write(type.ordinal());
+			format.write(key.length());
+			format.writeBytes(key.getBytes());
+		}
 
-			aPath.enter(key);
+		writeVarint(mFormats.computeIfAbsent(Base64.getEncoder().encodeToString(format.toByteArray()), k -> mFormats.size()));
 
-			if (mFilter.apply(aPath))
+		for (Entry<String, Object> entry : aDocument.entrySet())
+		{
+			String key = entry.getKey();
+			Object value = entry.getValue();
+
+			if (value instanceof Collection)
 			{
-				Object value = entry.getValue();
-				BinaryCodec type = BinaryCodec.identify(value);
-
-				if (value instanceof Collection v && mReferences.register(v, aPath.toString()))
-				{
-					value = mReferences.indexOf(v);
-					type = BinaryCodec.REFERENCE;
-				}
-
-				writeToken(type, key.length());
-				writeUTF(key);
-				writeValue(type, value, aPath);
+				aState = aState.enter(key);
 			}
 
-			aPath.exit();
+			BinaryCodec type = BinaryCodec.identify(value);
+
+			if (type == BinaryCodec.STRING)
+			{
+				value = mValues.computeIfAbsent((String)value, k -> mValues.size());
+			}
+
+//			System.out.printf("%15s %s%n", type, key);
+
+			writeValue(type, value, aState);
+
+			aState.put(key, value instanceof Collection ? "#REF" : value);
+
+			if (value instanceof Collection)
+			{
+				aState = aState.exit();
+			}
 		}
 
 		terminate();
@@ -97,43 +162,47 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	BinaryEncoder writeArray(Array aArray, Path aPath) throws IOException
+	BinaryEncoder writeArray(Array aArray, State aState) throws IOException
 	{
 		for (int offset = 0, elementCount = aArray.size(); offset < elementCount;)
 		{
-			BinaryCodec type = null;
-			int runLen = 0;
+			aState = aState.enter(offset);
 
 			ArrayList<Object> pending = new ArrayList<>();
-			runLen=1;
-			int j = offset;
+			BinaryCodec type = null;
 
-//			for (int i = offset; i < elementCount; i++, runLen++)
+			for (int i = offset; i < elementCount; i++)
 			{
-				Object value = aArray.get(j);
+				Object value = aArray.get(i);
 				BinaryCodec nextType = BinaryCodec.identify(value);
 
-				if ((type == null || type == BinaryCodec.REFERENCE) && value instanceof Collection v && mReferences.register(v, aPath.toString()))
+				if (type != nextType && type != null)
 				{
-					value = mReferences.indexOf(v);
-					nextType = BinaryCodec.REFERENCE;
+					break;
 				}
 
-//				if (type != nextType && type != null)
-//				{
-//					break;
-//				}
-
-				pending.add(value);
 				type = nextType;
+				pending.add(value);
 			}
 
-			writeToken(type, runLen);
+//			System.out.printf("%15s %s%n", type, pending.size());
+			writeToken(type, pending.size());
 
-			for (int i = 0; --runLen >= 0; i++, offset++)
+			for (int i = 0; i < pending.size(); i++, offset++)
 			{
-				writeValue(type, pending.get(i), aPath);
+				Object value = pending.get(i);
+
+				if (type == BinaryCodec.STRING)
+				{
+					value = mValues.computeIfAbsent(value.toString(), k -> mValues.size());
+				}
+
+				writeValue(type, value, aState);
+
+				aState.put(offset, value instanceof Collection ? "#REF" : value);
 			}
+
+			aState = aState.exit();
 		}
 
 		terminate();
@@ -143,13 +212,13 @@ class BinaryEncoder implements AutoCloseable
 
 	public void terminate() throws IOException
 	{
-		writeToken(BinaryCodec.TERMINATOR, getChecksumValue());
+		writeToken(BinaryCodec.TERMINATOR, 0);
 	}
 
 
-	private void writeValue(BinaryCodec aType, Object aValue, Path aPath) throws IOException
+	private void writeValue(BinaryCodec aType, Object aValue, State aState) throws IOException
 	{
-		aType.encoder.encode(this, aPath, aValue);
+		aType.encoder.encode(this, aState, aValue);
 	}
 
 
@@ -162,10 +231,6 @@ class BinaryEncoder implements AutoCloseable
 	BinaryEncoder writeByte(int aValue) throws IOException
 	{
 		mOutputStream.write(aValue);
-		if (mChecksum != null)
-		{
-			mChecksum.updateByte(aValue);
-		}
 		return this;
 	}
 
@@ -214,7 +279,6 @@ class BinaryEncoder implements AutoCloseable
 	void writeBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
 	{
 		mOutputStream.write(aBuffer, aOffset, aLength);
-		mChecksum.updateBytes(aBuffer, aOffset, aLength);
 	}
 
 
@@ -294,7 +358,6 @@ class BinaryEncoder implements AutoCloseable
 	public void close() throws IOException
 	{
 		mOutputStream = null;
-		mChecksum = null;
 	}
 
 
@@ -310,13 +373,6 @@ class BinaryEncoder implements AutoCloseable
 
 		return aWord;
 	}
-
-
-	private int getChecksumValue()
-	{
-		return mChecksum.getValue4bits();
-	}
-
 
 //	private Integer parseInt(String aKey)
 //	{

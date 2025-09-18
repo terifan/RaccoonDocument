@@ -16,7 +16,7 @@ public class CompareSerialization
 	{
 		try
 		{
-			System.out.printf("%12s %12s %12s %12s %12s %12s %12s %12s %12s %12s%n", "", "json", "bin", "json+zip", "bin+zip", "binTIME", "jsonTIME", "bin+dic", "bin+dic+zip", "dic");
+			System.out.printf("%12s %12s %12s %12s %12s %12s %12s %12s %12s%n", "", "json", "bin", "json+zip", "bin+zip", "jsonEnc", "binEnc", "jsonDec", "binDec");
 
 			Random rnd = new Random(0);
 
@@ -28,18 +28,17 @@ public class CompareSerialization
 			Array tinies = new Array();
 			for (int i = 0; i < 100; i++)
 			{
-				Document p = _Person.createPerson(rnd);
-				String name = p.at("personal/givenName");
-				tinies.add(Document.of("_id:" + rnd.nextInt(10000) + ",name:" + name + ",age:" + rnd.nextInt(100) + ",phone:'" + rnd.nextInt(100) + "-" + rnd.nextInt(100000000) + "',email:'" + name + "@mail.com'"));
+				String name = persons.getDocument(i).getDocument("personal").getArray("contacts").getDocument(0).getString("text");
+				tinies.add(Document.of("_id:" + rnd.nextInt(10000) + ",name:'" + name + "',age:" + rnd.nextInt(100) + ",phone:'" + rnd.nextInt(100) + "-" + rnd.nextInt(100000000) + "',email:'" + name + "@mail.com'"));
 			}
 
 			run("invoice", Document.parseJson(new InputStreamReader(CompareSerialization.class.getResourceAsStream("invoice.json"))));
 			run("manifest", Document.parseJson(new InputStreamReader(CompareSerialization.class.getResourceAsStream("manifest.json"))));
 			run("person", _Person.createPerson(rnd));
-			run("100 people", tinies);
-			run("tiny", Document.of("_id:3164,name:steve,age:45,phone:'34-35656464',email:'steve@mail.com'"));
+			run("tiny", Document.of("_id:3164,name:'steve bobs',age:45,phone:'34-35656464',email:'steve.bobs@mail.com'"));
 			run("100 tiny", tinies);
 			run("trip", Document.parseJson(new InputStreamReader(CompareSerialization.class.getResourceAsStream("trip.json"))));
+			run("manifest", Document.parseJson(new InputStreamReader(CompareSerialization.class.getResourceAsStream("test19.json"))));
 
 //			for (int i = 0; i <= 18; i++)
 //			{
@@ -61,22 +60,33 @@ public class CompareSerialization
 		byte[] binzip = Support.zip(bin);
 		byte[] zipjson = Support.zip(json.getBytes(StandardCharsets.UTF_8));
 
-		for (int i = 0; i < 100; i++)
-		{
-			Document.parseByteArray(bin);
-			Document.parseJson(json);
-		}
-		long t0 = System.currentTimeMillis();
-		for (int i = 0; i < 1000; i++)
-		{
-			Document.parseByteArray(bin);
-		}
-		long t1 = System.currentTimeMillis();
-		for (int i = 0; i < 1000; i++)
-		{
-			Document.parseJson(json);
-		}
-		long t2 = System.currentTimeMillis();
+//		for (int i = 0; i < 100; i++)
+//		{
+//			Document.parseByteArray(bin).toByteArray();
+//			Document.parseJson(json).toJson();
+//		}
+//
+//		long t0 = System.currentTimeMillis();
+//		for (int i = 0; i < 100; i++)
+//		{
+//			aCollection.toJson();
+//		}
+//		long t1 = System.currentTimeMillis();
+//		for (int i = 0; i < 100; i++)
+//		{
+//			aCollection.toByteArray();
+//		}
+//		long t2 = System.currentTimeMillis();
+//		for (int i = 0; i < 100; i++)
+//		{
+//			Document.parseJson(json);
+//		}
+//		long t3 = System.currentTimeMillis();
+//		for (int i = 0; i < 100; i++)
+//		{
+//			Document.parseByteArray(bin);
+//		}
+//		long t4 = System.currentTimeMillis();
 
 		System.out.printf("%10s : ", aName);
 		System.out.printf("%12d ", json.length());
@@ -84,8 +94,10 @@ public class CompareSerialization
 		System.out.printf("%12d ", zipjson.length);
 		System.out.printf("%12d ", binzip.length);
 
-		System.out.printf("%12.3f ", (t1 - t0) / 1000.0);
-		System.out.printf("%12.3f ", (t2 - t1) / 1000.0);
+//		System.out.printf("%12.3f ", (t1 - t0) / 100.0);
+//		System.out.printf("%12.3f ", (t2 - t1) / 100.0);
+//		System.out.printf("%12.3f ", (t3 - t2) / 100.0);
+//		System.out.printf("%12.3f ", (t4 - t3) / 100.0);
 
 		System.out.println();
 	}

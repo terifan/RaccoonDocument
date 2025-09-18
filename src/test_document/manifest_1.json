@@ -1,0 +1,2502 @@
+{
+	"env": "production",
+	"manifest": {
+		"_id": "cb66578d-4f4b-4959-ace9-d2b7c101b8d7",
+		"version": 8,
+		"changeDateTime": 1756806538185,
+		"createDateTime": 1756806519075,
+		"id": "cb66578d-4f4b-4959-ace9-d2b7c101b8d7",
+		"identifiers": [
+			{
+				"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+				"domain": "sailing",
+				"authority": "lx3"
+			},
+			{
+				"identifier": "booked",
+				"domain": "journey_status",
+				"authority": "lx3"
+			},
+			{
+				"identifier": "HUL-EURO",
+				"domain": "route_code",
+				"authority": "lx3"
+			},
+			{
+				"identifier": "9208617",
+				"domain": "imo",
+				"authority": "lx3"
+			},
+			{
+				"identifier": "MS Pride of Rotterdam",
+				"domain": "short_desc",
+				"authority": "lx3"
+			},
+			{
+				"identifier": "6065",
+				"domain": "ship_code",
+				"authority": "lx3"
+			},
+			{
+				"identifier": "PBAJ",
+				"domain": "call_sign",
+				"authority": "lx3"
+			},
+			{
+				"identifier": "peak",
+				"domain": "tariff_category",
+				"authority": "lx3"
+			},
+			{
+				"identifier": "25HULEUR0904190001",
+				"domain": "journey",
+				"authority": "lx3"
+			}
+		],
+		"journey": {
+			"id": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+			"routeCode": "HUL-EURO",
+			"identifiers": [
+				{
+					"identifier": "25HULEUR0904190001",
+					"domain": "journey",
+					"authority": "lx3"
+				}
+			]
+		},
+		"manifestItems": [
+			{
+				"id": "00136c13-5029-4446-8454-0335437d2c7f",
+				"type": "cargo",
+				"identifiers": [
+					{
+						"identifier": "POI9WZOX1P7BG",
+						"domain": "order",
+						"authority": "expian"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "booked",
+						"domain": "journey_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "HUL-EURO",
+						"domain": "route_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "9208617",
+						"domain": "imo",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "MS Pride of Rotterdam",
+						"domain": "short_desc",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "6065",
+						"domain": "ship_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "PBAJ",
+						"domain": "call_sign",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "peak",
+						"domain": "tariff_category",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "25HULEUR0904190001",
+						"domain": "journey",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "1756806042670",
+						"domain": "booking_version",
+						"authority": "pulse"
+					},
+					{
+						"identifier": "POOHA8NRUCS6P",
+						"domain": "sales_order",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "gate_exit",
+						"domain": "operational_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "5HX1P7BG",
+						"domain": "customs_order_number",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "none",
+						"domain": "pick_up_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "2025-09-02T11:48:38+0200",
+						"domain": "source_modified",
+						"authority": "lx3"
+					}
+				],
+				"terminalPosition": {
+					"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+					"loadingEquipmentId": "8ed7686c-881d-4431-b11a-9e7daf83ca14",
+					"level": "1",
+					"lane": "",
+					"position": "",
+					"status": "loaded"
+				},
+				"guests": [
+					{
+						"id": "0ff5c82c-35a9-4409-8193-8ecb9846cc0d",
+						"name": "Test",
+						"name2": "Testsson",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "adult",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				],
+				"loadingEquipments": [
+					{
+						"id": "8ed7686c-881d-4431-b11a-9e7daf83ca14",
+						"equipmentType": {
+							"identifier": "footpassenger",
+							"domain": "type",
+							"authority": "tenant"
+						},
+						"identifiers": [],
+						"information": {
+							"numberOfPassengers": 1
+						},
+						"loadingEquipments": [
+							{
+								"id": "c1b8a070-9122-47f4-ba59-5a408b2641b7",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "adult",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							}
+						],
+						"terminalPosition": {
+							"loadingEquipmentId": "8ed7686c-881d-4431-b11a-9e7daf83ca14",
+							"level": "1",
+							"lane": "",
+							"position": "",
+							"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+							"status": "loaded"
+						}
+					}
+				],
+				"isEmpty": false,
+				"orderInitiator": {
+					"id": "465e445f-2739-5786-8615-6a3cb800cf96",
+					"name": "Test Testsson",
+					"addressLine": "1",
+					"addressLine2": "1",
+					"zipOrPostalCode": "",
+					"city": "1, 1",
+					"countryCode": "GB",
+					"identifiers": []
+				},
+				"equipmentType": {
+					"identifier": "footpassenger",
+					"domain": "type",
+					"authority": "tenant"
+				},
+				"description": "",
+				"orderLineServices": [],
+				"subType": {
+					"identifier": "travel",
+					"domain": "shipmentType",
+					"authority": "lx3"
+				},
+				"checkInTime": "2025-09-02T09:40:41.468Z",
+				"orderCreationTime": "2025-09-02T08:55:28.400Z",
+				"roundTrip": false,
+				"ticketType": "Standard",
+				"cabins": [],
+				"additionalProducts": []
+			},
+			{
+				"id": "d391db8a-8ecb-442d-8e50-2f166181dd0d",
+				"type": "cargo",
+				"identifiers": [
+					{
+						"identifier": "POISWWUWU4ZO5",
+						"domain": "order",
+						"authority": "expian"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "booked",
+						"domain": "journey_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "HUL-EURO",
+						"domain": "route_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "9208617",
+						"domain": "imo",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "MS Pride of Rotterdam",
+						"domain": "short_desc",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "6065",
+						"domain": "ship_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "PBAJ",
+						"domain": "call_sign",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "peak",
+						"domain": "tariff_category",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "25HULEUR0904190001",
+						"domain": "journey",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "1756806021642",
+						"domain": "booking_version",
+						"authority": "pulse"
+					},
+					{
+						"identifier": "POOIISBKCGDML",
+						"domain": "sales_order",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "gate_exit",
+						"domain": "operational_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "5HWU4ZO5",
+						"domain": "customs_order_number",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "none",
+						"domain": "pick_up_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "2025-09-02T11:48:41+0200",
+						"domain": "source_modified",
+						"authority": "lx3"
+					}
+				],
+				"measurements": {
+					"gross_weight": {
+						"value": {
+							"amount": 1250,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					},
+					"net_weight": {
+						"value": {
+							"amount": 0,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				},
+				"dimensions": {
+					"outer": {
+						"width": {
+							"amount": 0,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"height": {
+							"amount": 2,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"length": {
+							"amount": 4.7,
+							"unit": {
+								"name": "m"
+							}
+						}
+					}
+				},
+				"terminalPosition": {
+					"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+					"loadingEquipmentId": "f6bbeaa6-e5cb-5a09-988b-1b03d205c9ed",
+					"level": "1",
+					"lane": "",
+					"position": "",
+					"status": "loaded"
+				},
+				"guests": [
+					{
+						"id": "2775072d-045d-45bf-b3b6-8a26bf2236e0",
+						"name": "Test",
+						"name2": "Testsson",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "adult",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				],
+				"loadingEquipments": [
+					{
+						"id": "f6bbeaa6-e5cb-5a09-988b-1b03d205c9ed",
+						"equipmentType": {
+							"identifier": "passenger-car",
+							"domain": "type",
+							"authority": "tenant"
+						},
+						"identifiers": [
+							{
+								"identifier": "34",
+								"domain": "reg_no",
+								"authority": "tenant"
+							},
+							{
+								"identifier": "true",
+								"domain": "isEmpty",
+								"authority": "lx3"
+							}
+						],
+						"measurements": {
+							"gross_weight": {
+								"value": {
+									"amount": 1250,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							},
+							"net_weight": {
+								"value": {
+									"amount": 0,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							}
+						},
+						"dimensions": {
+							"outer": {
+								"width": {
+									"amount": 0,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"height": {
+									"amount": 2,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"length": {
+									"amount": 4.7,
+									"unit": {
+										"name": "m"
+									}
+								}
+							}
+						},
+						"information": {
+							"numberOfPassengers": 1
+						},
+						"loadingEquipments": [
+							{
+								"id": "a458c9e5-7fa7-5265-b29d-e8e355ca0c40",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "adult",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							}
+						],
+						"terminalPosition": {
+							"loadingEquipmentId": "f6bbeaa6-e5cb-5a09-988b-1b03d205c9ed",
+							"level": "1",
+							"lane": "",
+							"position": "",
+							"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+							"status": "loaded"
+						}
+					}
+				],
+				"isEmpty": true,
+				"orderInitiator": {
+					"id": "465e445f-2739-5786-8615-6a3cb800cf96",
+					"name": "Test Testsson",
+					"addressLine": "1",
+					"addressLine2": "1",
+					"zipOrPostalCode": "",
+					"city": "1, 1",
+					"countryCode": "GB",
+					"identifiers": []
+				},
+				"unitId": "34",
+				"equipmentType": {
+					"identifier": "passenger-car",
+					"domain": "type",
+					"authority": "tenant"
+				},
+				"description": "",
+				"orderLineServices": [
+					{
+						"code": "priority_boarding",
+						"description": "Priority boarding"
+					}
+				],
+				"subType": {
+					"identifier": "travel",
+					"domain": "shipmentType",
+					"authority": "lx3"
+				},
+				"checkInTime": "2025-09-02T09:40:19.648Z",
+				"orderCreationTime": "2025-09-02T08:59:12.616Z",
+				"roundTrip": false,
+				"ticketType": "Standard",
+				"cabins": [],
+				"additionalProducts": []
+			},
+			{
+				"id": "88460004-4d4c-4b51-ab86-6bfe601193ba",
+				"type": "cargo",
+				"identifiers": [
+					{
+						"identifier": "POI184O4HQDBG",
+						"domain": "order",
+						"authority": "expian"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "booked",
+						"domain": "journey_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "HUL-EURO",
+						"domain": "route_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "9208617",
+						"domain": "imo",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "MS Pride of Rotterdam",
+						"domain": "short_desc",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "6065",
+						"domain": "ship_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "PBAJ",
+						"domain": "call_sign",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "peak",
+						"domain": "tariff_category",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "25HULEUR0904190001",
+						"domain": "journey",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "1756806342655",
+						"domain": "booking_version",
+						"authority": "pulse"
+					},
+					{
+						"identifier": "POOL91BRSIRN1",
+						"domain": "sales_order",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "gate_exit",
+						"domain": "operational_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "5H4HQDBG",
+						"domain": "customs_order_number",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "none",
+						"domain": "pick_up_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "2025-09-02T11:48:44+0200",
+						"domain": "source_modified",
+						"authority": "lx3"
+					}
+				],
+				"measurements": {
+					"gross_weight": {
+						"value": {
+							"amount": 1250,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					},
+					"net_weight": {
+						"value": {
+							"amount": 0,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				},
+				"dimensions": {
+					"outer": {
+						"width": {
+							"amount": 0,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"height": {
+							"amount": 2,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"length": {
+							"amount": 4.7,
+							"unit": {
+								"name": "m"
+							}
+						}
+					}
+				},
+				"terminalPosition": {
+					"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+					"loadingEquipmentId": "4d43cd45-9ce5-5a0a-9a36-2930ae337d35",
+					"level": "1",
+					"lane": "",
+					"position": "",
+					"status": "loaded"
+				},
+				"guests": [
+					{
+						"id": "b01def9e-f4da-405a-99c6-cdd6d43ce577",
+						"name": "Dog",
+						"name2": "dog",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "adult",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				],
+				"loadingEquipments": [
+					{
+						"id": "4d43cd45-9ce5-5a0a-9a36-2930ae337d35",
+						"equipmentType": {
+							"identifier": "passenger-car",
+							"domain": "type",
+							"authority": "tenant"
+						},
+						"identifiers": [
+							{
+								"identifier": "4123E",
+								"domain": "reg_no",
+								"authority": "tenant"
+							},
+							{
+								"identifier": "true",
+								"domain": "isEmpty",
+								"authority": "lx3"
+							}
+						],
+						"measurements": {
+							"gross_weight": {
+								"value": {
+									"amount": 1250,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							},
+							"net_weight": {
+								"value": {
+									"amount": 0,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							}
+						},
+						"dimensions": {
+							"outer": {
+								"width": {
+									"amount": 0,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"height": {
+									"amount": 2,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"length": {
+									"amount": 4.7,
+									"unit": {
+										"name": "m"
+									}
+								}
+							}
+						},
+						"information": {
+							"numberOfPassengers": 1
+						},
+						"loadingEquipments": [
+							{
+								"id": "ad1dd926-60ea-5848-835c-be92508164e0",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "adult",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							}
+						],
+						"terminalPosition": {
+							"loadingEquipmentId": "4d43cd45-9ce5-5a0a-9a36-2930ae337d35",
+							"level": "1",
+							"lane": "",
+							"position": "",
+							"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+							"status": "loaded"
+						}
+					}
+				],
+				"isEmpty": true,
+				"orderInitiator": {
+					"id": "67b4d26e-a71f-567b-9a81-adf28d06005b",
+					"name": "hejtest 1",
+					"addressLine": "1",
+					"addressLine2": "1",
+					"zipOrPostalCode": "",
+					"city": "1, 1",
+					"countryCode": "GB",
+					"identifiers": []
+				},
+				"unitId": "4123E",
+				"equipmentType": {
+					"identifier": "passenger-car",
+					"domain": "type",
+					"authority": "tenant"
+				},
+				"description": "",
+				"orderLineServices": [
+					{
+						"code": "pet_service",
+						"description": "Pet service",
+						"properties": [
+							{
+								"key": "category",
+								"value": "small-dog"
+							},
+							{
+								"key": "handling",
+								"value": "Cabin"
+							}
+						]
+					}
+				],
+				"subType": {
+					"identifier": "travel",
+					"domain": "shipmentType",
+					"authority": "lx3"
+				},
+				"checkInTime": "2025-09-02T09:45:40.258Z",
+				"orderCreationTime": "2025-09-02T09:45:27.753Z",
+				"roundTrip": false,
+				"ticketType": "Flexi",
+				"cabins": [],
+				"additionalProducts": []
+			},
+			{
+				"id": "10b21d3b-c7b0-4acb-be7b-742d6123d6d7",
+				"type": "cargo",
+				"identifiers": [
+					{
+						"identifier": "POIN2Y6997596",
+						"domain": "order",
+						"authority": "expian"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "booked",
+						"domain": "journey_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "HUL-EURO",
+						"domain": "route_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "9208617",
+						"domain": "imo",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "MS Pride of Rotterdam",
+						"domain": "short_desc",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "6065",
+						"domain": "ship_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "PBAJ",
+						"domain": "call_sign",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "peak",
+						"domain": "tariff_category",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "25HULEUR0904190001",
+						"domain": "journey",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "1756805829649",
+						"domain": "booking_version",
+						"authority": "pulse"
+					},
+					{
+						"identifier": "POOC8FCPC3WFI",
+						"domain": "sales_order",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "gate_exit",
+						"domain": "operational_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "5H997596",
+						"domain": "customs_order_number",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "none",
+						"domain": "pick_up_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "2025-09-02T11:48:46+0200",
+						"domain": "source_modified",
+						"authority": "lx3"
+					}
+				],
+				"measurements": {
+					"gross_weight": {
+						"value": {
+							"amount": 1250,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					},
+					"net_weight": {
+						"value": {
+							"amount": 0,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				},
+				"dimensions": {
+					"outer": {
+						"width": {
+							"amount": 0,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"height": {
+							"amount": 2,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"length": {
+							"amount": 4.7,
+							"unit": {
+								"name": "m"
+							}
+						}
+					}
+				},
+				"terminalPosition": {
+					"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+					"loadingEquipmentId": "fa020858-a2de-5f8d-8c01-170fcb562be0",
+					"level": "1",
+					"lane": "",
+					"position": "",
+					"status": "loaded"
+				},
+				"guests": [
+					{
+						"id": "953a72a6-49f9-423a-aee4-d1c6e833f50c",
+						"name": "Test",
+						"name2": "Testsson",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "adult",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				],
+				"loadingEquipments": [
+					{
+						"id": "fa020858-a2de-5f8d-8c01-170fcb562be0",
+						"equipmentType": {
+							"identifier": "passenger-car",
+							"domain": "type",
+							"authority": "tenant"
+						},
+						"identifiers": [
+							{
+								"identifier": "531",
+								"domain": "reg_no",
+								"authority": "tenant"
+							},
+							{
+								"identifier": "true",
+								"domain": "isEmpty",
+								"authority": "lx3"
+							}
+						],
+						"measurements": {
+							"gross_weight": {
+								"value": {
+									"amount": 1250,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							},
+							"net_weight": {
+								"value": {
+									"amount": 0,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							}
+						},
+						"dimensions": {
+							"outer": {
+								"width": {
+									"amount": 0,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"height": {
+									"amount": 2,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"length": {
+									"amount": 4.7,
+									"unit": {
+										"name": "m"
+									}
+								}
+							}
+						},
+						"information": {
+							"numberOfPassengers": 1
+						},
+						"loadingEquipments": [
+							{
+								"id": "a458c9e5-7fa7-5265-b29d-e8e355ca0c40",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "adult",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							}
+						],
+						"terminalPosition": {
+							"loadingEquipmentId": "fa020858-a2de-5f8d-8c01-170fcb562be0",
+							"level": "1",
+							"lane": "",
+							"position": "",
+							"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+							"status": "loaded"
+						}
+					}
+				],
+				"isEmpty": true,
+				"orderInitiator": {
+					"id": "755d63e6-6e3a-5dc5-a337-de479defc8dd",
+					"name": "1 1",
+					"addressLine": "1",
+					"addressLine2": "1",
+					"zipOrPostalCode": "",
+					"city": "1, 1",
+					"countryCode": "GB",
+					"identifiers": []
+				},
+				"unitId": "531",
+				"equipmentType": {
+					"identifier": "passenger-car",
+					"domain": "type",
+					"authority": "tenant"
+				},
+				"description": "",
+				"orderLineServices": [
+					{
+						"code": "meal_service",
+						"description": "Meal service",
+						"properties": [
+							{
+								"key": "meal",
+								"value": "Dinner"
+							},
+							{
+								"key": "category",
+								"value": "Adult"
+							}
+						]
+					},
+					{
+						"code": "meal_service",
+						"description": "Meal service",
+						"properties": [
+							{
+								"key": "meal",
+								"value": "Breakfast"
+							},
+							{
+								"key": "category",
+								"value": "Adult"
+							}
+						]
+					}
+				],
+				"subType": {
+					"identifier": "travel",
+					"domain": "shipmentType",
+					"authority": "lx3"
+				},
+				"checkInTime": "2025-09-02T09:37:06.293Z",
+				"orderCreationTime": "2025-09-02T09:20:08.858Z",
+				"roundTrip": false,
+				"ticketType": "Standard",
+				"cabins": [],
+				"additionalProducts": [
+					{
+						"id": "dinner-adult--1",
+						"productType": {
+							"identifier": "Dinner",
+							"domain": "meal",
+							"authority": "expian"
+						},
+						"properties": {
+							"category": "Adult",
+							"package": ""
+						}
+					},
+					{
+						"id": "breakfast-adult--1",
+						"productType": {
+							"identifier": "Breakfast",
+							"domain": "meal",
+							"authority": "expian"
+						},
+						"properties": {
+							"category": "Adult",
+							"package": ""
+						}
+					}
+				]
+			},
+			{
+				"id": "8b0dc521-13b4-4a17-ad89-f1ce7aa9d84c",
+				"type": "cargo",
+				"identifiers": [
+					{
+						"identifier": "POI2WOQFP2U8H",
+						"domain": "order",
+						"authority": "expian"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "booked",
+						"domain": "journey_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "HUL-EURO",
+						"domain": "route_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "9208617",
+						"domain": "imo",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "MS Pride of Rotterdam",
+						"domain": "short_desc",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "6065",
+						"domain": "ship_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "PBAJ",
+						"domain": "call_sign",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "peak",
+						"domain": "tariff_category",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "25HULEUR0904190001",
+						"domain": "journey",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "1756805967615",
+						"domain": "booking_version",
+						"authority": "pulse"
+					},
+					{
+						"identifier": "POOC1S95475IR",
+						"domain": "sales_order",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "gate_exit",
+						"domain": "operational_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "5HFP2U8H",
+						"domain": "customs_order_number",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "none",
+						"domain": "pick_up_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "2025-09-02T11:48:49+0200",
+						"domain": "source_modified",
+						"authority": "lx3"
+					}
+				],
+				"measurements": {
+					"gross_weight": {
+						"value": {
+							"amount": 1250,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					},
+					"net_weight": {
+						"value": {
+							"amount": 0,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				},
+				"dimensions": {
+					"outer": {
+						"width": {
+							"amount": 0,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"height": {
+							"amount": 2,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"length": {
+							"amount": 4.7,
+							"unit": {
+								"name": "m"
+							}
+						}
+					}
+				},
+				"terminalPosition": {
+					"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+					"loadingEquipmentId": "587db1af-c53a-5c81-acea-899f7159fde3",
+					"level": "3",
+					"lane": "",
+					"position": "",
+					"status": "loaded"
+				},
+				"guests": [
+					{
+						"id": "38ef2fed-fc15-4be9-b25a-381d49a79033",
+						"name": "Firearm",
+						"name2": "Test",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "adult",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				],
+				"loadingEquipments": [
+					{
+						"id": "587db1af-c53a-5c81-acea-899f7159fde3",
+						"equipmentType": {
+							"identifier": "passenger-car",
+							"domain": "type",
+							"authority": "tenant"
+						},
+						"identifiers": [
+							{
+								"identifier": "FIR",
+								"domain": "reg_no",
+								"authority": "tenant"
+							},
+							{
+								"identifier": "true",
+								"domain": "isEmpty",
+								"authority": "lx3"
+							}
+						],
+						"measurements": {
+							"gross_weight": {
+								"value": {
+									"amount": 1250,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							},
+							"net_weight": {
+								"value": {
+									"amount": 0,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							}
+						},
+						"dimensions": {
+							"outer": {
+								"width": {
+									"amount": 0,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"height": {
+									"amount": 2,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"length": {
+									"amount": 4.7,
+									"unit": {
+										"name": "m"
+									}
+								}
+							}
+						},
+						"information": {
+							"numberOfPassengers": 1
+						},
+						"loadingEquipments": [
+							{
+								"id": "d0d372d4-82fa-51f0-994b-918e60a5b198",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "adult",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							}
+						],
+						"terminalPosition": {
+							"loadingEquipmentId": "587db1af-c53a-5c81-acea-899f7159fde3",
+							"level": "1",
+							"lane": "",
+							"position": "",
+							"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+							"status": "loaded"
+						}
+					}
+				],
+				"isEmpty": true,
+				"orderInitiator": {
+					"id": "654d9736-c14a-5605-8328-f389090ec403",
+					"name": "Fir Arm",
+					"addressLine": "1",
+					"addressLine2": "1",
+					"zipOrPostalCode": "",
+					"city": "1, 1",
+					"countryCode": "GB",
+					"identifiers": []
+				},
+				"unitId": "FIR",
+				"equipmentType": {
+					"identifier": "passenger-car",
+					"domain": "type",
+					"authority": "tenant"
+				},
+				"description": "",
+				"orderLineServices": [
+					{
+						"code": "generic_add_on",
+						"description": "Generic add-on",
+						"properties": [
+							{
+								"key": "category",
+								"value": "keep_cabin"
+							},
+							{
+								"key": "category",
+								"value": "firearms"
+							}
+						]
+					}
+				],
+				"subType": {
+					"identifier": "travel",
+					"domain": "shipmentType",
+					"authority": "lx3"
+				},
+				"checkInTime": "2025-09-02T09:39:24.638Z",
+				"orderCreationTime": "2025-09-02T09:04:33.423Z",
+				"roundTrip": false,
+				"ticketType": "Standard",
+				"cabins": [],
+				"additionalProducts": []
+			},
+			{
+				"id": "57de09b7-214b-4ee0-9c28-9c6466c28e05",
+				"type": "cargo",
+				"identifiers": [
+					{
+						"identifier": "POIYA1DJC7EF3",
+						"domain": "order",
+						"authority": "expian"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "booked",
+						"domain": "journey_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "HUL-EURO",
+						"domain": "route_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "9208617",
+						"domain": "imo",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "MS Pride of Rotterdam",
+						"domain": "short_desc",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "6065",
+						"domain": "ship_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "PBAJ",
+						"domain": "call_sign",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "peak",
+						"domain": "tariff_category",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "25HULEUR0904190001",
+						"domain": "journey",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "1756805995497",
+						"domain": "booking_version",
+						"authority": "pulse"
+					},
+					{
+						"identifier": "POO4LRTQ8LI3E",
+						"domain": "sales_order",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "gate_exit",
+						"domain": "operational_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "5HJC7EF3",
+						"domain": "customs_order_number",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "none",
+						"domain": "pick_up_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "2025-09-02T11:48:52+0200",
+						"domain": "source_modified",
+						"authority": "lx3"
+					}
+				],
+				"measurements": {
+					"gross_weight": {
+						"value": {
+							"amount": 1400,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					},
+					"net_weight": {
+						"value": {
+							"amount": 0,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				},
+				"dimensions": {
+					"outer": {
+						"width": {
+							"amount": 0,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"height": {
+							"amount": 0,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"length": {
+							"amount": 14,
+							"unit": {
+								"name": "m"
+							}
+						}
+					}
+				},
+				"terminalPosition": {
+					"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+					"loadingEquipmentId": "13fec3b8-a0e2-5797-9531-e865a0c26e8c",
+					"level": "1",
+					"lane": "",
+					"position": "",
+					"status": "loaded"
+				},
+				"guests": [
+					{
+						"id": "87e4ad3d-720d-4b84-ab56-541a8bad764b",
+						"name": "Test",
+						"name2": "Testsson",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "adult",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					},
+					{
+						"id": "878c18b7-72c9-42a3-8fe7-6f8094f4d2b0",
+						"name": "Test",
+						"name2": "Testsson",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "child",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				],
+				"loadingEquipments": [
+					{
+						"id": "13fec3b8-a0e2-5797-9531-e865a0c26e8c",
+						"equipmentType": {
+							"identifier": "coach",
+							"domain": "type",
+							"authority": "tenant"
+						},
+						"identifiers": [
+							{
+								"identifier": "FSEE21",
+								"domain": "reg_no",
+								"authority": "tenant"
+							},
+							{
+								"identifier": "true",
+								"domain": "isEmpty",
+								"authority": "lx3"
+							}
+						],
+						"measurements": {
+							"gross_weight": {
+								"value": {
+									"amount": 1400,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							},
+							"net_weight": {
+								"value": {
+									"amount": 0,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							}
+						},
+						"dimensions": {
+							"outer": {
+								"width": {
+									"amount": 0,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"height": {
+									"amount": 0,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"length": {
+									"amount": 14,
+									"unit": {
+										"name": "m"
+									}
+								}
+							}
+						},
+						"information": {
+							"numberOfPassengers": 2
+						},
+						"loadingEquipments": [
+							{
+								"id": "a458c9e5-7fa7-5265-b29d-e8e355ca0c40",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "adult",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							},
+							{
+								"id": "5d35317d-246e-587d-aad5-61e551a942f9",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "child",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							}
+						],
+						"terminalPosition": {
+							"loadingEquipmentId": "13fec3b8-a0e2-5797-9531-e865a0c26e8c",
+							"level": "1",
+							"lane": "",
+							"position": "",
+							"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+							"status": "loaded"
+						}
+					}
+				],
+				"isEmpty": true,
+				"orderInitiator": {
+					"id": "465e445f-2739-5786-8615-6a3cb800cf96",
+					"name": "Test Testsson",
+					"addressLine": "1",
+					"addressLine2": "1",
+					"zipOrPostalCode": "",
+					"city": "1, 1",
+					"countryCode": "GB",
+					"identifiers": []
+				},
+				"unitId": "FSEE21",
+				"equipmentType": {
+					"identifier": "coach",
+					"domain": "type",
+					"authority": "tenant"
+				},
+				"description": "",
+				"orderLineServices": [],
+				"subType": {
+					"identifier": "travel",
+					"domain": "shipmentType",
+					"authority": "lx3"
+				},
+				"checkInTime": "2025-09-02T09:39:50.851Z",
+				"orderCreationTime": "2025-09-02T09:02:38.911Z",
+				"roundTrip": false,
+				"ticketType": "Groups - Published 26 ",
+				"cabins": [],
+				"additionalProducts": []
+			},
+			{
+				"id": "26ef3c63-15c5-49b8-814a-f4760bd916d5",
+				"type": "cargo",
+				"identifiers": [
+					{
+						"identifier": "POIOIKYYIH3ZT",
+						"domain": "order",
+						"authority": "expian"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "booked",
+						"domain": "journey_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "HUL-EURO",
+						"domain": "route_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "9208617",
+						"domain": "imo",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "MS Pride of Rotterdam",
+						"domain": "short_desc",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "6065",
+						"domain": "ship_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "PBAJ",
+						"domain": "call_sign",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "peak",
+						"domain": "tariff_category",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "25HULEUR0904190001",
+						"domain": "journey",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "1756805883678",
+						"domain": "booking_version",
+						"authority": "pulse"
+					},
+					{
+						"identifier": "POODNREYPBXST",
+						"domain": "sales_order",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "gate_exit",
+						"domain": "operational_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "5HYIH3ZT",
+						"domain": "customs_order_number",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "none",
+						"domain": "pick_up_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "2025-09-02T11:48:54+0200",
+						"domain": "source_modified",
+						"authority": "lx3"
+					}
+				],
+				"measurements": {
+					"gross_weight": {
+						"value": {
+							"amount": 1250,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					},
+					"net_weight": {
+						"value": {
+							"amount": 0,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				},
+				"dimensions": {
+					"outer": {
+						"width": {
+							"amount": 0,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"height": {
+							"amount": 2,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"length": {
+							"amount": 4.7,
+							"unit": {
+								"name": "m"
+							}
+						}
+					}
+				},
+				"terminalPosition": {
+					"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+					"loadingEquipmentId": "87d4d3bc-bbe6-5ed8-aa43-018fc71ab3cc",
+					"level": "1",
+					"lane": "",
+					"position": "",
+					"status": "loaded"
+				},
+				"guests": [
+					{
+						"id": "aceb3af6-ed52-48c4-998a-d71a5cc78a5a",
+						"name": "Test",
+						"name2": "Testsson",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "adult",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				],
+				"loadingEquipments": [
+					{
+						"id": "87d4d3bc-bbe6-5ed8-aa43-018fc71ab3cc",
+						"equipmentType": {
+							"identifier": "passenger-car",
+							"domain": "type",
+							"authority": "tenant"
+						},
+						"identifiers": [
+							{
+								"identifier": "GSDR32",
+								"domain": "reg_no",
+								"authority": "tenant"
+							},
+							{
+								"identifier": "true",
+								"domain": "isEmpty",
+								"authority": "lx3"
+							}
+						],
+						"measurements": {
+							"gross_weight": {
+								"value": {
+									"amount": 1250,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							},
+							"net_weight": {
+								"value": {
+									"amount": 0,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							}
+						},
+						"dimensions": {
+							"outer": {
+								"width": {
+									"amount": 0,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"height": {
+									"amount": 2,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"length": {
+									"amount": 4.7,
+									"unit": {
+										"name": "m"
+									}
+								}
+							}
+						},
+						"information": {
+							"numberOfPassengers": 1
+						},
+						"loadingEquipments": [
+							{
+								"id": "a458c9e5-7fa7-5265-b29d-e8e355ca0c40",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "adult",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							}
+						],
+						"terminalPosition": {
+							"loadingEquipmentId": "87d4d3bc-bbe6-5ed8-aa43-018fc71ab3cc",
+							"level": "1",
+							"lane": "",
+							"position": "",
+							"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+							"status": "loaded"
+						}
+					}
+				],
+				"isEmpty": true,
+				"orderInitiator": {
+					"id": "465e445f-2739-5786-8615-6a3cb800cf96",
+					"name": "Test Testsson",
+					"addressLine": "1",
+					"addressLine2": "1",
+					"zipOrPostalCode": "",
+					"city": "1, 1",
+					"countryCode": "GB",
+					"identifiers": []
+				},
+				"unitId": "GSDR32",
+				"equipmentType": {
+					"identifier": "passenger-car",
+					"domain": "type",
+					"authority": "tenant"
+				},
+				"description": "",
+				"orderLineServices": [
+					{
+						"code": "pet_service",
+						"description": "Pet service",
+						"properties": [
+							{
+								"key": "category",
+								"value": "small-dog"
+							},
+							{
+								"key": "handling",
+								"value": "Cabin"
+							}
+						]
+					}
+				],
+				"subType": {
+					"identifier": "travel",
+					"domain": "shipmentType",
+					"authority": "lx3"
+				},
+				"checkInTime": "2025-09-02T09:38:01.883Z",
+				"orderCreationTime": "2025-09-02T09:18:44.829Z",
+				"roundTrip": false,
+				"ticketType": "Flexi",
+				"cabins": [],
+				"additionalProducts": []
+			},
+			{
+				"id": "2e0734ac-ab61-41a1-a0d1-73af773f96cc",
+				"type": "cargo",
+				"identifiers": [
+					{
+						"identifier": "POIY9XC4PBAKY",
+						"domain": "order",
+						"authority": "expian"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "booked",
+						"domain": "journey_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "HUL-EURO",
+						"domain": "route_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "9208617",
+						"domain": "imo",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "MS Pride of Rotterdam",
+						"domain": "short_desc",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "6065",
+						"domain": "ship_code",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "PBAJ",
+						"domain": "call_sign",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "peak",
+						"domain": "tariff_category",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "25HULEUR0904190001",
+						"domain": "journey",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "1756806091224",
+						"domain": "booking_version",
+						"authority": "pulse"
+					},
+					{
+						"identifier": "POOXIHJX9WXXH",
+						"domain": "sales_order",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "816a0a8f-4552-40bd-857e-3cd826602fbd",
+						"domain": "sailing",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "gate_exit",
+						"domain": "operational_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "5H4PBAKY",
+						"domain": "customs_order_number",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "none",
+						"domain": "pick_up_status",
+						"authority": "lx3"
+					},
+					{
+						"identifier": "2025-09-02T11:48:57+0200",
+						"domain": "source_modified",
+						"authority": "lx3"
+					}
+				],
+				"measurements": {
+					"gross_weight": {
+						"value": {
+							"amount": 1250,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					},
+					"net_weight": {
+						"value": {
+							"amount": 0,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				},
+				"dimensions": {
+					"outer": {
+						"width": {
+							"amount": 0,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"height": {
+							"amount": 2,
+							"unit": {
+								"name": "m"
+							}
+						},
+						"length": {
+							"amount": 4.7,
+							"unit": {
+								"name": "m"
+							}
+						}
+					}
+				},
+				"terminalPosition": {
+					"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+					"loadingEquipmentId": "748fff49-44bd-538c-914a-21a568f5563f",
+					"level": "1",
+					"lane": "",
+					"position": "",
+					"status": "loaded"
+				},
+				"guests": [
+					{
+						"id": "79e02c73-1948-488b-b9b2-2cb51701402e",
+						"name": "Test",
+						"name2": "Testsson",
+						"addressLine": "",
+						"city": "",
+						"zipOrPostalCode": "",
+						"countryCode": "",
+						"identification": {
+							"identificationNumber": "",
+							"type": "passport",
+							"gender": "M"
+						},
+						"classification": "adult",
+						"weight": {
+							"amount": 75,
+							"unit": {
+								"name": "kg"
+							}
+						}
+					}
+				],
+				"loadingEquipments": [
+					{
+						"id": "748fff49-44bd-538c-914a-21a568f5563f",
+						"equipmentType": {
+							"identifier": "passenger-car",
+							"domain": "type",
+							"authority": "tenant"
+						},
+						"identifiers": [
+							{
+								"identifier": "TEST312",
+								"domain": "reg_no",
+								"authority": "tenant"
+							},
+							{
+								"identifier": "true",
+								"domain": "isEmpty",
+								"authority": "lx3"
+							}
+						],
+						"measurements": {
+							"gross_weight": {
+								"value": {
+									"amount": 1250,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							},
+							"net_weight": {
+								"value": {
+									"amount": 0,
+									"unit": {
+										"name": "kg"
+									}
+								}
+							}
+						},
+						"dimensions": {
+							"outer": {
+								"width": {
+									"amount": 0,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"height": {
+									"amount": 2,
+									"unit": {
+										"name": "m"
+									}
+								},
+								"length": {
+									"amount": 4.7,
+									"unit": {
+										"name": "m"
+									}
+								}
+							}
+						},
+						"information": {
+							"numberOfPassengers": 1
+						},
+						"loadingEquipments": [
+							{
+								"id": "a458c9e5-7fa7-5265-b29d-e8e355ca0c40",
+								"equipmentType": {
+									"identifier": "passenger",
+									"domain": "type",
+									"authority": "tenant"
+								},
+								"equipmentSubType": {
+									"identifier": "adult",
+									"domain": "subType",
+									"authority": "tenant"
+								}
+							}
+						],
+						"terminalPosition": {
+							"loadingEquipmentId": "748fff49-44bd-538c-914a-21a568f5563f",
+							"level": "1",
+							"lane": "",
+							"position": "",
+							"terminalId": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+							"status": "loaded"
+						}
+					}
+				],
+				"isEmpty": true,
+				"orderInitiator": {
+					"id": "1f654fd6-3270-506f-96a4-eea0f3b25471",
+					"name": "TEST TESTSSON",
+					"addressLine": "!11",
+					"addressLine2": "1",
+					"zipOrPostalCode": "",
+					"city": "1, 1",
+					"countryCode": "GB",
+					"identifiers": []
+				},
+				"unitId": "TEST312",
+				"equipmentType": {
+					"identifier": "passenger-car",
+					"domain": "type",
+					"authority": "tenant"
+				},
+				"description": "",
+				"orderLineServices": [
+					{
+						"code": "priority_boarding",
+						"description": "Priority boarding"
+					}
+				],
+				"subType": {
+					"identifier": "travel",
+					"domain": "shipmentType",
+					"authority": "lx3"
+				},
+				"checkInTime": "2025-09-02T09:41:29.841Z",
+				"orderCreationTime": "2025-09-02T08:53:03.350Z",
+				"roundTrip": false,
+				"ticketType": "Standard",
+				"cabins": [],
+				"additionalProducts": []
+			}
+		],
+		"parties": {
+			"deliveryLocation": {
+				"id": "b224bb5e-c68c-4fc1-9606-98032a64f80f",
+				"name": "Europoort",
+				"name2": "",
+				"contacts": [],
+				"contactMeans": [],
+				"addressLine": "",
+				"zipOrPostalCode": "",
+				"countryCode": "NL",
+				"city": "Europoort",
+				"identifiers": [
+					{
+						"identifier": "EURO",
+						"domain": "location",
+						"authority": "tenant"
+					},
+					{
+						"identifier": "EUR",
+						"domain": "location",
+						"authority": "tenant"
+					},
+					{
+						"identifier": "NLEUR",
+						"domain": "unlo",
+						"authority": "tenant"
+					},
+					{
+						"identifier": "NL66624231",
+						"domain": "ean",
+						"authority": "kvk"
+					}
+				]
+			},
+			"shippingLocation": {
+				"id": "8b0efaff-833e-49f6-bac1-15aa7900e3b3",
+				"name": "Hull",
+				"name2": "",
+				"contacts": [],
+				"contactMeans": [],
+				"addressLine": "",
+				"zipOrPostalCode": "",
+				"countryCode": "GB",
+				"city": "Hull",
+				"identifiers": [
+					{
+						"identifier": "HUL",
+						"domain": "location",
+						"authority": "tenant"
+					},
+					{
+						"identifier": "GBHUL",
+						"domain": "location",
+						"authority": "tenant"
+					},
+					{
+						"identifier": "GBHUL",
+						"domain": "unlo",
+						"authority": "lx3"
+					}
+				]
+			}
+		},
+		"status": "new",
+		"timeIntervals": {
+			"shippingDate": {
+				"estimated": {
+					"value": "2025-09-04T19:00:00.000+01:00",
+					"format": "date_time"
+				},
+				"planned": {
+					"value": "2025-09-04T19:00:00.000+01:00",
+					"format": "date_time"
+				}
+			},
+			"deliveryDate": {
+				"estimated": {
+					"value": "2025-09-05T07:00:00.000+02:00",
+					"format": "date_time"
+				},
+				"planned": {
+					"value": "2025-09-05T07:00:00.000+02:00",
+					"format": "date_time"
+				}
+			},
+			"orderDate": {
+				"requested": {
+					"value": "2025-08-26",
+					"format": "date"
+				}
+			}
+		},
+		"type": "freight",
+		"vehicle": {
+			"type": {
+				"identifier": "vessel",
+				"domain": "vehicle",
+				"authority": "lx3"
+			},
+			"id": "0ff3a86c-2068-4a6a-9288-a58ff6a3c9cb",
+			"name": "MS Pride of Rotterdam",
+			"identifiers": [
+				{
+					"identifier": "9208617",
+					"domain": "imo",
+					"authority": "lx3"
+				},
+				{
+					"identifier": "6065",
+					"domain": "ship_code",
+					"authority": "lx3"
+				},
+				{
+					"identifier": "PBAJ",
+					"domain": "call_sign",
+					"authority": "lx3"
+				}
+			]
+		}
+	},
+	"safetyProcedures": [],
+	"distributionList": [{
+			"name": "",
+			"name2": "",
+			"title": "",
+			"addressType": "email",
+			"address": "linus.romland+gncl-fat@surikat.se",
+			"language": "en",
+			"format": "pdf",
+			"types": ["hazardous-goods-manifest-report"]
+		}, {
+			"name": "",
+			"name2": "",
+			"title": "",
+			"addressType": "email",
+			"address": "richard.emm@surikat.se",
+			"language": "en",
+			"format": "pdf",
+			"types": ["hazardous-goods-manifest-report", "cabins-manifest-report", "freight-driver-manifest-report", "reefer-manifest-report"]
+		}],
+	"types": ["hazardous-goods-manifest-report", "cabins-manifest-report", "freight-driver-manifest-report", "reefer-manifest-report"],
+	"tenant": "gncl"
+}

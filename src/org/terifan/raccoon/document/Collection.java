@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -42,14 +44,26 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	}
 
 
-	;
 	public final Deserializer deserialize()
 	{
 		return new Deserializer();
 	}
 
 
-	;
+	private int indexOf(String aExpression, String... aTokens)
+	{
+		int i = -1;
+		for (String s : aTokens)
+		{
+			int j = aExpression.indexOf(s);
+			if (j != -1 && (i == -1 || j < i))
+			{
+				i = j;
+			}
+		}
+		return i;
+	}
+
 
 	public class Serializer
 	{
@@ -697,287 +711,90 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	}
 
 
-	public <T extends Object> T at(String aPath)
+	public Document collate(String aPath)
 	{
-		return findFirst(aPath);
+		Document result = new Document();
+		Visitor visitor = (parent, v) ->
+		{
+			result.get(v.toString(), k -> new Array()).add(v);
+			return true;
+		};
+		visit(aPath, visitor);
+		return result;
 	}
 
 
-	/**
-	 * Find a single value in the Document using a path by recursively visiting child Arrays and Documents.
-	 * <ul>
-	 * <li>find("name") - find field using name</li>
-	 * <li>find("7") - find array element</li>
-	 * <li>find("name/7") - find array element in child Document</li>
-	 * <li>find("people/7/name") - find the 8th name</li>
-	 * <li>find("people/[name=bob]/age")</li>
-	 * </ul>
-	 * todo:
-	 * <ul>
-	 * <li>find("people/[name=bob &amp;&amp; age > 18]/age")</li>
-	 * <li>find("people/[name=bob || age > 18 &amp;&amp; gender=male]/age")</li>
-	 * </ul>
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends Object> T findFirst(String aPath)
+	public double sum(String aPath)
 	{
-		if (aPath.startsWith("["))
+		AtomicReference<Number> sum = new AtomicReference<>(0.0);
+		Visitor visitor = (parent, v) ->
 		{
-			return evaluatePathExpression(aPath, null, false, false);
-		}
-
-		int i = aPath.indexOf('/');
-
-		if (i == -1)
-		{
-			if (aPath.matches("[0-9]*"))
+			if (!(v instanceof Number))
 			{
-				return ((Array)this).get(Integer.valueOf(aPath));
+				v = Double.valueOf(v.toString());
 			}
-			return ((Document)this).get(aPath);
-		}
-		if (i == 0)
-		{
-			return findFirst(aPath.substring(1));
-		}
-
-		String path = aPath.substring(0, i);
-		String remain = aPath.substring(i + 1);
-
-		Collection tmp;
-		if (this instanceof Array v)
-		{
-			if (path.matches("[0-9]*"))
-			{
-				tmp = v.get(Integer.valueOf(path));
-				return (T)tmp.findFirst(remain);
-			}
-			Array dest = new Array();
-			for (Object item : v)
-			{
-				if (item instanceof Collection collection)
-				{
-					dest.add(collection.findFirst(remain));
-				}
-				else
-				{
-					dest.add(item);
-				}
-			}
-			return (T)dest;
-		}
-		else
-		{
-			tmp = ((Document)this).get(path);
-			return (T)tmp.findFirst(remain);
-		}
+			sum.accumulateAndGet((Number)v, (a, b) -> a.doubleValue() + b.doubleValue());
+			return true;
+		};
+		visit(aPath, visitor);
+		return sum.get().doubleValue();
 	}
 
 
-	protected <T extends Object> T evaluatePathExpression(String aPath, Array aResult, boolean aValuesOnly, boolean aFindMany)
+	public int count(String aPath)
 	{
-		String key = aPath.substring(1, aPath.indexOf('='));
-		String expression = aPath.substring(aPath.indexOf('=') + 1, aPath.indexOf(']'));
-		String remain = aPath.substring(aPath.indexOf(']') + 1);
-
-		for (Object o : (Array)this)
+		AtomicInteger count = new AtomicInteger();
+		Visitor visitor = (parent, o) ->
 		{
-			if (o instanceof Document doc)
-			{
-				if (equalValues(doc.get(key), expression))
-				{
-					if (aFindMany)
-					{
-						doc.findMany(remain, aResult, aValuesOnly);
-					}
-					else
-					{
-						T result = doc.findFirst(remain);
-						if (result != null)
-						{
-							return (T)result;
-						}
-					}
-				}
-			}
-			else if (o instanceof Array arr)
-			{
-				System.out.println("#");
-//				if (value.equals(arr.get(key)))
-//				{
-//					if (aFindMany)
-//					{
-//						arr.findMany(remain, aResult, aValuesOnly);
-//					}
-//					else
-//					{
-//						T result = arr.findFirst(remain);
-//						if (result != null)
-//						{
-//							return (T)result;
-//						}
-//					}
-//				}
-			}
-		}
-		return null;
-	}
-
-
-	private boolean equalValues(Object aValue, String aExpression)
-	{
-		if (aValue == null)
-		{
-			return "null".equalsIgnoreCase(aExpression);
-		}
-		if (aValue instanceof Boolean v)
-		{
-			return aExpression.equalsIgnoreCase("true") == v;
-		}
-		return aExpression.equalsIgnoreCase(aValue.toString());
+			count.incrementAndGet();
+			return true;
+		};
+		visit(aPath, visitor);
+		return count.get();
 	}
 
 
 	public Array findMany(String aPath)
 	{
-		Array result = new Array();
-		findMany(aPath, result, false);
-		return result;
-	}
-
-
-	/**
-	 * Find many values in the Document using a path by recursively visiting child Arrays and Documents.
-	 * <ul>
-	 * <li>findMany("people/7/name") - find a single name at index 7 (index starts at zero)</li>
-	 * <li>findMany("people/sales/name") - find the name of all sales people</li>
-	 * <li>findMany("people/ * /name") - find the name of all people</li>
-	 * </ul>
-	 */
-	public Array findMany(String aPath, boolean aValuesOnly)
-	{
-		Array result = new Array();
-		findMany(aPath, result, aValuesOnly);
-		return result;
+		try (Logger lg = enter("findMany", aPath))
+		{
+			Array result = new Array();
+			Visitor v = (parent, o) ->
+			{
+				log(o);
+				result.add(o);
+				return true;
+			};
+			visit(aPath, v);
+			return result;
+		}
 	}
 
 
 	@SuppressWarnings("unchecked")
-	protected <T> void findMany(String aPath, Array aResult, boolean aValuesOnly)
+	public <T> T findFirst(String aPath)
 	{
-		int i = aPath.indexOf('/');
-
-		if (i == 0)
+		AtomicReference<T> result = new AtomicReference<>();
+		Visitor v = (parent, o) ->
 		{
-			findMany(aPath.substring(1), aResult, aValuesOnly);
-			return;
-		}
-		if (i == -1)
-		{
-			if (aPath.equals("*"))
+			if (!result.compareAndSet(null, (T)o))
 			{
-				Iterable it;
-				if (this instanceof Document v)
-				{
-					it = v.values();
-				}
-				else
-				{
-					it = (Iterable)this;
-				}
-				for (Object v : it)
-				{
-					optionalAdd(aResult, aValuesOnly, v);
-				}
+				throw new IllegalStateException();
 			}
-			else if (aPath.matches("[0-9]*"))
-			{
-				optionalAdd(aResult, aValuesOnly, ((Array)this).get(Integer.valueOf(aPath)));
-			}
-			else if (this instanceof Array v)
-			{
-				v.forEach(p ->
-				{
-					if (p instanceof Document w)
-					{
-						optionalAdd(aResult, aValuesOnly, w.get(aPath));
-					}
-				});
-			}
-			else
-			{
-				optionalAdd(aResult, aValuesOnly, ((Document)this).get(aPath));
-			}
-			return;
-		}
-
-		if (aPath.startsWith("["))
-		{
-			evaluatePathExpression(aPath, aResult, aValuesOnly, true);
-			return;
-		}
-
-		String path = aPath.substring(0, i);
-		String remain = aPath.substring(i + 1);
-
-		if (this instanceof Array v)
-		{
-			if (path.equals("*"))
-			{
-				for (Object item : v)
-				{
-					if (item instanceof Collection collection)
-					{
-						collection.findMany(remain, aResult, aValuesOnly);
-					}
-				}
-			}
-			else if (path.matches("[0-9]*"))
-			{
-				if (v.get(Integer.valueOf(path)) instanceof Collection collection)
-				{
-					collection.findMany(remain, aResult, aValuesOnly);
-				}
-			}
-			else
-			{
-				v.forEach(item ->
-				{
-					Document doc = (Document)item;
-					if (doc.get(path) instanceof Collection collection)
-					{
-						collection.findMany(remain, aResult, aValuesOnly);
-					}
-				});
-			}
-		}
-		else if (this instanceof Document v)
-		{
-			if (path.equals("*"))
-			{
-				for (Object item : v.values())
-				{
-					if (item instanceof Collection collection)
-					{
-						collection.findMany(remain, aResult, aValuesOnly);
-					}
-				}
-			}
-			else if (v.get(path) instanceof Collection collection)
-			{
-				collection.findMany(remain, aResult, aValuesOnly);
-			}
-		}
+			return false;
+		};
+		visit(aPath, v);
+		return result.get();
 	}
 
 
-	private void optionalAdd(Array aResult, boolean aValuesOnly, Object v)
+	public interface Visitor
 	{
-		if (v != null && (!aValuesOnly || !(v instanceof Collection)))
-		{
-			aResult.add(v);
-		}
+		boolean visit(Collection aParent, Object aValue);
 	}
+
+
+	public abstract boolean visit(String aPath, Visitor aVisitor);
 
 
 	@Override
@@ -1511,5 +1328,198 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			putImpl(aKey, aSupplier.apply(aKey));
 		}
 		return (R)this;
+	}
+
+	private static int mLogIndent;
+
+
+	static class Logger implements AutoCloseable
+	{
+		int i = -1;
+
+
+		@Override
+		public void close()
+		{
+			mLogIndent += i;
+			i = 0;
+		}
+	}
+
+
+	static Logger enter(String aSection, Object aText)
+	{
+		System.out.printf("%12s %s %s%n", aSection, "... ".repeat(mLogIndent), aText);
+		mLogIndent++;
+		return new Logger();
+	}
+
+
+	static void log(Object aText)
+	{
+		System.out.printf("%12s %s %s%n", "", "... ".repeat(mLogIndent), aText);
+	}
+
+
+	boolean _visit(Object aItem, String aRemain, Visitor aVisitor)
+	{
+		if (aItem != null)
+		{
+			if (aItem instanceof Collection c)
+			{
+				return !c.visit(aRemain, aVisitor);
+			}
+			else
+			{
+				return !aVisitor.visit(this, aItem);
+			}
+		}
+		return false;
+	}
+
+
+	String evaluate(String aPath)
+	{
+		try (Logger lg = enter("eval", aPath+" "+this))
+		{
+			String path = aPath;
+
+			do
+			{
+				int offset = path.indexOf('=');
+				String key = path.substring(0, offset).trim();
+				path = path.substring(offset + 1).trim();
+
+				Object value;
+				if (path.startsWith("'"))
+				{
+					int indexOf = path.indexOf("'", 1);
+					value = path.substring(1, indexOf);
+					path = path.substring(indexOf + 1);
+				}
+				else
+				{
+					int indexOf = indexOf(path, "]", " ", "&", "|", "(", ")");
+					value = path.substring(0, indexOf);
+					path = path.substring(indexOf);
+					if ("true".equals(value))
+					{
+						value = true;
+					}
+					else if ("false".equals(value))
+					{
+						value = false;
+					}
+					else if (value.toString().matches("[0-9]*"))
+					{
+						value = Long.valueOf(value.toString());
+					}
+					else if (value.toString().matches("[+\\\\-][0-9].[0-9]*"))
+					{
+						value = Double.valueOf(value.toString());
+					}
+				}
+				path = path.trim();
+
+				if (!findMatch(key, value))
+				{
+					return null;
+				}
+
+				if (path.startsWith("&&"))
+				{
+					path = path.trim().substring(2).trim();
+				}
+			}
+			while (!path.startsWith("]"));
+			path = path.substring(1);
+
+			return path;
+		}
+	}
+
+
+	boolean evaluatePathExpression(String aPath, Visitor aResult)
+	{
+		try (Logger lg = enter("eval", aPath+" "+this))
+		{
+			String path = aPath;
+
+			do
+			{
+				int offset = path.indexOf('=');
+				String key = path.substring(1, offset).trim();
+				path = path.substring(offset + 1).trim();
+
+				Object value;
+				if (path.startsWith("'"))
+				{
+					int indexOf = path.indexOf("'", 1);
+					value = path.substring(1, indexOf);
+					path = path.substring(indexOf + 1);
+				}
+				else
+				{
+					int indexOf = indexOf(path, "]", " ", "&", "|", "(", ")");
+					value = path.substring(0, indexOf);
+					path = path.substring(indexOf);
+					if ("true".equals(value))
+					{
+						value = true;
+					}
+					else if ("false".equals(value))
+					{
+						value = false;
+					}
+					else if (value.toString().matches("[0-9]*"))
+					{
+						value = Long.valueOf(value.toString());
+					}
+					else if (value.toString().matches("[+\\\\-][0-9].[0-9]*"))
+					{
+						value = Double.valueOf(value.toString());
+					}
+				}
+				path = path.trim();
+
+				if (!findMatch(key, value))
+				{
+					return false;
+				}
+
+//				log("eval", "success");
+				if (path.startsWith("&&"))
+				{
+					path = path.trim();
+				}
+			}
+			while (!path.startsWith("]"));
+			path = path.substring(1);
+
+			return visit(path, aResult);
+		}
+	}
+
+
+	private boolean findMatch(String aKey, Object aExpression)
+	{
+		try (Logger lg = enter("findMatch", aKey + " == " + aExpression))
+		{
+			int _i = 0;
+			for (Object o : findMany(aKey))
+			{
+				log("item "+(_i++)+": "+o);
+				if (o == null)
+				{
+					return aExpression == null;
+				}
+				if (o instanceof Boolean v)
+				{
+					return aExpression.equals(v);
+				}
+				return aExpression.toString().equalsIgnoreCase(o.toString());
+			}
+			return false;
+		}
 	}
 }

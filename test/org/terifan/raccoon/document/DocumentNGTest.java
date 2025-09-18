@@ -214,8 +214,8 @@ public class DocumentNGTest
 	{
 		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
 
-		assertEquals(doc.findMany("people/gender", true).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\"]");
-		assertEquals(doc.findMany("people/gender", false).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\",[\"m\",\"f\"]]");
+//		assertEquals(doc.findMany("people/gender", true).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\"]");
+		assertEquals(doc.findMany("people/gender").toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\",[\"m\",\"f\"]]");
 	}
 
 

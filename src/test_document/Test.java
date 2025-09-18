@@ -1,12 +1,16 @@
 package test_document;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BinaryOperator;
 import org.terifan.raccoon.document.Array;
 import org.terifan.raccoon.document.BinaryDecoder.Visitor;
 import org.terifan.raccoon.document.BinaryDecoder.VisitorResult;
 import org.terifan.raccoon.document.BinaryWalker;
+import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Document;
 import org.terifan.raccoon.document.Path;
 
@@ -36,11 +40,12 @@ public class Test
 //			System.out.printf("%10d ", dic.writeExternal().length);
 //			System.out.println();
 
-//			a();
+			a();
 //			b();
-			c();
+//			c();
 //			d();
 //			e();
+//			f();
 //			ObjectId id = ObjectId.fromParts(1, 2, 3);
 //
 //			ObjectId.Key key = new ObjectId.Key(123);
@@ -61,55 +66,70 @@ public class Test
 	}
 
 
-	public static void c(String... args)
+	public static void a(String... args) throws IOException
 	{
-		try
-		{
-			Document doc = _Person.createPerson(new Random(1));
+//		Document doc = new Document().fromJson(new String(Test.class.getResourceAsStream("manifest_2.json").readAllBytes()));
+//		Document doc = new Document().fromJson(new String(Test.class.getResourceAsStream("manifest_1.json").readAllBytes()));
+//		Document doc = new Document().fromJson(new String(Test.class.getResourceAsStream("test19.json").readAllBytes()));
+		Document doc = new Document().fromJson(new String(Test.class.getResourceAsStream("test00.json").readAllBytes()));
 
-			byte[] data = doc.toByteArray();
+		byte[] data = doc.toByteArray();
 
-			BinaryWalker walker = new BinaryWalker(new ByteArrayInputStream(data));
+//		_Log.hexDump(data);
 
-			walker.visit(new Visitor()
-			{
-				@Override
-				public VisitorResult preVisit(Path aPath)
-				{
-//					System.out.println(aPath);
-//					if (aPath.matches("work", "contacts"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-//					if (aPath.matches("locationHistory"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-//					if (aPath.matches("personal"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-					return VisitorResult.CONTINUE;
-				}
-
-
-				@Override
-				public VisitorResult postVisit(Path aPath, Object aValue)
-				{
-					System.out.println(aPath+" "+aValue);
-					if (aPath.matches("version"))
-					{
-						return VisitorResult.TERMINATE;
-					}
-					return VisitorResult.CONTINUE;
-				}
-			});
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace(System.out);
-		}
+		System.out.println(data.length);
 	}
+
+
+//	public static void c(String... args)
+//	{
+//		try
+//		{
+//			Document doc = _Person.createPerson(new Random(1));
+//
+//			byte[] data = doc.toByteArray();
+//
+//			BinaryWalker walker = new BinaryWalker(new ByteArrayInputStream(data));
+//
+//			walker.visit(new Visitor()
+//			{
+//				@Override
+//				public VisitorResult preVisit(Path aPath)
+//				{
+////					System.out.println(aPath);
+////					if (aPath.matches("work", "contacts"))
+////					{
+////						return VisitorResult.SKIP;
+////					}
+////					if (aPath.matches("locationHistory"))
+////					{
+////						return VisitorResult.SKIP;
+////					}
+////					if (aPath.matches("personal"))
+////					{
+////						return VisitorResult.SKIP;
+////					}
+//					return VisitorResult.CONTINUE;
+//				}
+//
+//
+//				@Override
+//				public VisitorResult postVisit(Path aPath, Object aValue)
+//				{
+//					System.out.println(aPath + " " + aValue);
+//					if (aPath.matches("version"))
+//					{
+//						return VisitorResult.TERMINATE;
+//					}
+//					return VisitorResult.CONTINUE;
+//				}
+//			});
+//		}
+//		catch (Exception e)
+//		{
+//			e.printStackTrace(System.out);
+//		}
+//	}
 
 
 	private static void d() throws IOException
@@ -117,6 +137,9 @@ public class Test
 		Document doc = Document.of(new String(Test.class.getResourceAsStream("invoice.json").readAllBytes()));
 
 		System.out.println("" + doc.findFirst("taxTotal/taxSubtotals/taxAmount/amount"));
+		System.out.println("" + doc.findMany("taxTotal/taxSubtotals/taxAmount/amount"));
+		System.out.println("" + doc.sum("taxTotal/taxSubtotals/taxAmount/amount"));
+		System.out.println("" + doc.count("taxTotal/taxSubtotals/taxAmount/amount"));
 	}
 
 
@@ -147,7 +170,55 @@ public class Test
 //		{
 //			System.out.println(a);
 //		}
-
 		System.out.println("" + doc.getArray("distributionList").toJson());
+	}
+
+
+	private static void f() throws IOException
+	{
+		Document doc = Document.of(new String(Test.class.getResourceAsStream("manifest_2.json").readAllBytes()));
+
+//		System.out.println(doc.count("manifest/manifestItems/terminalPosition/[level=" + 91 + "]") > 0);
+//		System.out.println("" + doc.findMany("manifest/manifestItems/guests[classification='adult']/weight/amount"));
+//		System.out.println("" + doc.findMany("manifest/manifestItems/guests[classification='child']/weight/amount"));
+//		System.out.println("" + doc.findMany("manifest/manifestItems/guests[classification='infant']/weight/amount"));
+//
+//		System.out.println("" + doc.sum("manifest/manifestItems[terminalPosition/level=1]/dimensions/outer/length/amount"));
+//		System.out.println("" + doc.count("manifest/manifestItems/terminalPosition/[level=1]"));
+//		System.out.println("" + doc.count("manifest/manifestItems/terminalPosition/[level=2]"));
+//
+//		Array d0 = doc.findMany("manifest/manifestItems/loadingEquipments[equipmentType/identifier='AR']");
+//		double d1 = d0.sum("dimensions/outer/length/amount");
+//		double d2 = d0.sum("measurements/gross_weight/value/amount");
+//
+//		System.out.println(d0);
+//		System.out.println(d1);
+//		System.out.println(d2);
+//
+//		System.out.println(doc.count("manifest/manifestItems/orderLineServices/[code='generic_add_on']/properties/[value='keep_cabin']"));
+//		System.out.println(doc.count("manifest/manifestItems/orderLineServices/[code='generic_add_on']/properties/[value='firearms']"));
+//		System.out.println(doc.count("manifest/manifestItems/orderLineServices/properties[value='Dinner' && value='Adult']"));
+//		System.out.println(doc.count("manifest/manifestItems/orderLineServices/properties[value='Dinner']/key"));
+
+//		Array arr = doc.findMany("a/b[s='x']");
+//		Array arr = doc.findMany("a");
+//		Array arr = doc.findMany("a/*");
+//		Array arr = doc.findMany("a/b");
+//		Array arr = doc.findMany("a/s");
+//		Array arr = doc.findMany("a/b/c");
+//		Array arr = doc.findMany("a[s='x']/b");
+//		Array arr = doc.findMany("a[s='x']/b[c=2]");
+		Array arr = doc.findMany("a[s='x' && b/c=2]/b");
+
+		System.out.println();
+		System.out.println("result:");
+		int i = 0;
+		for (Object o : arr)
+		{
+			System.out.println((i++)+": "+o);
+		}
+
+//		doc.collate("manifest/manifestItems/cabins/type/identifier");
+//		System.out.println(doc.collate("a"));
 	}
 }
