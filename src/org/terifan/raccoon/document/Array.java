@@ -1,8 +1,11 @@
 package org.terifan.raccoon.document;
 
 import java.io.Externalizable;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -228,6 +231,7 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 
 	/**
 	 * Remove an element at index
+	 *
 	 * @return the value at this index
 	 */
 	@Override
@@ -250,24 +254,31 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 	}
 
 
-//	public <T extends Iterable> T iterable()
-//	{
-//		return (T)mValues;
-//	}
-
-
 	@Override
-	public Iterable<Integer> keySet()
+	public Set<Integer> keySet()
 	{
-		return new Iterable<Integer>()
+		return new AbstractSet<Integer>()
 		{
-			int i;
+			@Override
+			public boolean contains(Object aObject)
+			{
+				if (aObject instanceof Number i)
+				{
+					return i.longValue() < size();
+				}
+				return false;
+			}
+
 
 			@Override
+			@SuppressWarnings("unchecked")
 			public Iterator<Integer> iterator()
 			{
 				return new Iterator<Integer>()
 				{
+					int i;
+
+
 					@Override
 					public boolean hasNext()
 					{
@@ -282,16 +293,34 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 					}
 				};
 			}
+
+
+			@Override
+			public int size()
+			{
+				return Array.this.size();
+			}
 		};
 	}
 
 
 	@Override
-	MurmurHash3 hashCode(MurmurHash3 aChecksum)
+	MurmurHash3 hashCode(MurmurHash3 aChecksum, ReferenceMap aLinkedList)
 	{
-		aChecksum.updateInt(93090393 ^ size()); // == "array".hashCode()
+		aChecksum.updateInt("array".hashCode());
+		aChecksum.updateInt(size());
 
-		mValues.forEach(value -> super.hashCode(aChecksum, value));
+		if (aLinkedList.contains(this))
+		{
+			aChecksum.updateInt(aLinkedList.indexOf(this));
+			return aChecksum;
+		}
+
+		aLinkedList.add(this, null);
+
+		mValues.forEach(value -> super.hashCode(aChecksum, value, aLinkedList));
+
+		aLinkedList.remove(this);
 
 		return aChecksum;
 	}
@@ -538,6 +567,7 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 		{
 			int i;
 
+
 			@Override
 			public Iterator<T> iterator()
 			{
@@ -650,7 +680,7 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 
 	public Array removeValue(Object aValue)
 	{
-		for (int i = size(); --i >= 0; )
+		for (int i = size(); --i >= 0;)
 		{
 			if (get(i).equals(aValue))
 			{
@@ -697,5 +727,21 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 	public boolean containsKey(Integer aKey)
 	{
 		return aKey < size();
+	}
+
+
+	boolean __visit(Visitor aVisitor, String aPath)
+	{
+		for (Object p : this)
+		{
+			if (p instanceof Document w)
+			{
+				if (!aVisitor.visit(w.get(aPath)))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

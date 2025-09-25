@@ -44,7 +44,7 @@ public class StreamMarshaller implements AutoCloseable
 	}
 
 
-	public StreamMarshaller(OutputStream aOutputStream, Function<Object, Boolean> aFilter)
+	public StreamMarshaller(OutputStream aOutputStream, Function<Path, Boolean> aFilter)
 	{
 		mOutputStream = aOutputStream;
 		mEncoder = new BinaryEncoder(aOutputStream, aFilter);
@@ -58,15 +58,15 @@ public class StreamMarshaller implements AutoCloseable
 	}
 
 
-	@SuppressWarnings("unchecked")
-	public <T extends Object> T read(Class aType) throws IOException
-	{
-		if (mDecoder == null)
-		{
-			throw new IllegalStateException("This Marshaller is either closed or not created for reading a stream.");
-		}
-		return (T)mDecoder.unmarshal(aType);
-	}
+//	@SuppressWarnings("unchecked")
+//	public <T extends Object> T read(Class aType) throws IOException
+//	{
+//		if (mDecoder == null)
+//		{
+//			throw new IllegalStateException("This Marshaller is either closed or not created for reading a stream.");
+//		}
+//		return (T)mDecoder.unmarshal(aType);
+//	}
 
 
 	@SuppressWarnings("unchecked")

@@ -3,56 +3,26 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 
 
-class JSONDecoder
+public class JSONDecoder
 {
 	private PushbackReader mReader;
-	private boolean mRestoreByteShortValues;
+	private boolean mRestoreShortValues;
+	private boolean mReferenceSharedObjects;
 
 
-	public JSONDecoder setRestoreByteShortValues(boolean aRestoreByteShortValues)
+	public JSONDecoder(boolean aReferenceSharedObjects, boolean aRestoreShortValues)
 	{
-		mRestoreByteShortValues = aRestoreByteShortValues;
-		return this;
+		mReferenceSharedObjects = aReferenceSharedObjects;
+		mRestoreShortValues = aRestoreShortValues;
 	}
 
 
-	@SuppressWarnings("unchecked")
-	public <T extends Collection> T unmarshal(String aJSON, T aContainer)
-	{
-		aJSON = aJSON.trim();
-		if (aContainer == null)
-		{
-			if (aJSON.startsWith("{"))
-			{
-				aContainer = (T)new Document();
-			}
-			else
-			{
-				aContainer = (T)new Array();
-			}
-		}
-		else if (aContainer instanceof Document)
-		{
-			if (!aJSON.startsWith("{"))
-			{
-				aJSON = "{" + aJSON + "}";
-			}
-		}
-		else
-		{
-			if (!aJSON.startsWith("["))
-			{
-				aJSON = "[" + aJSON + "]";
-			}
-		}
-		return unmarshal(new StringReader(aJSON), aContainer);
-	}
-
-
+	/**
+	 * @param aContainer either null or an instance of Document or Array that will be appended to.
+	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Collection> T unmarshal(Reader aJSON, T aContainer)
 	{
@@ -67,9 +37,13 @@ class JSONDecoder
 				{
 					aContainer = (T)new Document();
 				}
-				else
+				else if (c == '[')
 				{
 					aContainer = (T)new Array();
+				}
+				else
+				{
+					throw new IllegalArgumentException("First character in JSON must be a bracket or a curly bracket.");
 				}
 				mReader.unread(c);
 			}
@@ -274,7 +248,7 @@ class JSONDecoder
 		try
 		{
 			long v = Long.parseLong(in);
-			if (mRestoreByteShortValues)
+			if (mRestoreShortValues)
 			{
 				if (v >= Byte.MIN_VALUE && v <= Byte.MAX_VALUE)
 				{

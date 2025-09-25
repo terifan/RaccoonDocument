@@ -2,11 +2,11 @@ package test_document;
 
 import java.io.ByteArrayInputStream;
 import java.util.Random;
-import org.terifan.raccoon.document.BinaryDecoder.Path;
 import org.terifan.raccoon.document.BinaryDecoder.Visitor;
 import org.terifan.raccoon.document.BinaryDecoder.VisitorResult;
 import org.terifan.raccoon.document.BinaryWalker;
 import org.terifan.raccoon.document.Document;
+import org.terifan.raccoon.document.Path;
 
 
 /*

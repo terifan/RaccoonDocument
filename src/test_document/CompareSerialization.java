@@ -1,12 +1,12 @@
 package test_document;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import org.terifan.raccoon.document.Array;
 import org.terifan.raccoon.document.Collection;
-import org.terifan.raccoon.document.Dictionary;
 import org.terifan.raccoon.document.Document;
 import org.terifan.raccoon.document.Support;
 
@@ -17,7 +17,7 @@ public class CompareSerialization
 	{
 		try
 		{
-			System.out.printf("%12s %12s %12s %12s %12s %12s %12s %12s %12s %12s%n", "", "json", "bin", "json+zip", "bin+zip", "binTIME", "jsonTIME", "bin+dic", "bin+dic+zip", "dic");
+			System.out.printf("%12s %12s %12s %12s %12s %12s %12s%n", "", "json", "bin", "json+zip", "bin+zip", "binTIME", "jsonTIME");
 
 			Random rnd = new Random(0);
 
@@ -30,17 +30,18 @@ public class CompareSerialization
 			for (int i = 0; i < 100; i++)
 			{
 				Document p = _Person.createPerson(rnd);
-				String name = p.at("personal/givenName");
+				String name = p.findFirst("personal/givenName");
 				tinies.add(Document.of("_id:" + rnd.nextInt(10000) + ",name:" + name + ",age:" + rnd.nextInt(100) + ",phone:'" + rnd.nextInt(100) + "-" + rnd.nextInt(100000000) + "',email:'" + name + "@mail.com'"));
 			}
 
-			run("invoice", Document.parseJson(new InputStreamReader(CompareSerialization.class.getResourceAsStream("invoice.json"))));
-			run("manifest", Document.parseJson(new InputStreamReader(CompareSerialization.class.getResourceAsStream("manifest.json"))));
 			run("person", _Person.createPerson(rnd));
 			run("100 people", tinies);
 			run("tiny", Document.of("_id:3164,name:steve,age:45,phone:'34-35656464',email:'steve@mail.com'"));
 			run("100 tiny", tinies);
-			run("trip", Document.parseJson(new InputStreamReader(CompareSerialization.class.getResourceAsStream("trip.json"))));
+			run("invoice", Document.parseJson(new InputStreamReader(new FileInputStream("c:/data/json_testdata/invoice.json"))));
+			run("manifest-1", Document.parseJson(new InputStreamReader(new FileInputStream("c:/data/json_testdata/manifest_1.json"))));
+			run("manifest-2", Document.parseJson(new InputStreamReader(new FileInputStream("c:/data/json_testdata/manifest_2.json"))));
+			run("manifest-3", Document.parseJson(new InputStreamReader(new FileInputStream("c:/data/json_testdata/manifest_3.json"))));
 
 //			for (int i = 0; i <= 18; i++)
 //			{
@@ -59,24 +60,21 @@ public class CompareSerialization
 		String json = aCollection.toJson();
 		byte[] bin = aCollection.toByteArray();
 
-		Dictionary dic = Dictionary.of(aCollection);
 		byte[] binzip = Support.zip(bin);
 		byte[] zipjson = Support.zip(json.getBytes(StandardCharsets.UTF_8));
-		byte[] bindic = dic.toByteArray(aCollection);
-		byte[] bindiczip = Support.zip(bindic);
 
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 10; i++)
 		{
 			Document.parseByteArray(bin);
 			Document.parseJson(json);
 		}
 		long t0 = System.currentTimeMillis();
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < 100; i++)
 		{
 			Document.parseByteArray(bin);
 		}
 		long t1 = System.currentTimeMillis();
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < 100; i++)
 		{
 			Document.parseJson(json);
 		}
@@ -88,12 +86,8 @@ public class CompareSerialization
 		System.out.printf("%12d ", zipjson.length);
 		System.out.printf("%12d ", binzip.length);
 
-		System.out.printf("%12.3f ", (t1 - t0) / 1000.0);
-		System.out.printf("%12.3f ", (t2 - t1) / 1000.0);
-
-		System.out.printf("%12d ", bindic.length + dic.writeExternal().length);
-		System.out.printf("%12d ", bindiczip.length + Support.zip(dic.writeExternal()).length);
-		System.out.printf("%12d ", dic.writeExternal().length);
+		System.out.printf("%12.3f ", (t1 - t0) / 100.0);
+		System.out.printf("%12.3f ", (t2 - t1) / 100.0);
 
 		System.out.println();
 	}

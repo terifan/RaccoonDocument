@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 
 public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
@@ -40,7 +41,10 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	@SuppressWarnings({"unchecked", "unchecked"})
+	@SuppressWarnings(
+	{
+		"unchecked", "unchecked"
+	})
 	public <T> T get(String aKey, T aDefaultValue)
 	{
 		Object v = getImpl(aKey);
@@ -159,9 +163,9 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	public ArrayList<String> keySet()
+	public Set<String> keySet()
 	{
-		return new ArrayList<>(mValues.keySet());
+		return mValues.keySet();
 	}
 
 
@@ -213,15 +217,26 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	MurmurHash3 hashCode(MurmurHash3 aChecksum)
+	MurmurHash3 hashCode(MurmurHash3 aChecksum, ReferenceMap aLinkedList)
 	{
-		aChecksum.updateInt(861720859 ^ size()); // == "document".hashCode()
+		aChecksum.updateInt("document".hashCode());
+		aChecksum.updateInt(size());
+
+		if (aLinkedList.contains(this))
+		{
+			aChecksum.updateInt(aLinkedList.indexOf(this));
+			return aChecksum;
+		}
+
+		aLinkedList.add(this, null);
 
 		mValues.entrySet().forEach(entry ->
 		{
 			aChecksum.updateUTF8(entry.getKey());
-			super.hashCode(aChecksum, entry.getValue());
+			super.hashCode(aChecksum, entry.getValue(), aLinkedList);
 		});
+
+		aLinkedList.remove(this);
 
 		return aChecksum;
 	}
@@ -349,6 +364,10 @@ public class Document extends Collection<String, Document> implements Externaliz
 	 */
 	public static Document of(String aJSON)
 	{
+		if (!aJSON.startsWith("{"))
+		{
+			aJSON = "{" + aJSON + "}";
+		}
 		return new Document().fromJson(aJSON);
 	}
 
@@ -487,6 +506,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 	/**
 	 * Sort keys in the Document according to the STANDARD_COMPARATOR.
+	 *
 	 * @see STANDARD_COMPARATOR
 	 * @return this Document
 	 */
@@ -501,6 +521,32 @@ public class Document extends Collection<String, Document> implements Externaliz
 		TreeMap<String, Object> tmp = new TreeMap<>(aComparator);
 		tmp.putAll(mValues);
 		mValues = new LinkedHashMap<>(tmp);
+		return this;
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public Document merge(Document aOther, BiFunction aMergeFunction)
+	{
+		if (isEmpty())
+		{
+			mValues.putAll(aOther.mValues);
+		}
+		else
+		{
+			for (Entry<String, Object> entry : aOther.entrySet())
+			{
+				if (mValues.containsKey(entry.getKey()))
+				{
+					mValues.merge(entry.getKey(), entry.getValue(), aMergeFunction);
+				}
+				else
+				{
+					mValues.put(entry.getKey(), entry.getValue());
+				}
+			}
+		}
+
 		return this;
 	}
 }

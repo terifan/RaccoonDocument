@@ -2,40 +2,10 @@ package org.terifan.raccoon.document;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.util.function.Function;
-import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
-import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
 
-// +--order{}        <-- 0
-//   +--a
-//   +--b
-//   +--orderLines[]
-//      +--0{}        <-- 1
-//      |  +--a
-//      |  +--b
-//      |  +--orderDetails[]
-//      |     +--0{}        <-- 2
-//      |        +--a
-//      |        +--b
-//      |     +--1{}        <-- 3
-//      |        +--a
-//      |        +--b
-//      +--1{}        <-- 4
-//         +--a
-//         +--b
-//         +--orderDetails[]
-//            +--0{}        <-- 5
-//               +--a
-//               +--b
-//            +--1{}        <-- 6
-//               +--a
-//               +--b
-
-// same keys
-// same keys/values
-
-// 
 
 class BinaryEncoder implements AutoCloseable
 {
@@ -44,29 +14,15 @@ class BinaryEncoder implements AutoCloseable
 	private MurmurHash3 mChecksum;
 	private OutputStream mOutputStream;
 	private final byte[] mWriteBuffer = new byte[8];
-	private final Function<Object, Boolean> mFilter;
-
-	final Dictionary mDictionary;
-
-
-	public BinaryEncoder(OutputStream aOutputStream, Function<Object, Boolean> aFilter)
-	{
-		this(aOutputStream, aFilter, null);
-	}
+	private final Function<Path, Boolean> mFilter;
+	private final ReferenceMap mReferences;
 
 
-	public BinaryEncoder(OutputStream aOutputStream, Function<Object, Boolean> aFilter, Dictionary aDictionary)
+	public BinaryEncoder(OutputStream aOutputStream, Function<Path, Boolean> aFilter)
 	{
 		mOutputStream = aOutputStream;
 		mFilter = aFilter;
-		mDictionary = aDictionary;
-	}
-
-
-	void standalone() throws IOException
-	{
-		mChecksum = new MurmurHash3(VERSION);
-		writeToken(BinaryCodec.DICTIONARY, VERSION);
+		mReferences = new ReferenceMap();
 	}
 
 
@@ -89,58 +45,51 @@ class BinaryEncoder implements AutoCloseable
 			writeToken(type, getChecksumValue());
 		}
 
-		switch (type)
+		Path path = new Path();
+		if (aObject instanceof Document v)
 		{
-			case DOCUMENT:
-				writeDocument((Document)aObject);
-				break;
-			case ARRAY:
-				writeArray((Array)aObject);
-				break;
-			default:
-				writeValue(type, aObject);
-				break;
+			mReferences.register(v, "");
+			writeDocument(v, path);
 		}
+		else if (aObject instanceof Array v)
+		{
+			mReferences.register(v, "");
+			writeArray(v, path);
+		}
+		else
+		{
+			writeValue(type, aObject, path);
+		}
+
+		System.out.println(mReferences);
 	}
 
 
-	BinaryEncoder writeDocument(Document aDocument) throws IOException
+	BinaryEncoder writeDocument(Document aDocument, Path aPath) throws IOException
 	{
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
 			String key = entry.getKey();
 
-			if (mFilter.apply(key))
+			aPath.enter(key);
+
+			if (mFilter.apply(aPath))
 			{
 				Object value = entry.getValue();
 				BinaryCodec type = BinaryCodec.identify(value);
 
-				if (mDictionary != null)
+				if (value instanceof Collection v && mReferences.register(v, aPath.toString()))
 				{
-					if (mDictionary.encode(value) != null)
-					{
-						type = BinaryCodec.DICTIONARY;
-					}
-
-					Integer index = mDictionary.get(key);
-					if (index != null)
-					{
-						writeToken(type, 2 * index + 1);
-					}
-					else
-					{
-						writeToken(type, 2 * key.length());
-						writeUTF(key);
-					}
-				}
-				else
-				{
-					writeToken(type, 2 * key.length());
-					writeUTF(key);
+					value = mReferences.indexOf(v);
+					type = BinaryCodec.REFERENCE;
 				}
 
-				writeValue(type, value);
+				writeToken(type, key.length());
+				writeUTF(key);
+				writeValue(type, value, aPath);
 			}
+
+			aPath.exit();
 		}
 
 		terminate();
@@ -148,41 +97,42 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	BinaryEncoder writeArray(Array aArray) throws IOException
+	BinaryEncoder writeArray(Array aArray, Path aPath) throws IOException
 	{
-		int elementCount = aArray.size();
-
-		for (int offset = 0; offset < elementCount;)
+		for (int offset = 0, elementCount = aArray.size(); offset < elementCount;)
 		{
 			BinaryCodec type = null;
 			int runLen = 0;
 
-			for (int i = offset; i < elementCount; i++, runLen++)
+			ArrayList<Object> pending = new ArrayList<>();
+			runLen=1;
+			int j = offset;
+
+//			for (int i = offset; i < elementCount; i++, runLen++)
 			{
-				Object value = aArray.get(i);
+				Object value = aArray.get(j);
+				BinaryCodec nextType = BinaryCodec.identify(value);
 
-				BinaryCodec nextType;
-				if (mDictionary != null && mDictionary.encode(value) != null)
+				if ((type == null || type == BinaryCodec.REFERENCE) && value instanceof Collection v && mReferences.register(v, aPath.toString()))
 				{
-					nextType = BinaryCodec.DICTIONARY;
-				}
-				else
-				{
-					nextType = BinaryCodec.identify(value);
+					value = mReferences.indexOf(v);
+					nextType = BinaryCodec.REFERENCE;
 				}
 
-				if (type != nextType && type != null)
-				{
-					break;
-				}
+//				if (type != nextType && type != null)
+//				{
+//					break;
+//				}
+
+				pending.add(value);
 				type = nextType;
 			}
 
 			writeToken(type, runLen);
 
-			while (--runLen >= 0)
+			for (int i = 0; --runLen >= 0; i++, offset++)
 			{
-				writeValue(type, aArray.get(offset++));
+				writeValue(type, pending.get(i), aPath);
 			}
 		}
 
@@ -197,9 +147,9 @@ class BinaryEncoder implements AutoCloseable
 	}
 
 
-	private void writeValue(BinaryCodec aType, Object aValue) throws IOException
+	private void writeValue(BinaryCodec aType, Object aValue, Path aPath) throws IOException
 	{
-		aType.encoder.encode(this, aValue);
+		aType.encoder.encode(this, aPath, aValue);
 	}
 
 

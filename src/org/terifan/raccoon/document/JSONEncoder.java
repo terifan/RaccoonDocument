@@ -6,34 +6,44 @@ import static org.terifan.raccoon.document.SupportedTypes.escapeChar;
 import static org.terifan.raccoon.document.SupportedTypes.escapeString;
 
 
-class JSONEncoder
+public class JSONEncoder
 {
 	private Appendable mAppendable;
 	private boolean mTyped;
 	private boolean mCompact;
 	private boolean mNewLine;
 	private boolean mFirst;
+	private boolean mReferenceSharedObjects;
 	private char mQuote;
 	private int mIndent;
+	private String mIntentSymbol;
 
 
-	public Appendable marshal(Collection aContainer, boolean aCompact, boolean aTyped, boolean aApostrophes, Appendable aAppendable)
+	public JSONEncoder(boolean aCompact, boolean aTyped, boolean aApostrophes, boolean aReferenceSharedObjects)
+	{
+		mCompact = aCompact;
+		mTyped = aTyped;
+		mQuote = aApostrophes ? '\'' : '\"';
+		mReferenceSharedObjects = aReferenceSharedObjects;
+
+		mIntentSymbol = "\t";
+	}
+
+
+	public Appendable marshal(Collection aContainer, Appendable aAppendable)
 	{
 		mAppendable = aAppendable;
 		mNewLine = false;
-		mCompact = aCompact;
-		mTyped = aTyped;
 		mFirst = true;
-		mQuote = aApostrophes ? '\'' : '\"';
 
 		try
 		{
 			switch (aContainer)
 			{
 				case Document v ->
-					marshalDocument(v, true);
+					marshalDocument(v, new ReferenceMap(), new Path(), true);
 				case Array v ->
-					marshalArray(v);
+					marshalArray(v, new ReferenceMap(), new Path());
 				default ->
 					throw new IllegalArgumentException();
 			}
@@ -47,14 +57,23 @@ class JSONEncoder
 	}
 
 
-	private void marshalDocument(Document aDocument) throws IOException
+	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, Path aPath) throws IOException
 	{
-		marshalDocument(aDocument, true);
+		marshalDocument(aDocument, aReferenceMap, aPath, true);
 	}
 
 
-	private void marshalDocument(Document aDocument, boolean aNewLineOnClose) throws IOException
+	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, Path aPath, boolean aNewLineOnClose) throws IOException
 	{
+		if (aReferenceMap.contains(aDocument))
+		{
+			printReference(aReferenceMap, aDocument);
+			warn("A cyclic reference was encountered during evaluation: " + aPath);
+			return;
+		}
+
+		aReferenceMap.add(aDocument, aPath.toString());
+
 		int size = aDocument.size();
 
 		if (size == 0)
@@ -86,7 +105,9 @@ class JSONEncoder
 		{
 			print(mQuote + escapeString(entry.getKey()) + mQuote + ": ");
 
-			marshal(entry.getValue());
+			aPath.enter(entry.getKey());
+			marshal(entry.getValue(), aReferenceMap, aPath);
+			aPath.exit();
 
 			if (--size > 0)
 			{
@@ -106,11 +127,31 @@ class JSONEncoder
 			indent(-1);
 			print("}");
 		}
+
+		if (!mReferenceSharedObjects)
+		{
+			aReferenceMap.remove(aDocument);
+		}
 	}
 
 
-	private void marshalArray(Array aArray) throws IOException
+	private void printReference(ReferenceMap aReferenceMap, Collection aKey) throws IOException
 	{
+		print(mQuote + "$reference(" + aReferenceMap.get(aKey) + ")" + mQuote);
+	}
+
+
+	private void marshalArray(Array aArray, ReferenceMap aReferenceMap, Path aPath) throws IOException
+	{
+		if (aReferenceMap.contains(aArray))
+		{
+			printReference(aReferenceMap, aArray);
+			warn("A cyclic reference was encountered during evaluation: " + aPath);
+			return;
+		}
+
+		aReferenceMap.add(aArray, aPath.toString());
+
 		int size = aArray.size();
 
 		if (size == 0)
@@ -143,11 +184,13 @@ class JSONEncoder
 			indent(1);
 		}
 
-		for (Object value : aArray)
+		for (int i = 0; i < aArray.size(); i++)
 		{
+			Object value = aArray.get(i);
+			aPath.enter(i);
 			if (first)
 			{
-				marshalDocument((Document)value, false);
+				marshalDocument((Document)value, aReferenceMap, aPath, false);
 
 				if (--size > 0)
 				{
@@ -156,13 +199,14 @@ class JSONEncoder
 			}
 			else
 			{
-				marshal(value);
+				marshal(value, aReferenceMap, aPath);
 
 				if (--size > 0)
 				{
 					print(", ", false);
 				}
 			}
+			aPath.exit();
 
 			first = false;
 		}
@@ -182,27 +226,32 @@ class JSONEncoder
 			indent(-1);
 			println("]");
 		}
+
+		if (!mReferenceSharedObjects)
+		{
+			aReferenceMap.remove(aArray);
+		}
 	}
 
 
-	private void marshal(Object aValue) throws IOException
+	private void marshal(Object aValue, ReferenceMap aReferenceMap, Path aPath) throws IOException
 	{
 		if (aValue instanceof Document v)
 		{
-			marshalDocument(v);
+			marshalDocument(v, aReferenceMap, aPath);
 		}
 		else if (aValue instanceof Array v)
 		{
-			marshalArray(v);
+			marshalArray(v, aReferenceMap, aPath);
 		}
 		else
 		{
-			marshalValue(aValue);
+			marshalValue(aValue, aReferenceMap, aPath);
 		}
 	}
 
 
-	private void marshalValue(Object aValue) throws IOException
+	private void marshalValue(Object aValue, ReferenceMap aReferenceMap, Path aPath) throws IOException
 	{
 		if (aValue instanceof String v)
 		{
@@ -358,7 +407,7 @@ class JSONEncoder
 			mAppendable.append("\n");
 			for (int i = 0; i < mIndent; i++)
 			{
-				mAppendable.append("\t");
+				mAppendable.append(mIntentSymbol);
 			}
 			mNewLine = false;
 		}
@@ -372,5 +421,11 @@ class JSONEncoder
 			aText = aText.substring(0, aText.length() - 1);
 		}
 		return aText;
+	}
+
+
+	protected void warn(String aMessage)
+	{
+		System.err.println("JSONEncoder: " + aMessage);
 	}
 }

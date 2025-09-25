@@ -41,6 +41,12 @@ class MurmurHash3
 	}
 
 
+	public MurmurHash3 updateBytes(byte[] aBuffer)
+	{
+		return updateBytes(aBuffer, 0, aBuffer.length);
+	}
+
+
 	public MurmurHash3 updateBytes(byte[] aBuffer, int aOffset, int aLength)
 	{
 		int i = 0;

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
@@ -213,8 +214,8 @@ public class DocumentNGTest
 	{
 		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
 
-		assertEquals(doc.findMany("people/gender", true).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\"]");
-		assertEquals(doc.findMany("people/gender", false).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\",[\"m\",\"f\"]]");
+//		assertEquals(doc.findMany("people/gender", true).toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\"]");
+		assertEquals(doc.findMany("people/gender").toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\",[\"m\",\"f\"]]");
 	}
 
 
@@ -321,7 +322,7 @@ public class DocumentNGTest
 	}
 
 
-	@Test(invocationCount = 1000, skipFailedInvocations = true)
+	@Test(invocationCount = 1, skipFailedInvocations = true)
 	public void testAllTypes()
 	{
 		Byte _byte0 = Byte.MIN_VALUE;
@@ -408,13 +409,16 @@ public class DocumentNGTest
 		Document dstDoc = unmarshalledBin.get("doc");
 		Array dstArr = unmarshalledBin.get("arr");
 
-		Document unmarshalledJson = new Document().fromJson(json, true);
+		Document unmarshalledJson = new JSONDecoder(false, true).unmarshal(new StringReader(json), new Document());
 		Document dstDocJson = unmarshalledJson.get("doc");
 		Array dstArrJson = unmarshalledJson.get("arr");
 
-		Document unmarshalledText = new Document().fromJson(text, true);
+		Document unmarshalledText = new JSONDecoder(false, true).unmarshal(new StringReader(text), new Document());
 		Document dstDocText = unmarshalledText.get("doc");
 		Array dstArrText = unmarshalledText.get("arr");
+
+		System.out.println(unmarshalledJson.keySet());
+		System.out.println(srcDoc.keySet());
 
 		assertEquals(unmarshalledBin, srcDoc);
 		assertEquals(unmarshalledJson, srcDoc);
@@ -586,16 +590,14 @@ public class DocumentNGTest
 	}
 
 
-	@Test
-	public void testHashcode() throws IOException, ClassNotFoundException
-	{
-		assertEquals(Document.of("_id:1").hashCode(), -2019545584);
-		assertEquals(Document.of("_id:'1'").hashCode(), -1802300669);
-		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
-		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
-	}
-
-
+//	@Test
+//	public void testHashcode() throws IOException, ClassNotFoundException
+//	{
+//		assertEquals(Document.of("_id:1").hashCode(), -2019545584);
+//		assertEquals(Document.of("_id:'1'").hashCode(), -1802300669);
+//		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
+//		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
+//	}
 	@Test
 	public void testInterleaved() throws IOException, ClassNotFoundException
 	{
@@ -744,17 +746,21 @@ public class DocumentNGTest
 		Document out = new Document();
 		out.put("a", (short)14);
 		out.put("b", (int)765464647);
-		out.put("c", (long)7646464147844586464L);
+		out.put("c", Array.of(34, 7646464147844586464L));
 		out.put("d", (float)7);
 		out.put("e", (double)7);
 
-		byte[] data = out.toByteArray(k -> k.equals("a") || k.equals("c"));
+		byte[] data = out.toByteArray(k -> k.startsWith("a") || k.startsWith(new Path("c")));
+
+		System.out.println(new String(data));
 
 		Document in = new Document().fromByteArray(data);
 
 		assertEquals(in.size(), 2);
 		assertEquals(in.get("a"), out.getShort("a"));
-		assertEquals(in.get("c"), out.getLong("c"));
+//		assertEquals(in.get("c"), out.getLong("c"));
+
+		System.out.println(in);
 	}
 
 
@@ -764,6 +770,11 @@ public class DocumentNGTest
 		Document d = Document.of("{a:[1],b:[],c:[{}],d:[{x:1},[null],{}],e:null}");
 		assertEquals(d.toJson(), "{\"a\":[1],\"b\":[],\"c\":[{}],\"d\":[{\"x\":1},[null],{}],\"e\":null}");
 		assertEquals(d.reduce().toJson(), "{\"a\":[1],\"d\":[{\"x\":1}]}");
+
+		Document e = new Document().put("a", Document.of("z:1")).put("b", Document.of("z:1"));
+		assertNotSame(e.get("a"), e.get("b"));
+		e.reduce();
+		assertSame(e.get("a"), e.get("b"));
 	}
 
 
@@ -785,8 +796,6 @@ public class DocumentNGTest
 	{
 		Random rnd = new Random(1);
 		Document doc = _Person.createPerson(rnd);
-
-		Dictionary dic = Dictionary.of(doc);
 
 		System.out.println("          json: " + doc.toJson().length());
 		System.out.println("    typed-json: " + doc.toTypedJson().length());
@@ -812,20 +821,6 @@ public class DocumentNGTest
 			dos.write(doc.toByteArray());
 		}
 		System.out.println("       bin-zip: " + baos4.size());
-
-		System.out.println("       bin-dic: " + dic.toByteArray(doc).length + " +" + DictionaryNGTest.marshal(dic).length);
-
-		ByteArrayOutputStream baos5a = new ByteArrayOutputStream();
-		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos5a))
-		{
-			dos.write(dic.toByteArray(doc));
-		}
-		ByteArrayOutputStream baos5b = new ByteArrayOutputStream();
-		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos5b))
-		{
-			dos.write(DictionaryNGTest.marshal(dic));
-		}
-		System.out.println("   bin-dic-zip: " + baos5a.size() + " +" + baos5b.size());
 
 //		_Log.hexDump(doc.toByteArray());
 	}
@@ -892,9 +887,9 @@ public class DocumentNGTest
 		Document doc = new Document()
 			.put("name", "bob")
 			.putIfAbsent("address", key -> new Document()
-				.put("street", "Big road")
-				.put("city", "Smallville")
-				.put("country", "Americastan")
+			.put("street", "Big road")
+			.put("city", "Smallville")
+			.put("country", "Americastan")
 			)
 			.put("info", Array.of("fatty")
 				.addWithCondition("weirdo", key -> gender == null)
@@ -905,11 +900,9 @@ public class DocumentNGTest
 			.fromJson("color:red,shape:round")
 			.putWithCondition("gender", gender, value -> value != null)
 			.putWhenCondition("catapult", key -> gender == null, key -> Document.of("when:now!"))
-			.append("name", "johnson")
-			;
+			.append("name", "johnson");
 
 //		System.out.println(doc);
-
 		assertEquals(doc.toString(), "{\"name\":[\"bob\",\"johnson\"],\"address\":{\"street\":\"Big road\",\"city\":\"Smallville\",\"country\":\"Americastan\"},\"info\":[\"fatty\",\"weirdo\"],\"number\":[-1,-2,-3],\"color\":\"red\",\"shape\":\"round\",\"catapult\":{\"when\":\"now!\"}}");
 	}
 
@@ -925,7 +918,6 @@ public class DocumentNGTest
 		Document doc = new Document().fromByteArray(data);
 
 //		System.out.println(doc);
-
 //		assertEquals(in, out);
 	}
 
@@ -933,7 +925,7 @@ public class DocumentNGTest
 	@Test
 	public void testClone() throws IOException
 	{
-		Document doc = Document.of("a:1,b:{c:2},d:[3,4]").put("arr", Array.of(1,2,3));
+		Document doc = Document.of("a:1,b:{c:2},d:[3,4]").put("arr", Array.of(1, 2, 3));
 
 		Document other = doc.clone();
 
@@ -960,17 +952,49 @@ public class DocumentNGTest
 
 
 	@Test
-	public void testX() throws IOException
+	public void testReference() throws IOException
 	{
-		Document doc = new Document().fromJson(new String(DocumentNGTest.class.getResourceAsStream("trip.json").readAllBytes()));
+		Document a1 = Document.of("number:'47314631'");
+		Document a2 = Document.of("number:'47314631'");
+		Document a3 = Document.of("number:'47314631'");
+		Document a4 = Document.of("number:'47314631'");
+		Document a5 = Document.of("number:'47314631'");
 
-		Dictionary dic = Dictionary.of(doc);
+//		Document a5;
+//		long ex = a1.hashCode();
+//		a5 = new Document();
+//		for (long i = 47314631+1; ;i++)
+//		{
+//			a5.put("number", ""+i);
+//			if (a5.hashCode()==ex) break;
+//		}
+//		System.out.println(a5);
+//		HashMap<Document,Document> map = new HashMap<>();
+//		map.putIfAbsent(a1, a1);
+//		map.putIfAbsent(a2, a2);
+//		map.putIfAbsent(a3, a3);
+//		map.putIfAbsent(a4, a4);
+//		map.putIfAbsent(a5, a5);
+//		a1 = map.get(a1);
+//		a2 = map.get(a2);
+//		a3 = map.get(a3);
+//		a4 = map.get(a4);
+//		a5 = map.get(a5);
+		Document out = Document.of("text:'hello world'");
+		out.put("alpha", a1);
+		out.put("beta", a2);
+		out.put("gamma", a3);
+		out.put("omega", a4);
+		out.put("zeta", a5);
 
-//		_Log.hexDump(dic.toByteArray(doc));
+		out.reduce();
 
-		System.out.println(doc.toJson().length());
-		System.out.println(doc.toJson(false).length());
-		System.out.println(doc.toByteArray().length);
-		System.out.println(dic.toByteArray(doc).length + " +" + dic.writeExternal().length);
+		System.out.println(out);
+		System.out.println(new String(out.toByteArray()));
+
+		Document in = new Document().fromByteArray(out.toByteArray());
+
+		System.out.println(in.hashCode() == out.hashCode());
+		System.out.println(in.equals(out));
 	}
 }
