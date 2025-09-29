@@ -549,4 +549,10 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 		return this;
 	}
+
+
+//	void merge(String aKey, Object aValue, BiFunction aMerger)
+//	{
+//		put(aKey, aMerger.apply(get(aKey), aValue));
+//	}
 }

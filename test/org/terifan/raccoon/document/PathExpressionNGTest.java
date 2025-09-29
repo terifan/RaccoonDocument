@@ -20,6 +20,7 @@ public class PathExpressionNGTest
 //		PathExpression e6 = new PathExpression("apple/b/[c='false']/d/[g=bob]/a");
 //		PathExpression e7 = new PathExpression("apple/b/[c=test]/d/[g=bob]/a");
 //		PathExpression e8 = new PathExpression("apple/b/[c=.5]/d/[g=bob]/a");
-		PathExpression e9 = new PathExpression("apple/b/[c=/apple/e && c=../e && d=true || (d=false && (f<1 || f<=1 || f>1 || f>=1 || f!=1))]/d/[g=bob]/a");
+		PathExpression_Deprecated e9 = new PathExpression_Deprecated("apple/b/[c=/apple/e && c=../e && d=true || (d=false && (f<1 || f<=1 || f>1 || f>=1 || f!=1))]/d/[g=bob]/a");
+		System.out.println(e9);
 	}
 }

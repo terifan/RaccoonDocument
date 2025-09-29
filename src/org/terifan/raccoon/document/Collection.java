@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -32,7 +31,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
+import org.terifan.raccoon.document.PathExpression.Expression;
+import org.terifan.raccoon.document.PathExpression.ExpressionAnd;
+import test_document.Console;
+import test_document.Console.Color;
 
 
 public abstract class Collection<K, R> implements Externalizable, Serializable
@@ -708,9 +710,9 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 				v = Double.valueOf(v.toString());
 			}
 			sum.accumulateAndGet((Number)v, (a, b) -> a.doubleValue() + b.doubleValue());
-			return true;
+			return VisitorResult.CONTINUE;
 		};
-		visit(aPath, visitor);
+		visit(null, aPath, visitor);
 		return sum.get().doubleValue();
 	}
 
@@ -720,10 +722,13 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		AtomicInteger count = new AtomicInteger();
 		Visitor visitor = v ->
 		{
-			count.incrementAndGet();
-			return true;
+			if (v != null)
+			{
+				count.incrementAndGet();
+			}
+			return VisitorResult.CONTINUE;
 		};
-		visit(aPath, visitor);
+		visit(null, aPath, visitor);
 		return count.get();
 	}
 
@@ -731,12 +736,15 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public Array findMany(String aPath)
 	{
 		Array result = new Array();
-		Visitor v = o ->
+		Visitor visitor = v ->
 		{
-			result.add(o);
-			return true;
+			if (v != null)
+			{
+				result.add(v);
+			}
+			return VisitorResult.CONTINUE;
 		};
-		visit(aPath, v);
+		visit(null, aPath, visitor);
 		return result;
 	}
 
@@ -744,13 +752,13 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public Document distinct(String aPath)
 	{
 		Document result = new Document();
-		Visitor v = o ->
+		Visitor visitor = v ->
 		{
-			String key = o == null ? "" : o.toString();
-			result.put(key, result.get(key, 0) + 1);
-			return true;
+			String key = v == null ? "" : v.toString();
+			result.increment(key);
+			return VisitorResult.CONTINUE;
 		};
-		visit(aPath, v);
+		visit(null, aPath, visitor);
 		return result;
 	}
 
@@ -759,22 +767,26 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public <T> T findFirst(String aPath)
 	{
 		AtomicReference<T> result = new AtomicReference<>();
-		Visitor v = o ->
+		Visitor visitor = v ->
 		{
-			if (!result.compareAndSet(null, (T)o))
+			if (!result.compareAndSet(null, (T)v))
 			{
 				throw new IllegalStateException();
 			}
-			return false;
+			return VisitorResult.CONTINUE;
 		};
-		visit(aPath, v);
+		visit(null, aPath, visitor);
 		return result.get();
 	}
 
 
 	public interface Visitor
 	{
-		boolean visit(Object o);
+		VisitorResult visit(Object o);
+	}
+	public enum VisitorResult
+	{
+		ABORT, CONTINUE
 	}
 
 
@@ -786,29 +798,33 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 * <li>findMany("people/ * /name") - find the name of all people</li>
 	 * </ul>
 	 */
-	public boolean visit(String aPath, Visitor aVisitor)
+	public VisitorResult visit(Collection aParent, String aPath, Visitor aVisitor)
 	{
-//		System.out.println(aPath);
+		Console.println(Color.GREEN, "--- " + aPath + " ----------------------");
 
 		int i = aPath.indexOf('/');
 		int j = aPath.indexOf("[");
 
 		if (i == 0)
 		{
-			return visit(aPath.substring(1), aVisitor);
+			return visit(aParent, aPath.substring(1), aVisitor);
 		}
 		if (j == 0)
 		{
-			return evaluatePathExpression(aPath, aVisitor);
+			return evaluatePathExpression(aParent, aPath.substring(1), aVisitor);
 		}
 
 		if (i == -1 && j == -1)
 		{
-			if (aPath.equals("*"))
+			if (aPath.equals(".") || aPath.isEmpty())
 			{
-				if (___visit(aVisitor))
+				return aVisitor.visit(this);
+			}
+			else if (aPath.equals("*"))
+			{
+				if (_visit_all(aVisitor) == VisitorResult.ABORT)
 				{
-					return false;
+					return VisitorResult.ABORT;
 				}
 			}
 			else if (aPath.matches("[0-9]+"))
@@ -817,26 +833,25 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 			else if (this instanceof Array v)
 			{
-				if (v.__visit(aVisitor, aPath))
+				if (v.__visit(aVisitor, aPath) == VisitorResult.ABORT)
 				{
-					return false;
+					return VisitorResult.ABORT;
 				}
+			}
+			else if (this instanceof Document v)
+			{
+				return aVisitor.visit(v.get(aPath));
 			}
 			else
 			{
-//				return aVisitor.visit(((Document)this).get(aPath));
-				Object v = ((Document)this).get(aPath);
-				if (v != null)
-				{
-					return aVisitor.visit(v);
-				}
+				throw new IllegalStateException();
 			}
-			return true;
+			return VisitorResult.CONTINUE;
 		}
 
 		String path, remain;
 //
-//		System.out.println(aPath);
+//		Console.println(Color.GREEN, aPath);
 //
 		if (j != -1 && (j == -1 || j < i))
 		{
@@ -858,229 +873,159 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			throw new IllegalStateException(aPath);
 		}
 
-//		System.out.println(path + " // " + remain);
 
 		if (this instanceof Array arr)
 		{
-			if (path.equals("*"))
+			if (remain.equals("*"))
 			{
 				for (Object item : arr)
 				{
-					if (_visit(item, remain, aVisitor))
+					if (_visit(aParent, item, remain, aVisitor) == VisitorResult.ABORT)
 					{
-						return false;
+						return VisitorResult.ABORT;
 					}
 				}
 			}
-			else if (path.matches("[0-9]*"))
+			else if (remain.matches("[0-9]+"))
 			{
-				Object item = arr.get(Integer.valueOf(path));
-				if (_visit(item, remain, aVisitor))
+				if (_visit(aParent, arr, remain, aVisitor) == VisitorResult.ABORT)
 				{
-					return false;
+					return VisitorResult.ABORT;
 				}
 			}
 			else
 			{
 				for (Object item : arr)
 				{
-					if (_visit(item, aPath, aVisitor))
+					if (_visit(aParent, item, path + "/" + remain, aVisitor) == VisitorResult.ABORT)
 					{
-						return false;
+						return VisitorResult.ABORT;
+					}
+				}
+			}
+			return VisitorResult.CONTINUE;
+		}
+
+
+		Object obj = get((K)path);
+
+		Console.println(Color.BLUE, path + " // " + remain + " == " + (obj==null?"null":obj.getClass().getSimpleName()));
+
+//		if (remain.startsWith("["))
+//		{
+//			return evaluatePathExpression(aParent, remain.substring(1), aVisitor);
+//		}
+
+		if (obj instanceof Array arr)
+		{
+			if (remain.equals("*"))
+			{
+				for (Object item : arr)
+				{
+					if (_visit(aParent, item, remain, aVisitor) == VisitorResult.ABORT)
+					{
+						return VisitorResult.ABORT;
+					}
+				}
+			}
+			else if (remain.matches("[0-9]+"))
+			{
+				if (_visit(aParent, arr, remain, aVisitor) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+			}
+			else
+			{
+				for (Object item : arr)
+				{
+					if (_visit(aParent, item, remain, aVisitor) == VisitorResult.ABORT)
+					{
+						return VisitorResult.ABORT;
 					}
 				}
 			}
 		}
-		else if (this instanceof Document v)
+		else if (obj instanceof Document v)
 		{
-			if (path.equals("*"))
+			if (remain.equals("*"))
 			{
 				for (Object item : v.values())
 				{
-					if (_visit(item, remain, aVisitor))
+					if (_visit(aParent, item, remain, aVisitor) == VisitorResult.ABORT)
 					{
-						return false;
+						return VisitorResult.ABORT;
 					}
 				}
 			}
 			else
 			{
-				Object item = v.get(path);
-				if (_visit(item, remain, aVisitor))
+				if (_visit(aParent, v, remain, aVisitor) == VisitorResult.ABORT)
 				{
-					return false;
+					return VisitorResult.ABORT;
 				}
 			}
 		}
 
-		return true;
+		return VisitorResult.CONTINUE;
 	}
 
 
-	private boolean ___visit(Visitor aVisitor)
+	public VisitorResult evaluatePathExpression(Collection aParent, String aPath, Visitor aResult)
 	{
-		Iterable it;
+		Expression tree = new ExpressionAnd();
+		String remain = new PathExpression().parse(aPath, tree);
+
+//		tree.print(0);
+
+		boolean b = tree.eval(this);
+		Console.println(Color.CYAN, "?????????????????????? " + b);
+		if (b)
+		{
+			return visit(aParent, remain, aResult);
+		}
+		return VisitorResult.CONTINUE;
+	}
+
+
+	private VisitorResult _visit_all(Visitor aVisitor)
+	{
 		if (this instanceof Document v)
 		{
-			it = v.values();
+			return aVisitor.visit(v);
 		}
-		else
-		{
-			it = (Iterable)this;
-		}
+		Iterable it = (Iterable)this;
 		for (Object v : it)
 		{
-			if (!aVisitor.visit(v))
+			if (aVisitor.visit(v) == VisitorResult.ABORT)
 			{
-				return true;
+				return VisitorResult.ABORT;
 			}
 		}
-		return false;
+		return VisitorResult.CONTINUE;
 	}
 
 
-	private boolean _visit(Object aItem, String aRemain, Visitor aVisitor)
+	private VisitorResult _visit(Collection aParent, Object aItem, String aRemain, Visitor aVisitor)
 	{
 		if (aItem != null)
 		{
 			if (aItem instanceof Collection c)
 			{
-				if (!c.visit(aRemain, aVisitor))
+				if (c.visit(aParent, aRemain, aVisitor) == VisitorResult.ABORT)
 				{
-					return true;
+					return VisitorResult.ABORT;
 				}
 			}
 			else
 			{
-				if (!aVisitor.visit(aItem))
+				if (aVisitor.visit(aItem) == VisitorResult.ABORT)
 				{
-					return true;
+					return VisitorResult.ABORT;
 				}
 			}
 		}
-		return false;
-	}
-
-
-	protected boolean evaluatePathExpression(String aPath, Visitor aResult)
-	{
-		String remain;
-		String key;
-		String expression;
-
-		boolean expected;
-		String op;
-
-		if (aPath.contains("!="))
-		{
-			op = "!=";
-			expected = false;
-		}
-		else
-		{
-			op = "=";
-			expected = true;
-		}
-
-		int i = aPath.indexOf(op);
-		key = aPath.substring(1, i);
-		expression = aPath.substring(i + op.length());
-
-		if (expression.startsWith("'"))
-		{
-			int indexOf = expression.indexOf("'", 1);
-			expression = expression.substring(1, indexOf);
-			remain = aPath.substring(i + op.length() + indexOf + 2);
-		}
-		else
-		{
-			int indexOf = expression.indexOf("]", 0);
-			expression = expression.substring(0, indexOf);
-			remain = aPath.substring(i + op.length() + indexOf + 1);
-			if (expression.equals("null")) expression = null;
-		}
-
-//		System.out.println(aPath);
-//		System.out.println(key);
-//		System.out.println(expression);
-//		System.out.println(remain);
-//		System.out.println(expected);
-
-		if (remain.startsWith("/"))
-		{
-			remain = remain.substring(1);
-		}
-
-		if (this instanceof Array arr)
-		{
-			for (Object o : arr)
-			{
-				if (o instanceof Collection doc)
-				{
-					if (equalValues(doc.findFirst(key), expression) == expected)
-					{
-						if (remain.isEmpty())
-						{
-							if (!aResult.visit(o))
-							{
-								return false;
-							}
-						}
-						else if (!doc.visit(remain, aResult))
-						{
-							return false;
-						}
-					}
-				}
-				else
-				{
-					if (equalValues(o, expression) == expected)
-					{
-						aResult.visit(o);
-					}
-				}
-			}
-		}
-		else if (this instanceof Document doc)
-		{
-			for (Object o : findMany(key))
-			{
-				if (equalValues(o, expression) == expected)
-				{
-					return doc.visit(remain, aResult);
-				}
-			}
-		}
-		return true;
-	}
-
-
-	private boolean equalValues(Object aValue, String aExpression)
-	{
-//		if (aValue == null)
-//		{
-//			return false;
-//		}
-//		if (aExpression.startsWith("'") && aExpression.endsWith("'"))
-//		{
-//			return aExpression.substring(1, aExpression.length() - 1).equalsIgnoreCase(aValue.toString());
-//		}
-//		else
-//		{
-			if (aValue == null)
-			{
-				return aExpression == null;
-			}
-			if (aExpression == null)
-			{
-				return aValue == null;
-			}
-			if (aValue instanceof Boolean v)
-			{
-				return aExpression.equalsIgnoreCase("true") == v;
-			}
-			return aExpression.equalsIgnoreCase(aValue.toString());
-//		}
+		return VisitorResult.CONTINUE;
 	}
 
 

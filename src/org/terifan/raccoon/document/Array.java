@@ -730,18 +730,18 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 	}
 
 
-	boolean __visit(Visitor aVisitor, String aPath)
+	VisitorResult __visit(Visitor aVisitor, String aPath)
 	{
 		for (Object p : this)
 		{
 			if (p instanceof Document w)
 			{
-				if (!aVisitor.visit(w.get(aPath)))
+				if (aVisitor.visit(w.get(aPath)) == VisitorResult.ABORT)
 				{
-					return true;
+					return VisitorResult.ABORT;
 				}
 			}
 		}
-		return false;
+		return VisitorResult.CONTINUE;
 	}
 }
