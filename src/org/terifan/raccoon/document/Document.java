@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 
 public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
@@ -42,9 +44,9 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 	@Override
 	@SuppressWarnings(
-	{
-		"unchecked", "unchecked"
-	})
+		{
+			"unchecked", "unchecked"
+		})
 	public <T> T get(String aKey, T aDefaultValue)
 	{
 		Object v = getImpl(aKey);
@@ -216,6 +218,25 @@ public class Document extends Collection<String, Document> implements Externaliz
 	}
 
 
+	public Array keys()
+	{
+		return Array.of(keySet());
+	}
+
+
+	@SuppressWarnings("unchecked")
+	public Document map(Function<String, String> aMapper)
+	{
+		LinkedHashMap<String, Object> tmp = new LinkedHashMap<>();
+		for (Entry<String, Object> entry : mValues.entrySet())
+		{
+			tmp.put(aMapper.apply(entry.getKey()).toString(), entry.getValue());
+		}
+		mValues = tmp;
+		return this;
+	}
+
+
 	@Override
 	MurmurHash3 hashCode(MurmurHash3 aChecksum, ReferenceMap aLinkedList)
 	{
@@ -303,7 +324,11 @@ public class Document extends Collection<String, Document> implements Externaliz
 	}
 
 
-	public void forEach(BiConsumer<? super String, ? super Object> aAction)
+	/**
+	 * Key/Value iterator
+	 */
+	@Override
+	public void forEach(BiConsumer<String, Object> aAction)
 	{
 		mValues.forEach(aAction);
 	}
@@ -446,76 +471,38 @@ public class Document extends Collection<String, Document> implements Externaliz
 	}
 
 
+	/**
+	 * Update the stored value, incrementing it with the amount provided. Stored value is cast to long.
+	 */
 	@SuppressWarnings("unchecked")
-	public <T extends Document> T increment(String aKey)
+	public <T extends Document> T increment(String aKey, long aAmount)
 	{
-		Object v = mValues.get(aKey);
-		if (v == null)
+		Object value = mValues.get(aKey);
+
+		if (value == null || "".equals(value))
 		{
-			v = 1;
+			value = 0L;
 		}
-		else if (v instanceof Integer w)
+		else if (value instanceof String v)
 		{
-			v = w == Integer.MAX_VALUE ? (long)w + 1 : w + 1;
+			value = Long.valueOf(v);
 		}
-		else if (v instanceof Long w)
+
+		if (value instanceof Number v)
 		{
-			v = w + 1;
-		}
-		else if (v instanceof Short w)
-		{
-			v = w == Short.MAX_VALUE ? (int)w + 1 : w + 1;
-		}
-		else if (v instanceof Byte w)
-		{
-			v = w == Byte.MAX_VALUE ? (short)w + 1 : w + 1;
-		}
-		else if (v instanceof Double w)
-		{
-			v = w + 1;
-		}
-		else if (v instanceof Float w)
-		{
-			v = w + 1;
+			value = v.longValue() + aAmount;
 		}
 		else
 		{
-			throw new IllegalArgumentException("Unsupported type");
+			throw new IllegalArgumentException("The value of the key specified must be an long value (String and Number are cast to long).");
 		}
-		mValues.put(aKey, v);
+
+		mValues.put(aKey, value);
 		return (T)this;
 	}
 
-	/**
-	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining keys
-	 * according to their lexicographical order. E.g. order of keys: [_id, _alpha, 123, Banana, ape]
-	 */
-	public final static Comparator<String> STANDARD_COMPARATOR = (p, q) ->
-	{
-		boolean P = !p.isEmpty() && p.charAt(0) == '_'; // p.startsWith("_");
-		boolean Q = !q.isEmpty() && q.charAt(0) == '_'; // q.startsWith("_");
-		boolean S = P && "_id".equals(p);
-		boolean T = Q && "_id".equals(q);
-		if (S || T)
-		{
-			return S && !T ? -1 : T && !S ? 1 : 0;
-		}
-		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
-	};
 
-
-	/**
-	 * Sort keys in the Document according to the STANDARD_COMPARATOR.
-	 *
-	 * @see STANDARD_COMPARATOR
-	 * @return this Document
-	 */
-	public Document sort()
-	{
-		return sort(STANDARD_COMPARATOR);
-	}
-
-
+	@Override
 	public Document sort(Comparator<String> aComparator)
 	{
 		TreeMap<String, Object> tmp = new TreeMap<>(aComparator);
@@ -555,4 +542,31 @@ public class Document extends Collection<String, Document> implements Externaliz
 //	{
 //		put(aKey, aMerger.apply(get(aKey), aValue));
 //	}
+
+
+	public Document flatten(String aSeparator)
+	{
+		return flatten(aSeparator, e -> e);
+	}
+
+
+	@Override
+	public Document flatten(String aSeparator, Function<String, String> aFormatter)
+	{
+		Document dest = new Document();
+		flatten(dest, this, "", aSeparator, aFormatter);
+		clear();
+		putAll(dest);
+		return this;
+	}
+
+
+	public Map<String, Object> copyTo(Map<String, Object> aMap)
+	{
+		for (Entry<String, Object> entry : entrySet())
+		{
+			aMap.put(entry.getKey(), entry.getValue());
+		}
+		return aMap;
+	}
 }

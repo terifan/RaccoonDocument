@@ -861,7 +861,7 @@ public class DocumentNGTest
 	@Test
 	public void testIncrement() throws IOException
 	{
-		assertEquals((long)Document.of("i:" + Integer.MAX_VALUE).increment("i").getLong("i"), 2147483648L);
+		assertEquals((long)Document.of("i:" + Integer.MAX_VALUE).increment("i", 1).getLong("i"), 2147483648L);
 	}
 
 

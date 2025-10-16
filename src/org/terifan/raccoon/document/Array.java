@@ -3,15 +3,16 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 
-public class Array extends Collection<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
+public class Array extends Collection<Integer, Array> implements Iterable<Object>, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
 {
 	private final static long serialVersionUID = 1L;
 
@@ -603,6 +604,10 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 	}
 
 
+	/**
+	 * Index/Value iterator
+	 */
+	@Override
 	public void forEach(BiConsumer<Integer, Object> aAction)
 	{
 		for (int i = 0; i < mValues.size(); i++)
@@ -743,5 +748,56 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 			}
 		}
 		return VisitorResult.CONTINUE;
+	}
+
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Array sort(Comparator aComparator)
+	{
+		Collections.sort(mValues, aComparator);
+		return this;
+	}
+
+
+	@Override
+	public VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
+	{
+		if (aPath.startsWith("["))
+		{
+			int i = aPath.indexOf(']');
+			String number = aPath.substring(1, i);
+			if (number.matches("[0-9]+"))
+			{
+				String remain = aPath.substring(i + 1).trim();
+				aConsumedPath += "[" + number + "]";
+				return _visit(aConsumedPath, get(Integer.valueOf(number)), remain, aVisitor);
+			}
+			return evaluatePathExpression(aConsumedPath, aPath.substring(1), aVisitor);
+		}
+
+		for (Object item : this)
+		{
+			if (_visit(aConsumedPath, item, aPath, aVisitor) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+		}
+		return VisitorResult.CONTINUE;
+	}
+
+
+	public Document flatten(String aSeparator)
+	{
+		return flatten(aSeparator, e -> e);
+	}
+
+
+	@Override
+	public Document flatten(String aSeparator, Function<String, String> aFormatter)
+	{
+		Document dest = new Document();
+		flatten(dest, this, "", aSeparator, aFormatter);
+		return dest;
 	}
 }

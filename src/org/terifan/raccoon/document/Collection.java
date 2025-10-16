@@ -22,13 +22,17 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.terifan.raccoon.document.PathExpression.Expression;
@@ -705,14 +709,17 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		AtomicReference<Number> sum = new AtomicReference<>(0.0);
 		Visitor visitor = v ->
 		{
-			if (!(v instanceof Number))
+			if (v != null)
 			{
-				v = Double.valueOf(v.toString());
+				if (!(v instanceof Number))
+				{
+					v = Double.valueOf(v.toString().replace(',', '.'));
+				}
+				sum.accumulateAndGet((Number)v, (a, b) -> a.doubleValue() + b.doubleValue());
 			}
-			sum.accumulateAndGet((Number)v, (a, b) -> a.doubleValue() + b.doubleValue());
 			return VisitorResult.CONTINUE;
 		};
-		visit(null, aPath, visitor);
+		visit("", aPath, visitor);
 		return sum.get().doubleValue();
 	}
 
@@ -728,7 +735,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 			return VisitorResult.CONTINUE;
 		};
-		visit(null, aPath, visitor);
+		visit("", aPath, visitor);
 		return count.get();
 	}
 
@@ -744,7 +751,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 			return VisitorResult.CONTINUE;
 		};
-		visit(null, aPath, visitor);
+		visit("", aPath, visitor);
 		return result;
 	}
 
@@ -755,10 +762,10 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		Visitor visitor = v ->
 		{
 			String key = v == null ? "" : v.toString();
-			result.increment(key);
+			result.increment(key, 1L);
 			return VisitorResult.CONTINUE;
 		};
-		visit(null, aPath, visitor);
+		visit("", aPath, visitor);
 		return result;
 	}
 
@@ -773,9 +780,9 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			{
 				throw new IllegalStateException();
 			}
-			return VisitorResult.CONTINUE;
+			return VisitorResult.ABORT;
 		};
-		visit(null, aPath, visitor);
+		visit("", aPath, visitor);
 		return result.get();
 	}
 
@@ -784,9 +791,27 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	{
 		VisitorResult visit(Object o);
 	}
+
+
 	public enum VisitorResult
 	{
 		ABORT, CONTINUE
+	}
+
+
+	public VisitorResult evaluatePathExpression(String aConsumedPath, String aPath, Visitor aResult)
+	{
+		Expression tree = new ExpressionAnd();
+		String remain = new PathExpression().parse(aConsumedPath, aPath, tree);
+
+		//tree.print(0);
+		boolean b = tree.eval(this);
+
+		if (b)
+		{
+			return visit(aConsumedPath, remain, aResult);
+		}
+		return VisitorResult.CONTINUE;
 	}
 
 
@@ -798,7 +823,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 * <li>findMany("people/ * /name") - find the name of all people</li>
 	 * </ul>
 	 */
-	public VisitorResult visit(Collection aParent, String aPath, Visitor aVisitor)
+	public VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
 	{
 		Console.println(Color.GREEN, "--- " + aPath + " ----------------------");
 
@@ -807,11 +832,26 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 		if (i == 0)
 		{
-			return visit(aParent, aPath.substring(1), aVisitor);
+			return visit(aConsumedPath, aPath.substring(1), aVisitor);
 		}
 		if (j == 0)
 		{
-			return evaluatePathExpression(aParent, aPath.substring(1), aVisitor);
+//			throw new IllegalStateException();
+			String number = aPath.substring(1, aPath.indexOf(']'));
+			if (number.matches("[0-9]+"))
+			{
+				String remain = aPath.substring(2 + number.length()).trim();
+				if (this instanceof Array arr)
+				{
+					aConsumedPath += "[" + number + "]";
+					return ((Collection)arr.get(Integer.valueOf(number))).visit(aConsumedPath, remain, aVisitor);
+				}
+				else
+				{
+					throw new IllegalStateException();
+				}
+			}
+			return evaluatePathExpression(aConsumedPath, aPath.substring(1), aVisitor);
 		}
 
 		if (i == -1 && j == -1)
@@ -826,10 +866,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 				{
 					return VisitorResult.ABORT;
 				}
-			}
-			else if (aPath.matches("[0-9]+"))
-			{
-				return aVisitor.visit(((Array)this).get(Integer.valueOf(aPath)));
 			}
 			else if (this instanceof Array v)
 			{
@@ -850,9 +886,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		}
 
 		String path, remain;
-//
-//		Console.println(Color.GREEN, aPath);
-//
+
 		if (j != -1 && (j == -1 || j < i))
 		{
 			path = aPath.substring(0, j);
@@ -873,31 +907,63 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			throw new IllegalStateException(aPath);
 		}
 
+		if (remain.startsWith("["))
+		{
+			if (remain.matches("\\[[0-9]+\\].*"))
+			{
+				int k = remain.indexOf(']');
+				int number = Integer.parseInt(remain.substring(1, k));
+				remain = remain.substring(k + 1).trim();
+
+				Console.println(Color.BLUE, "<< " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
+
+				aConsumedPath += "/" + path + "[" + number + "]";
+
+				Document doc = (Document)this;
+				Array arr = doc.get(path);
+				Collection col = arr.get(number);
+
+				if (col == null)
+				{
+					return VisitorResult.CONTINUE;
+				}
+				if (col.visit(aConsumedPath, remain, aVisitor) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+				return VisitorResult.CONTINUE;
+			}
+//			else
+//			{
+//				aConsumedPath += "/" + path;
+//
+//				Object obj = get((K)path);
+//
+//				return ((Collection)obj).evaluatePathExpression(aConsumedPath, remain.substring(1), aVisitor);
+//			}
+		}
+
+		Console.println(Color.BLUE, "<< " + aConsumedPath + " >> " + path + " ==> " + remain);
+
+		aConsumedPath += "/" + path;
 
 		if (this instanceof Array arr)
 		{
-			if (remain.equals("*"))
+			if (path.equals("*"))
 			{
 				for (Object item : arr)
 				{
-					if (_visit(aParent, item, remain, aVisitor) == VisitorResult.ABORT)
+					if (_visit(aConsumedPath, item, remain, aVisitor) == VisitorResult.ABORT)
 					{
 						return VisitorResult.ABORT;
 					}
-				}
-			}
-			else if (remain.matches("[0-9]+"))
-			{
-				if (_visit(aParent, arr, remain, aVisitor) == VisitorResult.ABORT)
-				{
-					return VisitorResult.ABORT;
 				}
 			}
 			else
 			{
 				for (Object item : arr)
 				{
-					if (_visit(aParent, item, path + "/" + remain, aVisitor) == VisitorResult.ABORT)
+					if (_visit(aConsumedPath, item, path + "/" + remain, aVisitor) == VisitorResult.ABORT)
 					{
 						return VisitorResult.ABORT;
 					}
@@ -906,15 +972,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			return VisitorResult.CONTINUE;
 		}
 
-
 		Object obj = get((K)path);
-
-		Console.println(Color.BLUE, path + " // " + remain + " == " + (obj==null?"null":obj.getClass().getSimpleName()));
-
-//		if (remain.startsWith("["))
-//		{
-//			return evaluatePathExpression(aParent, remain.substring(1), aVisitor);
-//		}
 
 		if (obj instanceof Array arr)
 		{
@@ -922,24 +980,17 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			{
 				for (Object item : arr)
 				{
-					if (_visit(aParent, item, remain, aVisitor) == VisitorResult.ABORT)
+					if (_visit(aConsumedPath, item, remain, aVisitor) == VisitorResult.ABORT)
 					{
 						return VisitorResult.ABORT;
 					}
-				}
-			}
-			else if (remain.matches("[0-9]+"))
-			{
-				if (_visit(aParent, arr, remain, aVisitor) == VisitorResult.ABORT)
-				{
-					return VisitorResult.ABORT;
 				}
 			}
 			else
 			{
 				for (Object item : arr)
 				{
-					if (_visit(aParent, item, remain, aVisitor) == VisitorResult.ABORT)
+					if (_visit(aConsumedPath, item, remain, aVisitor) == VisitorResult.ABORT)
 					{
 						return VisitorResult.ABORT;
 					}
@@ -952,7 +1003,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			{
 				for (Object item : v.values())
 				{
-					if (_visit(aParent, item, remain, aVisitor) == VisitorResult.ABORT)
+					if (_visit(aConsumedPath, item, remain, aVisitor) == VisitorResult.ABORT)
 					{
 						return VisitorResult.ABORT;
 					}
@@ -960,30 +1011,13 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 			else
 			{
-				if (_visit(aParent, v, remain, aVisitor) == VisitorResult.ABORT)
+				if (_visit(aConsumedPath, v, remain, aVisitor) == VisitorResult.ABORT)
 				{
 					return VisitorResult.ABORT;
 				}
 			}
 		}
 
-		return VisitorResult.CONTINUE;
-	}
-
-
-	public VisitorResult evaluatePathExpression(Collection aParent, String aPath, Visitor aResult)
-	{
-		Expression tree = new ExpressionAnd();
-		String remain = new PathExpression().parse(aPath, tree);
-
-//		tree.print(0);
-
-		boolean b = tree.eval(this);
-		Console.println(Color.CYAN, "?????????????????????? " + b);
-		if (b)
-		{
-			return visit(aParent, remain, aResult);
-		}
 		return VisitorResult.CONTINUE;
 	}
 
@@ -1006,13 +1040,13 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	}
 
 
-	private VisitorResult _visit(Collection aParent, Object aItem, String aRemain, Visitor aVisitor)
+	VisitorResult _visit(String aConsumedPath, Object aItem, String aRemain, Visitor aVisitor)
 	{
 		if (aItem != null)
 		{
 			if (aItem instanceof Collection c)
 			{
-				if (c.visit(aParent, aRemain, aVisitor) == VisitorResult.ABORT)
+				if (c.visit(aConsumedPath, aRemain, aVisitor) == VisitorResult.ABORT)
 				{
 					return VisitorResult.ABORT;
 				}
@@ -1072,10 +1106,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public R fromJson(String aJson)
 	{
-		if (!aJson.startsWith("{"))
-		{
-			aJson = "{" + aJson + "}";
-		}
 		return (R)new JSONDecoder(false, false).unmarshal(new StringReader(aJson), this);
 	}
 
@@ -1092,10 +1122,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public static <T extends Collection> T parseJson(String aJson)
 	{
-		if (!aJson.startsWith("{"))
-		{
-			aJson = "{" + aJson + "}";
-		}
 		return new JSONDecoder(false, false).unmarshal(new StringReader(aJson), null);
 	}
 
@@ -1560,5 +1586,82 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			putImpl(aKey, aSupplier.apply(aKey));
 		}
 		return (R)this;
+	}
+
+	/**
+	 * Comparator for ordering keys. "_id" will always be the lowest key followed with keys with an underscore prefix and remaining keys
+	 * according to their lexicographical order. E.g. order of keys: [_id, _alpha, 123, Banana, ape]
+	 */
+	public final static Comparator<String> STANDARD_COMPARATOR = (p, q) ->
+	{
+		boolean P = !p.isEmpty() && p.charAt(0) == '_'; // p.startsWith("_");
+		boolean Q = !q.isEmpty() && q.charAt(0) == '_'; // q.startsWith("_");
+		boolean S = P && "_id".equals(p);
+		boolean T = Q && "_id".equals(q);
+		if (S || T)
+		{
+			return S && !T ? -1 : T && !S ? 1 : 0;
+		}
+		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
+	};
+
+
+	/**
+	 * Sort keys in the Document according to the STANDARD_COMPARATOR.
+	 *
+	 * @see STANDARD_COMPARATOR
+	 * @return this Document
+	 */
+	public R sort()
+	{
+		return sort(STANDARD_COMPARATOR);
+	}
+
+
+	public abstract R sort(Comparator<String> aComparator);
+
+
+	public abstract void forEach(BiConsumer<K, Object> aAction);
+
+
+	public abstract Document flatten(String aSeparator, Function<String, String> aFormatter);
+
+
+	protected void flatten(Document aDest, Object aValue, String aPath, String aSeparator, Function<String, String> aFormatter)
+	{
+		if (aValue instanceof Document v)
+		{
+			if (!aPath.isEmpty())
+			{
+				aPath += aSeparator;
+			}
+			for (Entry<String, Object> en : v.entrySet())
+			{
+				flatten(aDest, en.getValue(), aPath + en.getKey(), aSeparator, aFormatter);
+			}
+		}
+		else if (aValue instanceof Array v)
+		{
+			if (!aPath.isEmpty())
+			{
+				aPath += aSeparator;
+			}
+			for (int i = 0; i < v.size(); i++)
+			{
+				flatten(aDest, v.get(i), aPath + i, aSeparator, aFormatter);
+			}
+		}
+		else
+		{
+			String s = aPath;
+			if (aFormatter != null)
+			{
+				s = aFormatter.apply(s);
+			}
+			if (s != null)
+			{
+				aDest.put(s, aValue);
+			}
+		}
 	}
 }

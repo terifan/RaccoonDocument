@@ -10,16 +10,19 @@ public class PathExpression
 	private String[] OPS =
 	{
 		"!==", // not any
-		"!=",  // not
-		"==",  // all
-		"="    // any
+		"!=", // not
+		"==", // all
+		"=", // any
+		"<=",
+		">=",
+		"<",
+		"<"
 	};
-
 
 	private boolean mEOF;
 
 
-	public String parse(String aPath, Expression aParent)
+	public String parse(String aConsumedPath, String aPath, Expression aParent)
 	{
 		mEOF = false;
 		Expression node = new ExpressionAnd();
@@ -43,7 +46,7 @@ public class PathExpression
 				parent.nodes.add(node);
 				parent.nodes.add(right);
 				node = parent;
-				aPath = parse(aPath.substring(2), right);
+				aPath = parse(aConsumedPath, aPath.substring(2), right);
 			}
 			else if (aPath.startsWith("("))
 			{
@@ -52,7 +55,7 @@ public class PathExpression
 				parent.nodes.add(node);
 				parent.nodes.add(right);
 				node = parent;
-				aPath = parse(aPath.substring(1), right);
+				aPath = parse(aConsumedPath, aPath.substring(1), right);
 			}
 			else if (aPath.startsWith("]"))
 			{
@@ -175,6 +178,16 @@ public class PathExpression
 		if (i > 0)
 		{
 			aStatement.key = aPath.substring(0, i);
+
+//			if (aStatement.key.startsWith("'"))
+//			{
+//				aStatement.key = "constant(" + aStatement.key + ")";
+//			}
+//			else if (!aStatement.key.contains("("))
+//			{
+//				aStatement.key = "lookup(" + aStatement.key + ")";
+//			}
+
 			aPath = aPath.substring(i);
 			aStatement.op = startsWith(aPath, OPS);
 			aPath = aPath.substring(aStatement.op.length());
@@ -288,24 +301,54 @@ public class PathExpression
 		@Override
 		public boolean eval(Collection aCollection)
 		{
-			Console.println(Color.YELLOW, "eval " + aCollection.getClass().getSimpleName()+" "+key+" "+op+" "+value);
+			Console.println(Color.YELLOW, "eval " + aCollection.getClass().getSimpleName() + " " + key + " " + op + " " + value);
 
 			if (aCollection instanceof Array arr)
 			{
+				Console.println(Color.YELLOW, "find in " + arr);
+
 				boolean all = true;
 				boolean any = false;
 				for (Object o : arr)
 				{
-					if (o instanceof Collection doc)
+					if (o instanceof Collection doc) // ????????????????????
 					{
 						o = doc.findFirst(key);
+						throw new IllegalStateException();
 					}
-					boolean b = equalValues(o, value);
-					all &= b;
-					any |= b;
-					if (b & op.equals("=") || !b && op.equals("!="))
+
+					Console.println(Color.YELLOW, "-- " + key + " " + op + " " + value + " // " + o);
+
+//					if (key.startsWith("lookup("))
+//					{
+//						o = lookup(aCollection, key.substring(key.indexOf('(') + 1, key.length() - 1));
+//					}
+//					else
+//					{
+//						throw new IllegalStateException();
+//					}
+
+					if (op.equals("=") || op.equals("==") || op.equals("!=") || op.equals("!=="))
+					{
+						boolean b = equalValues(o, value);
+						all &= b;
+						any |= b;
+						if (b & op.equals("=") || !b && op.equals("!="))
+						{
+							return true;
+						}
+					}
+					else if ((op.equals("<") || op.equals("<=")) && lessValue(o, value) || op.equals("<=") && equalValues(o, value))
 					{
 						return true;
+					}
+					else if ((op.equals(">") || op.equals(">=")) && greaterValue(o, value) || op.equals(">=") && equalValues(o, value))
+					{
+						return true;
+					}
+					else
+					{
+						throw new IllegalStateException();
 					}
 				}
 				if (all && op.equals("==") || !any & op.equals("!=="))
@@ -317,26 +360,46 @@ public class PathExpression
 			{
 				Array findMany = doc.findMany(key);
 
-				Console.println(Color.YELLOW, "findMany=" + findMany);
+				Console.println(Color.YELLOW, "findMany " + key + " " + findMany);
 
-				if (value == null && findMany.isEmpty() == (op.equals("=") || op.equals("==")))
+				if ((op.equals("=") || op.equals("==")) && (value == null && findMany.isEmpty()))
 				{
 					return true;
 				}
+				if ((op.equals("!=") || op.equals("!==")) && (value != null && findMany.isEmpty()))
+				{
+					return true;
+				}
+
 				boolean all = true;
 				boolean any = false;
 				for (Object o : findMany)
 				{
-					boolean b = equalValues(o, value);
-					Console.println(Color.YELLOW, o + "=" + b);
-					all &= b;
-					any |= b;
-					if (b & op.equals("=") || !b && op.equals("!="))
+					boolean b;
+					if (op.equals("=") || op.equals("==") || op.equals("!=") || op.equals("!=="))
+					{
+						b = equalValues(o, value);
+						Console.println(Color.YELLOW, o + "=" + b);
+						all &= b;
+						any |= b;
+						if (b & op.equals("=") || !b && op.equals("!="))
+						{
+							return true;
+						}
+					}
+					else if ((op.equals("<") || op.equals("<=")) && lessValue(o, value) || op.equals("<=") && equalValues(o, value))
 					{
 						return true;
 					}
+					else if ((op.equals(">") || op.equals(">=")) && greaterValue(o, value) || op.equals(">=") && equalValues(o, value))
+					{
+						return true;
+					}
+					else
+					{
+						throw new IllegalStateException();
+					}
 				}
-				Console.println(Color.YELLOW, op + " " + all);
 				if (all && op.equals("==") || !any & op.equals("!=="))
 				{
 					return true;
@@ -355,6 +418,34 @@ public class PathExpression
 			}
 			return key + op + value;
 		}
+	}
+
+
+	private static Object lookup(Collection aCollection, String aPath)
+	{
+		return aCollection.findFirst(aPath);
+	}
+
+
+	private static Number toNumber(Object aValue)
+	{
+		if (aValue instanceof Number n)
+		{
+			return n;
+		}
+		return Double.valueOf(aValue.toString());
+	}
+
+
+	private static boolean lessValue(Object aValue, Object aComparedTo)
+	{
+		return toNumber(aValue).doubleValue() < toNumber(aComparedTo).doubleValue();
+	}
+
+
+	private static boolean greaterValue(Object aValue, Object aComparedTo)
+	{
+		return toNumber(aValue).doubleValue() > toNumber(aComparedTo).doubleValue();
 	}
 
 
