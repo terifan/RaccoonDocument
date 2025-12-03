@@ -1,6 +1,5 @@
 package test_document;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -8,12 +7,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import org.terifan.raccoon.document.Array;
-import org.terifan.raccoon.document.BinaryDecoder.Visitor;
-import org.terifan.raccoon.document.BinaryDecoder.VisitorResult;
-import org.terifan.raccoon.document.BinaryWalker;
 import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Document;
-import org.terifan.raccoon.document.Path;
 
 
 public class Test
@@ -62,57 +57,6 @@ public class Test
 //			System.out.println(ObjectId.fromArmouredString(key, as));
 		}
 		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
-
-
-	public static void c(String... args)
-	{
-		try
-		{
-			Document doc = _Person.createPerson(new Random(1));
-
-			byte[] data = doc.toByteArray();
-
-			BinaryWalker walker = new BinaryWalker(new ByteArrayInputStream(data));
-
-			walker.visit(new Visitor()
-			{
-				@Override
-				public VisitorResult preVisit(Path aPath)
-				{
-//					System.out.println(aPath);
-//					if (aPath.matches("work", "contacts"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-//					if (aPath.matches("locationHistory"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-//					if (aPath.matches("personal"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-					return VisitorResult.CONTINUE;
-				}
-
-
-				@Override
-				public VisitorResult postVisit(Path aPath, Object aValue)
-				{
-					System.out.println(aPath + " " + aValue);
-					if (aPath.matches("version"))
-					{
-						return VisitorResult.TERMINATE;
-					}
-					return VisitorResult.CONTINUE;
-				}
-			});
-		}
-		catch (Exception e)
 		{
 			e.printStackTrace(System.out);
 		}

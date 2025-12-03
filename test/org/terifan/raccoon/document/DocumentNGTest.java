@@ -598,24 +598,24 @@ public class DocumentNGTest
 //		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
 //		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
 //	}
-	@Test
-	public void testInterleaved() throws IOException, ClassNotFoundException
-	{
-		int a = 1234;
-		int b = 789;
-
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BinaryEncoder encoder = new BinaryEncoder(baos, k -> true);
-		encoder.marshal(0);
-		encoder.writeInterleaved(a, b);
-
-		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
-		decoder.unmarshal();
-		long v = decoder.readInterleaved();
-
-		assertEquals((int)v, a);
-		assertEquals((int)(v >>> 32), b);
-	}
+//	@Test
+//	public void testInterleaved() throws IOException, ClassNotFoundException
+//	{
+//		int a = 1234;
+//		int b = 789;
+//
+//		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//		BinaryEncoder encoder = new BinaryEncoder(baos);
+//		encoder.marshal(0);
+//		encoder.writeInterleaved(a, b);
+//
+//		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
+//		decoder.unmarshal();
+//		long v = decoder.readInterleaved();
+//
+//		assertEquals((int)v, a);
+//		assertEquals((int)(v >>> 32), b);
+//	}
 
 
 //	@Test
@@ -737,30 +737,6 @@ public class DocumentNGTest
 //		_Log.hexDump(data);
 
 		Document a = new Document().fromByteArray(data);
-	}
-
-
-	@Test
-	public void testFilter() throws IOException, ClassNotFoundException
-	{
-		Document out = new Document();
-		out.put("a", (short)14);
-		out.put("b", (int)765464647);
-		out.put("c", Array.of(34, 7646464147844586464L));
-		out.put("d", (float)7);
-		out.put("e", (double)7);
-
-		byte[] data = out.toByteArray(k -> k.startsWith("a") || k.startsWith(new Path("c")));
-
-		System.out.println(new String(data));
-
-		Document in = new Document().fromByteArray(data);
-
-		assertEquals(in.size(), 2);
-		assertEquals(in.get("a"), out.getShort("a"));
-//		assertEquals(in.get("c"), out.getLong("c"));
-
-		System.out.println(in);
 	}
 
 

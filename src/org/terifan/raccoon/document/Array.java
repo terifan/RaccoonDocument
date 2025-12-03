@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import static org.terifan.raccoon.document.SupportedTypes.assertSupported;
 
 
 public class Array extends Collection<Integer, Array> implements Iterable<Object>, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
@@ -53,11 +54,7 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 	@SuppressWarnings("unchecked")
 	public <T extends Array> T put(Integer aKey, Object aValue)
 	{
-		if (!SupportedTypes.isSupported(aValue))
-		{
-			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
-		}
-
+		assertSupported(aValue);
 		return (T)putImpl(aKey, aValue);
 	}
 
@@ -65,11 +62,7 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 	@SuppressWarnings("unchecked")
 	public <T extends Array> T put(String aPath, Object aValue)
 	{
-		if (!SupportedTypes.isSupported(aValue))
-		{
-			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
-		}
-
+		assertSupported(aValue);
 		return (T)putImpl(Integer.valueOf(aPath), aValue);
 	}
 

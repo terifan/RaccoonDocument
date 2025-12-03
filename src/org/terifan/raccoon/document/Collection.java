@@ -1338,35 +1338,17 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	/**
 	 * Return a binary representation of this object.
 	 */
-	public byte[] toByteArray()
+	public byte[] toByteArray() throws IOException
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (BinaryEncoder encoder = new BinaryEncoder(baos, k -> true))
-		{
-			encoder.marshal(this);
-		}
-		catch (IOException e)
-		{
-			throw new StreamException(e.toString());
-		}
-		return baos.toByteArray();
-	}
-
-
-	/**
-	 * Return a binary representation of this object.
-	 */
-	public byte[] toByteArray(Function<Path, Boolean> aFilter)
-	{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try (BinaryEncoder encoder = new BinaryEncoder(baos, aFilter))
-		{
-			encoder.marshal(this);
-		}
-		catch (IOException e)
-		{
-			throw new StreamException(e.toString());
-		}
+//		try
+//		{
+			new BinaryEncoder(baos).marshal(this);
+//		}
+//		catch (IOException e)
+//		{
+//			throw new StreamException(e.toString());
+//		}
 		return baos.toByteArray();
 	}
 
@@ -1394,10 +1376,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public void writeTo(OutputStream aOutputStream) throws IOException
 	{
-		try (BinaryEncoder encoder = new BinaryEncoder(aOutputStream, k -> true))
-		{
-			encoder.marshal(this);
-		}
+		new BinaryEncoder(aOutputStream).marshal(this);
 	}
 
 
@@ -1450,10 +1429,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 		};
 
-		try (BinaryEncoder encoder = new BinaryEncoder(tmp, k -> true))
-		{
-			encoder.marshal(this);
-		}
+		new BinaryEncoder(tmp).marshal(this);
 	}
 
 

@@ -17,6 +17,15 @@ public class SupportedTypes
 	}
 
 
+	public static void assertSupported(Object aValue)
+	{
+		if (!isSupported(aValue))
+		{
+			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
+		}
+	}
+
+
 	public static boolean isSimpleType(Object aValue)
 	{
 		if (aValue == null)
@@ -59,9 +68,13 @@ public class SupportedTypes
 	{
 		if (!isExtendedType(aValue))
 		{
-			throw new IllegalArgumentException("Not a supported extended type: " + (aValue==null?null:aValue.getClass()));
+			throw new IllegalArgumentException("Not a supported extended type: " + (aValue == null ? null : aValue.getClass()));
 		}
 
+		if (aValue == null)
+		{
+			return "null";
+		}
 		if (!aTyped)
 		{
 			if (aValue instanceof byte[] v)

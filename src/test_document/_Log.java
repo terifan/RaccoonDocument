@@ -7,7 +7,10 @@ public class _Log
 {
 	public static void hexDump(byte[] aBuffer)
 	{
-		int LW = 48;
+		hexDump(aBuffer, 48);
+	}
+	public static void hexDump(byte[] aBuffer, int LW)
+	{
 		int MR = 1000;
 
 		StringBuilder binText = new StringBuilder("");

@@ -1,5 +1,6 @@
-package org.terifan.raccoon.document;
+package test_serializer;
 
+import org.terifan.raccoon.document.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

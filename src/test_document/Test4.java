@@ -1,13 +1,5 @@
 package test_document;
 
-import java.io.ByteArrayInputStream;
-import java.util.Random;
-import org.terifan.raccoon.document.BinaryDecoder.Visitor;
-import org.terifan.raccoon.document.BinaryDecoder.VisitorResult;
-import org.terifan.raccoon.document.BinaryWalker;
-import org.terifan.raccoon.document.Document;
-import org.terifan.raccoon.document.Path;
-
 
 /*
  *    /...
@@ -26,33 +18,33 @@ public class Test4
 	{
 		try
 		{
-			Document doc = _Person.createPerson(new Random(1));
-
-			byte[] data = doc.toByteArray();
-
-			BinaryWalker walker = new BinaryWalker(new ByteArrayInputStream(data));
-
-			walker.visit(new Visitor()
-			{
-				@Override
-				public VisitorResult preVisit(Path aPath)
-				{
-					return aPath.startsWith("personal", "home") ? VisitorResult.CONTINUE : VisitorResult.SKIP;
+//			Document doc = _Person.createPerson(new Random(1));
+//
+//			byte[] data = doc.toByteArray();
+//
+//			BinaryWalker walker = new BinaryWalker(new ByteArrayInputStream(data));
+//
+//			walker.visit(new Visitor()
+//			{
+//				@Override
+//				public VisitorResult preVisit(Path aPath)
+//				{
+//					return aPath.startsWith("personal", "home") ? VisitorResult.CONTINUE : VisitorResult.SKIP;
+////					return VisitorResult.CONTINUE;
+//				}
+//
+//
+//				@Override
+//				public VisitorResult postVisit(Path aPath, Object aValue)
+//				{
+//					System.out.printf("%30s @ %s%n", (aValue.toString().length() > 30 ? aValue.toString().substring(0, 27) + "..." : aValue), aPath);
+//					if (aPath.matches("personal", "home", "country"))
+//					{
+//						return VisitorResult.TERMINATE;
+//					}
 //					return VisitorResult.CONTINUE;
-				}
-
-
-				@Override
-				public VisitorResult postVisit(Path aPath, Object aValue)
-				{
-					System.out.printf("%30s @ %s%n", (aValue.toString().length() > 30 ? aValue.toString().substring(0, 27) + "..." : aValue), aPath);
-					if (aPath.matches("personal", "home", "country"))
-					{
-						return VisitorResult.TERMINATE;
-					}
-					return VisitorResult.CONTINUE;
-				}
-			});
+//				}
+//			});
 		}
 		catch (Exception e)
 		{

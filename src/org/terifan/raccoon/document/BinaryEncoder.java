@@ -1,28 +1,30 @@
 package org.terifan.raccoon.document;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
-import java.util.function.Function;
+import java.util.zip.Deflater;
+import java.util.zip.DeflaterOutputStream;
+import test_document._Log;
 
 
-class BinaryEncoder implements AutoCloseable
+// <obj1><obj2><obj3><strings><structs><directory>
+class BinaryEncoder
 {
-	final static int VERSION = 1;
+	private LinkedHashMap<String, Integer> strs = new LinkedHashMap();
+	private LinkedHashMap<Object, Integer> mObjectLookup = new LinkedHashMap();
+	private LinkedHashMap<String, Integer> structs = new LinkedHashMap();
+	private ArrayList<Long> mObjectPosition = new ArrayList();
 
-	private MurmurHash3 mChecksum;
-	private OutputStream mOutputStream;
-	private final byte[] mWriteBuffer = new byte[8];
-	private final Function<Path, Boolean> mFilter;
-	private final ReferenceMap mReferences;
+	private final BinaryOutputStream mOutputStream;
 
 
-	public BinaryEncoder(OutputStream aOutputStream, Function<Path, Boolean> aFilter)
+	public BinaryEncoder(OutputStream aOutputStream)
 	{
-		mOutputStream = aOutputStream;
-		mFilter = aFilter;
-		mReferences = new ReferenceMap();
+		mOutputStream = new BinaryOutputStream(aOutputStream);
 	}
 
 
@@ -35,302 +37,224 @@ class BinaryEncoder implements AutoCloseable
 			throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
 		}
 
-		if (mChecksum == null)
-		{
-			mChecksum = new MurmurHash3(VERSION);
-			writeToken(type, VERSION);
-		}
-		else
-		{
-			writeToken(type, getChecksumValue());
-		}
-
-		Path path = new Path();
 		if (aObject instanceof Document v)
 		{
-			mReferences.register(v, "");
-			writeDocument(v, path);
+			writeDocument(v);
 		}
 		else if (aObject instanceof Array v)
 		{
-			mReferences.register(v, "");
-			writeArray(v, path);
+			writeArray(v);
 		}
 		else
 		{
-			writeValue(type, aObject, path);
+			throw new IllegalStateException();
 		}
 
-		System.out.println(mReferences);
+//		System.out.println(strs);
+//		System.out.println(refs);
+//		System.out.println(structs);
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		BinaryOutputStream buffer = new BinaryOutputStream(baos);
+		buffer.writeUnsignedVarint(strs.size());
+		for (String s : strs.keySet())
+		{
+			buffer.writeUnsignedVarint(s.length());
+			buffer.writeUTF(s);
+		}
+		byte[] buf = zip(baos.toByteArray());
+		writeInterleaved(2, buf.length);
+		mOutputStream.writeBytes(buf);
+
+		baos = new ByteArrayOutputStream();
+		buffer = new BinaryOutputStream(baos);
+		buffer.writeUnsignedVarint(structs.size());
+		for (String s : structs.keySet())
+		{
+			buffer.writeUnsignedVarint(s.length());
+			buffer.writeUTF(s);
+		}
+		buf = zip(baos.toByteArray());
+		writeInterleaved(1, buf.length);
+		mOutputStream.writeBytes(buf);
+
+		baos = new ByteArrayOutputStream();
+		buffer = new BinaryOutputStream(baos);
+		buffer.writeUnsignedVarint(mObjectPosition.size());
+		for (long pos : mObjectPosition)
+		{
+			buffer.writeUnsignedVarint(pos);
+		}
+		buf = zip(baos.toByteArray());
+		writeInterleaved(0, buf.length);
+		mOutputStream.writeBytes(buf);
+
+		mOutputStream.close();
 	}
 
 
-	BinaryEncoder writeDocument(Document aDocument, Path aPath) throws IOException
+	void writeDocument(Document aDocument) throws IOException
 	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		BinaryOutputStream buffer = new BinaryOutputStream(baos);
+
+		ArrayList<Object> pendingValues = new ArrayList<>();
+		ArrayList<BinaryCodec> pendingTypes = new ArrayList<>();
+
+		StringBuilder format = new StringBuilder();
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
 			String key = entry.getKey();
+			Object value = entry.getValue();
+			BinaryCodec type = BinaryCodec.identify(value);
 
-			aPath.enter(key);
+			pendingTypes.add(type);
+			pendingValues.add(value);
 
-			if (mFilter.apply(aPath))
-			{
-				Object value = entry.getValue();
-				BinaryCodec type = BinaryCodec.identify(value);
-
-				if (value instanceof Collection v && mReferences.register(v, aPath.toString()))
-				{
-					value = mReferences.indexOf(v);
-					type = BinaryCodec.REFERENCE;
-				}
-
-				writeToken(type, key.length());
-				writeUTF(key);
-				writeValue(type, value, aPath);
-			}
-
-			aPath.exit();
+			format.append("[" + type + "," + key + "]");
 		}
 
-		terminate();
-		return this;
+		String formatString = format.toString();
+		if (structs.containsKey(formatString))
+		{
+			buffer.writeUnsignedVarint(structs.get(formatString));
+		}
+		else
+		{
+			buffer.writeUnsignedVarint(structs.size());
+			structs.put(formatString, structs.size());
+		}
+
+		for (int i = 0; i < pendingValues.size(); i++)
+		{
+			BinaryCodec type = pendingTypes.get(i);
+			Object value = pendingValues.get(i);
+
+			writeValue(buffer, type, value);
+		}
+
+		byte[] buf = zip(baos.toByteArray());
+		if (baos.size()<= buf.length)buf=baos.toByteArray();
+
+		writeInterleaved(3 + mObjectPosition.size(), buf.length);
+		mOutputStream.writeBytes(buf);
+
+		mObjectPosition.add(mOutputStream.position());
+		mObjectLookup.put(aDocument, mObjectLookup.size());
 	}
 
 
-	BinaryEncoder writeArray(Array aArray, Path aPath) throws IOException
+	void writeArray(Array aArray) throws IOException
 	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		BinaryOutputStream buffer = new BinaryOutputStream(baos);
+
 		for (int offset = 0, elementCount = aArray.size(); offset < elementCount;)
 		{
+			ArrayList<Object> pending = new ArrayList<>();
 			BinaryCodec type = null;
 			int runLen = 0;
 
-			ArrayList<Object> pending = new ArrayList<>();
-			runLen=1;
-			int j = offset;
-
-//			for (int i = offset; i < elementCount; i++, runLen++)
+			for (int i = offset; i < elementCount; i++, runLen++)
 			{
-				Object value = aArray.get(j);
+				Object value = aArray.get(i);
 				BinaryCodec nextType = BinaryCodec.identify(value);
 
-				if ((type == null || type == BinaryCodec.REFERENCE) && value instanceof Collection v && mReferences.register(v, aPath.toString()))
+				if (type != nextType && type != null)
 				{
-					value = mReferences.indexOf(v);
-					nextType = BinaryCodec.REFERENCE;
+					break;
 				}
-
-//				if (type != nextType && type != null)
-//				{
-//					break;
-//				}
 
 				pending.add(value);
 				type = nextType;
 			}
 
-			writeToken(type, runLen);
+			writeToken(buffer, type, runLen);
 
 			for (int i = 0; --runLen >= 0; i++, offset++)
 			{
-				writeValue(type, pending.get(i), aPath);
+				Object value = pending.get(i);
+
+				writeValue(buffer, type, value);
 			}
 		}
 
-		terminate();
-		return this;
+		byte[] buf = zip(baos.toByteArray());
+		if (baos.size()<= buf.length)buf=baos.toByteArray();
+
+		writeInterleaved(3 + mObjectPosition.size(), buf.length);
+		mOutputStream.writeBytes(buf);
+
+		mObjectPosition.add(mOutputStream.position());
+		mObjectLookup.put(aArray, mObjectLookup.size());
 	}
 
 
-	public void terminate() throws IOException
+	private void writeValue(BinaryOutputStream aOutputStream, BinaryCodec aType, Object aValue) throws IOException
 	{
-		writeToken(BinaryCodec.TERMINATOR, getChecksumValue());
-	}
-
-
-	private void writeValue(BinaryCodec aType, Object aValue, Path aPath) throws IOException
-	{
-		aType.encoder.encode(this, aPath, aValue);
-	}
-
-
-	void writeToken(BinaryCodec aType, int aValue) throws IOException
-	{
-		writeInterleaved(aType.ordinal(), aValue);
-	}
-
-
-	BinaryEncoder writeByte(int aValue) throws IOException
-	{
-		mOutputStream.write(aValue);
-		if (mChecksum != null)
+		if (aType == BinaryCodec.STRING)
 		{
-			mChecksum.updateByte(aValue);
-		}
-		return this;
-	}
-
-
-	BinaryEncoder writeShort(short aValue) throws IOException
-	{
-		mWriteBuffer[0] = (byte)(aValue >>> 8);
-		mWriteBuffer[1] = (byte)(aValue);
-		writeBytes(mWriteBuffer, 0, 2);
-		return this;
-	}
-
-
-	BinaryEncoder writeInt(int aValue) throws IOException
-	{
-		mWriteBuffer[0] = (byte)(aValue >>> 24);
-		mWriteBuffer[1] = (byte)(aValue >>> 16);
-		mWriteBuffer[2] = (byte)(aValue >>> 8);
-		mWriteBuffer[3] = (byte)(aValue);
-		writeBytes(mWriteBuffer, 0, 4);
-		return this;
-	}
-
-
-	BinaryEncoder writeLong(long aValue) throws IOException
-	{
-		mWriteBuffer[0] = (byte)(aValue >>> 56);
-		mWriteBuffer[1] = (byte)(aValue >>> 48);
-		mWriteBuffer[2] = (byte)(aValue >>> 40);
-		mWriteBuffer[3] = (byte)(aValue >>> 32);
-		mWriteBuffer[4] = (byte)(aValue >>> 24);
-		mWriteBuffer[5] = (byte)(aValue >>> 16);
-		mWriteBuffer[6] = (byte)(aValue >>> 8);
-		mWriteBuffer[7] = (byte)(aValue);
-		writeBytes(mWriteBuffer, 0, 8);
-		return this;
-	}
-
-
-	void writeBytes(byte[] aBuffer) throws IOException
-	{
-		writeBytes(aBuffer, 0, aBuffer.length);
-	}
-
-
-	void writeBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
-	{
-		mOutputStream.write(aBuffer, aOffset, aLength);
-		mChecksum.updateBytes(aBuffer, aOffset, aLength);
-	}
-
-
-	BinaryEncoder writeVarint(long aValue) throws IOException
-	{
-		aValue = (aValue << 1) ^ (aValue >> 63);
-
-		for (;;)
-		{
-			int b = (int)(aValue & 127);
-			aValue >>>= 7;
-
-			if (aValue == 0)
+			Integer ref = strs.get(aValue.toString());
+			if (ref != null)
 			{
-				writeByte(b);
-				return this;
-			}
-
-			writeByte(128 + b);
-		}
-	}
-
-
-	BinaryEncoder writeUnsignedVarint(long aValue) throws IOException
-	{
-		for (;;)
-		{
-			int b = (int)(aValue & 127);
-			aValue >>>= 7;
-
-			if (aValue == 0)
-			{
-				writeByte(b);
-				return this;
-			}
-
-			writeByte(128 + b);
-		}
-	}
-
-
-	BinaryEncoder writeUTF(String aInput) throws IOException
-	{
-		for (int i = 0, len = aInput.length(); i < len; i++)
-		{
-			char c = aInput.charAt(i);
-			if (c <= 0x007F)
-			{
-				writeByte(c & 0x7F);
-			}
-			else if (c <= 0x07FF)
-			{
-				writeByte(0xC0 | ((c >> 6) & 0x1F));
-				writeByte(0x80 | ((c) & 0x3F));
+				BinaryCodec.STRING.encoder.encode(aOutputStream, ref);
 			}
 			else
 			{
-				writeByte(0xE0 | ((c >> 12) & 0x0F));
-				writeByte(0x80 | ((c >> 6) & 0x3F));
-				writeByte(0x80 | ((c) & 0x3F));
+				BinaryCodec.STRING.encoder.encode(aOutputStream, strs.size());
+
+				strs.put(aValue.toString(), strs.size());
 			}
 		}
-		return this;
+		else if (aType == BinaryCodec.DOCUMENT || aType == BinaryCodec.ARRAY)
+		{
+			Integer ref = mObjectLookup.get(aValue);
+			if (ref != null)
+			{
+				BinaryCodec.REFERENCE.encoder.encode(aOutputStream, ref);
+			}
+			else
+			{
+				if (aType == BinaryCodec.DOCUMENT)
+				{
+					writeDocument((Document)aValue);
+				}
+				else
+				{
+					writeArray((Array)aValue);
+				}
+
+				BinaryCodec.REFERENCE.encoder.encode(aOutputStream, mObjectLookup.size());
+			}
+		}
+		else
+		{
+			aType.encoder.encode(aOutputStream, aValue);
+		}
 	}
 
 
-	void writeInterleaved(int aX, int aY) throws IOException
+	void writeToken(BinaryOutputStream aOutputStream, BinaryCodec aType, int aValue) throws IOException
 	{
-		writeUnsignedVarint((shift(aX) << 1) | shift(aY));
+		aOutputStream.writeInterleaved(aType.ordinal(), aValue);
 	}
 
 
-	/**
-	 * note: this implementation will not close the underlying stream.
-	 */
-	@Override
-	public void close() throws IOException
+	private byte[] zip(byte[] aData) throws IOException
 	{
-		mOutputStream = null;
-		mChecksum = null;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//		Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION, true);
+//		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos, deflater))
+		try (DeflaterOutputStream dos = new DeflaterOutputStream(baos))
+		{
+			dos.write(aData);
+		}
+		return baos.toByteArray();
 	}
 
 
-	private static long shift(long aWord)
+	private void writeInterleaved(int aOffset, int aIndex) throws IOException
 	{
-		aWord &= 0xffffffffL;
-
-		aWord = (aWord | (aWord << 16)) & 0x0000ffff0000ffffL;
-		aWord = (aWord | (aWord << 8)) & 0x00ff00ff00ff00ffL;
-		aWord = (aWord | (aWord << 4)) & 0x0f0f0f0f0f0f0f0fL;
-		aWord = (aWord | (aWord << 2)) & 0x3333333333333333L;
-		aWord = (aWord | (aWord << 1)) & 0x5555555555555555L;
-
-		return aWord;
+		mOutputStream.writeInterleaved(aIndex, aOffset);
 	}
-
-
-	private int getChecksumValue()
-	{
-		return mChecksum.getValue4bits();
-	}
-
-
-//	private Integer parseInt(String aKey)
-//	{
-//		int v = 0;
-//		for (int i = 0; i < aKey.length(); i++)
-//		{
-//			char c = aKey.charAt(i);
-//			if (c < '0' || c > '9' || i == 0 && c == '0')
-//			{
-//				return null;
-//			}
-//			v *= 10;
-//			v += c - '0';
-//		}
-//		return v;
-//	}
 }

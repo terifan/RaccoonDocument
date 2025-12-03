@@ -6,22 +6,22 @@ import java.io.InputStream;
 
 public class StreamComparator
 {
-	public int compare(InputStream aInputStreamA, InputStream aInputStreamB) throws IOException
-	{
-		Object inA = new BinaryDecoder(aInputStreamA, null).unmarshal();
-		Object inB = new BinaryDecoder(aInputStreamB, null).unmarshal();
-
-		if (inA instanceof Document v1 && inB instanceof Document v2)
-		{
-			return v1.compareTo(v2);
-		}
-		if (inA instanceof Array v1 && inB instanceof Array v2)
-		{
-			return v1.compareTo(v2);
-		}
-
-		return ((Array)inA).compareTo((Array)inB);
-	}
+//	public int compare(InputStream aInputStreamA, InputStream aInputStreamB) throws IOException
+//	{
+//		Object inA = new BinaryDecoder(aInputStreamA, null).unmarshal();
+//		Object inB = new BinaryDecoder(aInputStreamB, null).unmarshal();
+//
+//		if (inA instanceof Document v1 && inB instanceof Document v2)
+//		{
+//			return v1.compareTo(v2);
+//		}
+//		if (inA instanceof Array v1 && inB instanceof Array v2)
+//		{
+//			return v1.compareTo(v2);
+//		}
+//
+//		return ((Array)inA).compareTo((Array)inB);
+//	}
 
 
 //	public int compareId(InputStream aInputStreamA, InputStream aInputStreamB) throws IOException

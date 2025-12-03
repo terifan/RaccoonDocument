@@ -12,6 +12,7 @@ import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import static org.terifan.raccoon.document.SupportedTypes.assertSupported;
 
 
 public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
@@ -96,11 +97,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 	@SuppressWarnings("unchecked")
 	public <T extends Document> T put(String aKey, Object aValue)
 	{
-		if (!SupportedTypes.isSupported(aValue))
-		{
-			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
-		}
-
+		assertSupported(aValue);
 		return (T)putImpl(aKey, aValue);
 	}
 
@@ -131,7 +128,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 	{
 		if (aSource != null)
 		{
-			aSource.entrySet().forEach(entry -> mValues.put(entry.getKey(), entry.getValue()));
+			aSource.entrySet().forEach(entry -> put(entry.getKey(), entry.getValue()));
 		}
 		return (T)this;
 	}
@@ -343,7 +340,8 @@ public class Document extends Collection<String, Document> implements Externaliz
 		try
 		{
 			Document doc = (Document)super.clone();
-//			doc.mValues = new TreeMap<>();
+
+			// ???
 			doc.mValues = new LinkedHashMap<>();
 			return doc.fromByteArray(toByteArray());
 		}
@@ -542,8 +540,6 @@ public class Document extends Collection<String, Document> implements Externaliz
 //	{
 //		put(aKey, aMerger.apply(get(aKey), aValue));
 //	}
-
-
 	public Document flatten(String aSeparator)
 	{
 		return flatten(aSeparator, e -> e);

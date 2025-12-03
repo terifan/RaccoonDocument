@@ -17,7 +17,7 @@ public class CompareSerialization
 	{
 		try
 		{
-			System.out.printf("%12s %12s %12s %12s %12s %12s %12s%n", "", "json", "bin", "json+zip", "bin+zip", "binTIME", "jsonTIME");
+			System.out.printf("%12s %12s %12s %12s %12s %19s %19s%n", "", "json", "bin", "json+zip", "bin+zip", "bin enc/dec", "json enc/dec");
 
 			Random rnd = new Random(0);
 
@@ -63,22 +63,42 @@ public class CompareSerialization
 		byte[] binzip = Support.zip(bin);
 		byte[] zipjson = Support.zip(json.getBytes(StandardCharsets.UTF_8));
 
-		for (int i = 0; i < 10; i++)
+		try
 		{
-			Document.parseByteArray(bin);
-			Document.parseJson(json);
+			for (int i = 0; i < 10; i++)
+			{
+				Document.parseByteArray(bin);
+				Document.parseJson(json);
+			}
 		}
-		long t0 = System.currentTimeMillis();
+		catch (Exception e)
+		{
+//			e.printStackTrace(System.out);
+		}
+
+		long et0 = System.currentTimeMillis();
 		for (int i = 0; i < 100; i++)
 		{
-			Document.parseByteArray(bin);
+			aCollection.toByteArray();
 		}
-		long t1 = System.currentTimeMillis();
+		long et1 = System.currentTimeMillis();
+		for (int i = 0; i < 100; i++)
+		{
+			aCollection.toJson();
+		}
+		long et2 = System.currentTimeMillis();
+
+		long dt0 = System.currentTimeMillis();
+		for (int i = 0; i < 100; i++)
+		{
+//			Document.parseByteArray(bin);
+		}
+		long dt1 = System.currentTimeMillis();
 		for (int i = 0; i < 100; i++)
 		{
 			Document.parseJson(json);
 		}
-		long t2 = System.currentTimeMillis();
+		long dt2 = System.currentTimeMillis();
 
 		System.out.printf("%10s : ", aName);
 		System.out.printf("%12d ", json.length());
@@ -86,8 +106,11 @@ public class CompareSerialization
 		System.out.printf("%12d ", zipjson.length);
 		System.out.printf("%12d ", binzip.length);
 
-		System.out.printf("%12.3f ", (t1 - t0) / 100.0);
-		System.out.printf("%12.3f ", (t2 - t1) / 100.0);
+		System.out.printf("%12.3f ", (et1 - et0) / 100.0);
+		System.out.printf("%6.3f ", (dt1 - dt0) / 100.0);
+
+		System.out.printf("%12.3f ", (et2 - et1) / 100.0);
+		System.out.printf("%6.3f ", (dt2 - dt1) / 100.0);
 
 		System.out.println();
 	}

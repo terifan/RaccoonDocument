@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -34,7 +35,7 @@ public class Support
 		try
 		{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try (DeflaterOutputStream dos = new DeflaterOutputStream(baos))
+			try (DeflaterOutputStream dos = new DeflaterOutputStream(baos, new Deflater(Deflater.DEFAULT_COMPRESSION, true)))
 			{
 				dos.write(aData);
 			}
