@@ -25,14 +25,14 @@ public class BinaryOutputStream
 	}
 
 
-	void writeByte(int aValue) throws IOException
+	public void writeByte(int aValue) throws IOException
 	{
 		mOutputStream.write(aValue);
 		mPosition++;
 	}
 
 
-	void writeInt(int aValue) throws IOException
+	public void writeInt(int aValue) throws IOException
 	{
 		mWriteBuffer[0] = (byte)(aValue >>> 24);
 		mWriteBuffer[1] = (byte)(aValue >>> 16);
@@ -42,7 +42,7 @@ public class BinaryOutputStream
 	}
 
 
-	void writeLong(long aValue) throws IOException
+	public void writeLong(long aValue) throws IOException
 	{
 		mWriteBuffer[0] = (byte)(aValue >>> 56);
 		mWriteBuffer[1] = (byte)(aValue >>> 48);
@@ -56,26 +56,26 @@ public class BinaryOutputStream
 	}
 
 
-	void writeBytes(byte[] aBuffer) throws IOException
+	public void writeBytes(byte[] aBuffer) throws IOException
 	{
 		writeBytes(aBuffer, 0, aBuffer.length);
 	}
 
 
-	void writeBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
+	public void writeBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
 	{
 		mOutputStream.write(aBuffer, aOffset, aLength);
 		mPosition += aBuffer.length;
 	}
 
 
-	void writeVarint(long aValue) throws IOException
+	public void writeVarint(long aValue) throws IOException
 	{
 		writeUnsignedVarint((aValue << 1) ^ (aValue >> 63));
 	}
 
 
-	void writeUnsignedVarint(long aValue) throws IOException
+	public void writeUnsignedVarint(long aValue) throws IOException
 	{
 		for (;;)
 		{
@@ -93,7 +93,28 @@ public class BinaryOutputStream
 	}
 
 
-	void writeUTF(String aInput) throws IOException
+	public void writeCompactString(String aInput) throws IOException
+	{
+		for (int i = 0, len = aInput.length(); i < len; i++)
+		{
+			int c = aInput.charAt(i);
+			if (i == len - 1)
+			{
+				c |= 128;
+			}
+			writeByte(c);
+		}
+	}
+
+
+	public void writeString(String aInput) throws IOException
+	{
+		writeUnsignedVarint(aInput.length());
+		writeUTF(aInput);
+	}
+
+
+	public void writeUTF(String aInput) throws IOException
 	{
 		for (int i = 0, len = aInput.length(); i < len; i++)
 		{
@@ -117,7 +138,7 @@ public class BinaryOutputStream
 	}
 
 
-	void writeInterleaved(int aX, int aY) throws IOException
+	public void writeInterleaved(int aX, int aY) throws IOException
 	{
 		writeUnsignedVarint((shift(aX) << 1) | shift(aY));
 	}
@@ -154,8 +175,8 @@ public class BinaryOutputStream
 	 *  .   46
 	 *  0-9 48-57
 	 *  e   58
-	*/
-	void writeDecimal(BigDecimal aValue) throws IOException
+	 */
+	public void writeDecimal(BigDecimal aValue) throws IOException
 	{
 		char[] s = aValue.toString().toCharArray();
 		writeUnsignedVarint(s.length);

@@ -62,7 +62,10 @@ public class BinaryInputStream
 	public byte[] readBytes(byte[] aBuffer) throws IOException
 	{
 		int len = mInputStream.read(aBuffer);
-		if (len!=aBuffer.length)throw new IllegalStateException();
+		if (len != aBuffer.length)
+		{
+			throw new IllegalStateException();
+		}
 		return aBuffer;
 	}
 
@@ -115,6 +118,30 @@ public class BinaryInputStream
 		}
 
 		throw new StreamException("Variable int64 exceeds maximum length");
+	}
+
+
+	public String readCompactString() throws IOException
+	{
+		StringBuilder sb = new StringBuilder();
+
+		for (;;)
+		{
+			int c = readByte();
+			sb.append((char)(0x7f & c));
+			if (c >= 128)
+			{
+				break;
+			}
+		}
+
+		return sb.toString();
+	}
+
+
+	public String readString() throws IOException
+	{
+		return readUTF((int)readUnsignedVarint());
 	}
 
 
@@ -204,12 +231,18 @@ public class BinaryInputStream
 		{
 			int v = readByte();
 			int a = '+' + (v >>> 4);
-			if (a == ':') a = 'E';
+			if (a == ':')
+			{
+				a = 'E';
+			}
 			s[i++] = (char)a;
 			if (i < s.length)
 			{
 				int b = '+' + (15 & v);
-				if (b == ':') b = 'E';
+				if (b == ':')
+				{
+					b = 'E';
+				}
 				s[i++] = (char)b;
 			}
 		}

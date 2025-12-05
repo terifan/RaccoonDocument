@@ -23,16 +23,16 @@ public class BinaryDecoder extends BinaryInputStream
 		{
 			case DOCUMENT:
 				Document d = new Document();
-				readDocument(d, VisitorResult.CONTINUE);
+				readDocument(d);
 				return d;
 			case ARRAY:
 				Array a = new Array();
-				readArray(a, VisitorResult.CONTINUE);
+				readArray(a);
 				return a;
 			case TERMINATOR:
 				return token.type;
 			default:
-				return readValue(token.type, VisitorResult.CONTINUE);
+				return readValue(token.type);
 		}
 	}
 
@@ -52,7 +52,7 @@ public class BinaryDecoder extends BinaryInputStream
 				throw new StreamException("Stream corrupted.");
 			}
 
-			readDocument(v, VisitorResult.CONTINUE);
+			readDocument(v);
 		}
 		else if (aContainer instanceof Array v)
 		{
@@ -65,7 +65,7 @@ public class BinaryDecoder extends BinaryInputStream
 				throw new StreamException("Stream corrupted.");
 			}
 
-			readArray(v, VisitorResult.CONTINUE);
+			readArray(v);
 		}
 		else
 		{
@@ -86,7 +86,7 @@ public class BinaryDecoder extends BinaryInputStream
 	}
 
 
-	Document readDocument(Document aDocument, VisitorResult aState) throws IOException
+	Document readDocument(Document aDocument) throws IOException
 	{
 		for (;;)
 		{
@@ -97,7 +97,7 @@ public class BinaryDecoder extends BinaryInputStream
 			}
 
 			String key = readUTF(token.value);
-			Object value = readValue(token.type, aState);
+			Object value = readValue(token.type);
 			aDocument.putImpl(key, value);
 		}
 
@@ -105,7 +105,7 @@ public class BinaryDecoder extends BinaryInputStream
 	}
 
 
-	Array readArray(Array aArray, VisitorResult aState) throws IOException
+	Array readArray(Array aArray) throws IOException
 	{
 		for (;;)
 		{
@@ -118,7 +118,7 @@ public class BinaryDecoder extends BinaryInputStream
 
 			for (int i = 0; i < token.value; i++)
 			{
-				aArray.add(readValue(token.type, aState));
+				aArray.add(readValue(token.type));
 			}
 		}
 
@@ -126,20 +126,20 @@ public class BinaryDecoder extends BinaryInputStream
 	}
 
 
-	private Object readValue(BinaryCodec aType, VisitorResult aState) throws IOException
+	private Object readValue(BinaryCodec aType) throws IOException
 	{
 		switch (aType)
 		{
 			case DOCUMENT:
 				Document d = new Document();
-				readDocument(d, aState);
+				readDocument(d);
 				return d;
 			case ARRAY:
 				Array a = new Array();
-				readArray(a, aState);
+				readArray(a);
 				return a;
 			default:
-				return aType.decoder.decode(this, aState);
+				return aType.decoder.decode(this);
 		}
 	}
 
@@ -158,26 +158,26 @@ public class BinaryDecoder extends BinaryInputStream
 	}
 
 
-	public static enum VisitorResult
-	{
-		TERMINATE,
-		SKIP,
-		SKIP_SIBLINGS,
-		SKIP_SUBTREE,
-		CONTINUE;
-
-
-		boolean isSkip()
-		{
-			switch (this)
-			{
-				case VisitorResult.SKIP_SUBTREE:
-				case VisitorResult.SKIP_SIBLINGS:
-				case VisitorResult.SKIP:
-					return true;
-				default:
-					return false;
-			}
-		}
-	}
+//	public static enum VisitorResult
+//	{
+//		TERMINATE,
+//		SKIP,
+//		SKIP_SIBLINGS,
+//		SKIP_SUBTREE,
+//		CONTINUE;
+//
+//
+//		boolean isSkip()
+//		{
+//			switch (this)
+//			{
+//				case VisitorResult.SKIP_SUBTREE:
+//				case VisitorResult.SKIP_SIBLINGS:
+//				case VisitorResult.SKIP:
+//					return true;
+//				default:
+//					return false;
+//			}
+//		}
+//	}
 }

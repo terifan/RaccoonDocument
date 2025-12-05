@@ -1338,17 +1338,17 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	/**
 	 * Return a binary representation of this object.
 	 */
-	public byte[] toByteArray() throws IOException
+	public byte[] toByteArray()
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//		try
-//		{
+		try
+		{
 			new BinaryEncoder(baos).marshal(this);
-//		}
-//		catch (IOException e)
-//		{
-//			throw new StreamException(e.toString());
-//		}
+		}
+		catch (IOException e)
+		{
+			throw new StreamException(e.toString());
+		}
 		return baos.toByteArray();
 	}
 
