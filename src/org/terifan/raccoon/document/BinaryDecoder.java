@@ -153,6 +153,10 @@ public class BinaryDecoder extends BinaryInputStream
 			case ARRAY:
 				value = readArray(new Array(), null);
 				break;
+			case COMPACT_STRING:
+				value = aType.decoder.decode(this);
+				mStringLookup.add((String)value);
+				break;
 			case STRING:
 				int v = (int)readVarint();
 				if (v < 0)

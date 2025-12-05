@@ -80,6 +80,11 @@ class BinaryEncoder extends BinaryOutputStream
 			Object value = entry.getValue();
 			BinaryCodec type = BinaryCodec.identify(value);
 
+			if (type==BinaryCodec.COMPACT_STRING && mStringLookup.containsKey(value))
+			{
+				type = BinaryCodec.STRING;
+			}
+
 			pendingTypes.add(type);
 			pendingValues.add(value);
 
@@ -135,6 +140,11 @@ class BinaryEncoder extends BinaryOutputStream
 				Object value = aArray.get(i);
 				BinaryCodec type = BinaryCodec.identify(value);
 
+				if (type==BinaryCodec.COMPACT_STRING && mStringLookup.containsKey(value))
+				{
+					type = BinaryCodec.STRING;
+				}
+
 				if (nextType != type && nextType != null)
 				{
 					break;
@@ -182,8 +192,11 @@ class BinaryEncoder extends BinaryOutputStream
 					writeUnsignedVarint((Integer)aValue);
 				}
 				break;
-			case STRING:
 			case COMPACT_STRING:
+				aType.encoder.encode(this, aValue);
+				mStringLookup.put((String)aValue, mStringLookup.size());
+				break;
+			case STRING:
 				String s = (String)aValue;
 				Integer ref = mStringLookup.get(s);
 				if (ref != null)
