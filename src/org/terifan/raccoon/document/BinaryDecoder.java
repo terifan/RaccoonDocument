@@ -2,6 +2,7 @@ package org.terifan.raccoon.document;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
 import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryCodec.TERMINATOR;
@@ -9,6 +10,10 @@ import static org.terifan.raccoon.document.BinaryCodec.TERMINATOR;
 
 public class BinaryDecoder extends BinaryInputStream
 {
+	private ArrayList<Object> mObjectLookup;
+	private ArrayList<ArrayList<Entry>> mStructLookup;
+
+
 	BinaryDecoder(InputStream aInputStream)
 	{
 		super(aInputStream);
@@ -17,55 +22,54 @@ public class BinaryDecoder extends BinaryInputStream
 
 	Object unmarshal() throws IOException
 	{
-		Token token = readToken();
+		mObjectLookup = new ArrayList<>();
+		mStructLookup = new ArrayList<>();
 
-		switch (token.type)
+		Entry entry = readEntry();
+
+		switch (entry.type)
 		{
 			case DOCUMENT:
-				Document d = new Document();
-				readDocument(d);
-				return d;
+				return readDocument(new Document(), entry);
 			case ARRAY:
-				Array a = new Array();
-				readArray(a);
-				return a;
+				return readArray(new Array(), entry);
 			case TERMINATOR:
-				return token.type;
+				return entry.type;
 			default:
-				return readValue(token.type);
+				return readValue(entry.type);
 		}
 	}
 
 
 	void unmarshal(Collection aContainer) throws IOException
 	{
-		Token token = readToken();
+		Entry entry = readEntry();
 
 		if (aContainer instanceof Document v)
 		{
-			if (token.type == BinaryCodec.ARRAY)
+			if (entry.type == BinaryCodec.ARRAY)
 			{
 				throw new StreamException("Attempt to unmarshal a Document when binary stream contains an Array.");
 			}
-			if (token.type != BinaryCodec.DOCUMENT)
+			if (entry.type != BinaryCodec.DOCUMENT)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
 
-			readDocument(v);
+			readDocument(v, entry);
 		}
 		else if (aContainer instanceof Array v)
 		{
-			if (token.type == BinaryCodec.DOCUMENT)
+			if (entry.type == BinaryCodec.DOCUMENT)
 			{
 				throw new StreamException("Attempt to unmarshal an Array when binary stream contains a Document.");
 			}
-			if (token.type != BinaryCodec.ARRAY)
+			if (entry.type != BinaryCodec.ARRAY)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
 
-			readArray(v);
+			readArray(v, entry);
 		}
 		else
 		{
@@ -74,53 +78,63 @@ public class BinaryDecoder extends BinaryInputStream
 	}
 
 
-	Token readToken() throws IOException
+	Document readDocument(Document aDocument, Entry aEntry) throws IOException
 	{
-		long params = readInterleaved();
+		Entry header = aEntry != null ? aEntry : readEntry();
 
-		Token token = new Token();
-		token.value = (int)(params >>> 32);
-		token.type = BinaryCodec.values()[(int)params];
-
-		return token;
-	}
-
-
-	Document readDocument(Document aDocument) throws IOException
-	{
-		for (;;)
+		if (header.type == BinaryCodec.REFERENCE)
 		{
-			Token token = readToken();
-			if (token.type == BinaryCodec.TERMINATOR)
-			{
-				break;
-			}
-
-			String key = readUTF(token.value);
-			Object value = readValue(token.type);
-			aDocument.putImpl(key, value);
+			return (Document)mObjectLookup.get(header.value);
 		}
+
+		ArrayList<Entry> entries;
+		if (header.type == BinaryCodec.BINARY)
+		{
+			entries = mStructLookup.get(header.value);
+		}
+		else
+		{
+			entries = new ArrayList<>();
+			for (int i = 0; i < header.value; i++)
+			{
+				Entry entry = readEntry();
+				entry.name = readUTF(entry.value);
+				entries.add(entry);
+			}
+			mStructLookup.add(entries);
+		}
+
+		for (Entry entry : entries)
+		{
+			aDocument.put(entry.name, readValue(entry.type));
+		}
+
+		mObjectLookup.add(aDocument);
 
 		return aDocument;
 	}
 
 
-	Array readArray(Array aArray) throws IOException
+	Array readArray(Array aArray, Entry aEntry) throws IOException
 	{
-		for (;;)
+		Entry header = aEntry != null ? aEntry : readEntry();
+
+		if (header.type == BinaryCodec.REFERENCE)
 		{
-			Token token = readToken();
+			return (Array)mObjectLookup.get(header.value);
+		}
 
-			if (token.type == BinaryCodec.TERMINATOR)
-			{
-				break;
-			}
+		for (int i = 0; i < header.value;)
+		{
+			Entry entry = readEntry();
 
-			for (int i = 0; i < token.value; i++)
+			for (int j = 0; j < entry.value; j++, i++)
 			{
-				aArray.add(readValue(token.type));
+				aArray.add(readValue(entry.type));
 			}
 		}
+
+		mObjectLookup.add(aArray);
 
 		return aArray;
 	}
@@ -128,35 +142,53 @@ public class BinaryDecoder extends BinaryInputStream
 
 	private Object readValue(BinaryCodec aType) throws IOException
 	{
+		Object value;
 		switch (aType)
 		{
 			case DOCUMENT:
-				Document d = new Document();
-				readDocument(d);
-				return d;
+				value = readDocument(new Document(), null);
+				break;
 			case ARRAY:
-				Array a = new Array();
-				readArray(a);
-				return a;
+				value = readArray(new Array(), null);
+				break;
+			case REFERENCE:
+				throw new IllegalStateException();
+//				value = mObjectLookup.get((int)readUnsignedVarint());
+//				break;
 			default:
-				return aType.decoder.decode(this);
+				value = aType.decoder.decode(this);
+				break;
 		}
+
+		return value;
 	}
 
 
-	static class Token
+	Entry readEntry() throws IOException
 	{
-		int value;
+		long params = readInterleaved();
+
+		Entry token = new Entry();
+		token.value = (int)(params >>> 32);
+		token.type = BinaryCodec.values()[(int)params];
+
+		return token;
+	}
+
+
+	static class Entry
+	{
 		BinaryCodec type;
+		int value;
+		String name;
 
 
 		@Override
 		public String toString()
 		{
-			return type.name();
+			return "{type=" + type + ", value=" + value + ", name=" + name + "}";
 		}
 	}
-
 
 //	public static enum VisitorResult
 //	{

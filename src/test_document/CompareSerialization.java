@@ -17,7 +17,7 @@ public class CompareSerialization
 	{
 		try
 		{
-			System.out.printf("%12s %12s %12s %12s %12s %19s %19s%n", "", "json", "bin", "json+zip", "bin+zip", "bin enc/dec", "json enc/dec");
+			System.out.printf("%12s %12s %12s %12s %12s %19s %19s %19s%n", "", "json", "bin", "json+zip", "bin+zip", "bin enc/dec", "json enc/dec", "speed");
 
 			Random rnd = new Random(0);
 
@@ -91,7 +91,7 @@ public class CompareSerialization
 		long dt0 = System.currentTimeMillis();
 		for (int i = 0; i < 100; i++)
 		{
-//			Document.parseByteArray(bin);
+			Document.parseByteArray(bin);
 		}
 		long dt1 = System.currentTimeMillis();
 		for (int i = 0; i < 100; i++)
@@ -111,6 +111,9 @@ public class CompareSerialization
 
 		System.out.printf("%12.3f ", (et2 - et1) / 100.0);
 		System.out.printf("%6.3f ", (dt2 - dt1) / 100.0);
+
+		System.out.printf("%12.3f ", (et2 - et1) / (double)((et1 - et0)));
+		System.out.printf("%6.3f ", (dt2 - dt1) / (double)((dt1 - dt0)));
 
 		System.out.println();
 	}

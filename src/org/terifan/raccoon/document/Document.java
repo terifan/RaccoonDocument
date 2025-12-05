@@ -260,12 +260,28 @@ public class Document extends Collection<String, Document> implements Externaliz
 	}
 
 
+	/**
+	 * This implementation disregard the order of keys.
+	 */
 	@Override
 	public boolean equals(Object aOther)
 	{
 		if (aOther instanceof Document v)
 		{
-			return toJson().equals(v.toJson());
+			if (size() != v.size())
+			{
+				return false;
+			}
+			Array keys = keys();
+			for (int i = 0, sz = size(); i < sz; i++)
+			{
+				String key = keys.get(i);
+				if (!get(key).equals(v.get(key)))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		return false;

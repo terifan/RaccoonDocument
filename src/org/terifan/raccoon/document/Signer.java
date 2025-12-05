@@ -13,7 +13,7 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-
+ 
 /*
     iss (issuer): Issuer of the JWT
     sub (subject): Subject of the JWT (the user)

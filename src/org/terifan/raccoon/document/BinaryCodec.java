@@ -22,10 +22,10 @@ public enum BinaryCodec
 //		(aEncoder, aValue) -> aEncoder.writeArray((Array)aValue),
 //		aDecoder -> aDecoder.readArray(new Array())
 //	),
-	REFERENCE(3,
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
-		aDecoder -> (int)aDecoder.readVarint()
-	),
+	REFERENCE(3),
+//		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
+//		aDecoder -> (int)aDecoder.readVarint()
+//	),
 	/** type: org.terifan.raccoon.document.ObjectId */
 	OBJECTID(4,
 		(aEncoder, aValue) -> aEncoder.writeBytes(((ObjectId)aValue).toByteArray()),

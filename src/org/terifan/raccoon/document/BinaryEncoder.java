@@ -7,36 +7,26 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import static org.terifan.raccoon.document.BinaryCodec.isCompactString;
+import test_document._Log;
 
 
-// <obj1><obj2><obj3><strings><structs><directory>
-// key1/type, key2/type, key3/type, val1, val2, val3
-class BinaryEncoder
+class BinaryEncoder extends BinaryOutputStream
 {
 	private HashMap<Object, Integer> mObjectLookup;
 	private HashMap<ByteKey, Integer> mStructLookup;
 
-	private final BinaryOutputStream mOutputStream;
-
 
 	public BinaryEncoder(OutputStream aOutputStream)
 	{
-		mOutputStream = new BinaryOutputStream(aOutputStream);
+		super(aOutputStream);
+
+		mObjectLookup = new HashMap<>();
+		mStructLookup = new HashMap<>();
 	}
 
 
 	void marshal(Object aObject) throws IOException
 	{
-		mObjectLookup = new HashMap<>();
-		mStructLookup = new HashMap<>();
-
-		BinaryCodec type = BinaryCodec.identify(aObject);
-
-		if (type == null)
-		{
-			throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
-		}
-
 		if (aObject instanceof Document v)
 		{
 			writeDocument(v);
@@ -47,63 +37,65 @@ class BinaryEncoder
 		}
 		else
 		{
-			throw new IllegalStateException();
-		}
+			BinaryCodec type = BinaryCodec.identify(aObject);
 
-		mOutputStream.close();
+			if (type == null)
+			{
+				throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
+			}
+
+			writeValue(type, aObject);
+		}
 
 //		for (Entry<Object, Integer> entry : mObjectLookup.entrySet())
 //		{
 //			System.out.println("** " + entry.getKey());
 //		}
-//		for (Entry<ByteKey, Integer> entry : mStructsLookup.entrySet())
+//		for (Entry<ByteKey, Integer> entry : mStructLookup.entrySet())
 //		{
-//			System.out.println("** " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
+//			System.out.println("## " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
 //		}
 	}
 
 
 	void writeDocument(Document aDocument) throws IOException
 	{
+		Integer ref2 = mObjectLookup.get(aDocument);
+		if (ref2 != null)
+		{
+			writeInterleaved(BinaryCodec.REFERENCE.ordinal(), ref2);
+			return;
+		}
+
 		ArrayList<Object> pendingValues = new ArrayList<>();
 		ArrayList<BinaryCodec> pendingTypes = new ArrayList<>();
 
-		BinaryBufferedOutputStream buffer = new BinaryBufferedOutputStream();
+		BinaryBufferedOutputStream header = new BinaryBufferedOutputStream();
+
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
 			String key = entry.getKey();
 			Object value = entry.getValue();
 			BinaryCodec type = BinaryCodec.identify(value);
 
-			Integer ref = mObjectLookup.get(value);
-			if (ref != null)
-			{
-				type = BinaryCodec.REFERENCE;
-				value = ref;
-			}
-			else if (!(type == BinaryCodec.BOOLEAN || (type == BinaryCodec.INT || type == BinaryCodec.LONG || type == BinaryCodec.BYTE || type == BinaryCodec.SHORT) && ((Number)value).longValue() < 128))
-			{
-				mObjectLookup.put(value, mObjectLookup.size());
-			}
-
 			pendingTypes.add(type);
 			pendingValues.add(value);
 
-			buffer.writeInterleaved(type.ordinal(), key.length());
-			buffer.writeUTF(key);
+			header.writeInterleaved(type.ordinal(), key.length());
+			header.writeUTF(key);
 		}
 
-		byte[] header = buffer.finish();
-		ByteKey key = new ByteKey(header);
+		byte[] headerData = header.finish();
+		ByteKey key = new ByteKey(headerData);
 		Integer ref = mStructLookup.get(key);
 		if (ref != null)
 		{
-			mOutputStream.writeVarint(ref);
+			writeInterleaved(BinaryCodec.BINARY.ordinal(), ref);
 		}
 		else
 		{
-			mOutputStream.writeVarint(-header.length);
-			mOutputStream.writeBytes(header);
+			writeInterleaved(BinaryCodec.DOCUMENT.ordinal(), aDocument.size());
+			writeBytes(headerData);
 			mStructLookup.put(key, mStructLookup.size());
 		}
 
@@ -112,13 +104,24 @@ class BinaryEncoder
 			BinaryCodec type = pendingTypes.get(i);
 			Object value = pendingValues.get(i);
 
-			writeValue(mOutputStream, type, value);
+			writeValue(type, value);
 		}
+
+		mObjectLookup.put(aDocument, mObjectLookup.size());
 	}
 
 
 	void writeArray(Array aArray) throws IOException
 	{
+		Integer ref = mObjectLookup.get(aArray);
+		if (ref != null)
+		{
+			writeInterleaved(BinaryCodec.REFERENCE.ordinal(), ref);
+			return;
+		}
+
+		writeInterleaved(BinaryCodec.ARRAY.ordinal(), aArray.size());
+
 		for (int offset = 0, elementCount = aArray.size(); offset < elementCount;)
 		{
 			ArrayList<Object> pending = new ArrayList<>();
@@ -130,17 +133,6 @@ class BinaryEncoder
 				Object value = aArray.get(i);
 				BinaryCodec type = BinaryCodec.identify(value);
 
-				Integer ref = mObjectLookup.get(value);
-				if (ref != null)
-				{
-					type = BinaryCodec.REFERENCE;
-					value = ref;
-				}
-				else if (!(type == BinaryCodec.BOOLEAN || (type == BinaryCodec.INT || type == BinaryCodec.LONG || type == BinaryCodec.BYTE || type == BinaryCodec.SHORT) && ((Number)value).longValue() < 128))
-				{
-					mObjectLookup.put(value, mObjectLookup.size());
-				}
-
 				if (nextType != type && nextType != null)
 				{
 					break;
@@ -150,38 +142,73 @@ class BinaryEncoder
 				nextType = type;
 			}
 
-			mOutputStream.writeInterleaved(nextType.ordinal(), runLen);
+			writeInterleaved(nextType.ordinal(), runLen);
 
 			for (int i = 0; --runLen >= 0; i++, offset++)
 			{
 				Object value = pending.get(i);
 
-				writeValue(mOutputStream, nextType, value);
+				writeValue(nextType, value);
 			}
 		}
+
+		mObjectLookup.put(aArray, mObjectLookup.size());
 	}
 
 
-	private void writeValue(BinaryOutputStream aOutputStream, BinaryCodec aType, Object aValue) throws IOException
+	private void writeValue(BinaryCodec aType, Object aValue) throws IOException
 	{
 		switch (aType)
 		{
 			case DOCUMENT:
-				writeDocument((Document)aValue);
+				if (aValue instanceof Document v)
+				{
+					writeDocument(v);
+				}
+				else
+				{
+					writeUnsignedVarint((Integer)aValue);
+				}
 				break;
 			case ARRAY:
-				writeArray((Array)aValue);
+				if (aValue instanceof Array v)
+				{
+					writeArray(v);
+				}
+				else
+				{
+					writeUnsignedVarint((Integer)aValue);
+				}
 				break;
+			case REFERENCE:
+				throw new IllegalStateException();
+//				writeUnsignedVarint((Integer)aValue);
+//				break;
 			default:
-				aType.encoder.encode(aOutputStream, aValue);
+				aType.encoder.encode(this, aValue);
 				break;
 		}
 	}
 
 
-	private static class ByteKey
+	static boolean isReferencableValue(BinaryCodec aType, Object aValue)
 	{
-		private final byte[] mBuffer;
+		if (aType == BinaryCodec.BOOLEAN || aType == BinaryCodec.REFERENCE)
+		{
+			return false;
+		}
+		if (aType == BinaryCodec.INT || aType == BinaryCodec.LONG || aType == BinaryCodec.BYTE || aType == BinaryCodec.SHORT)
+		{
+			long v = ((Number)aValue).longValue();
+			return v < -63 || v > 63;
+		}
+		return true;
+	}
+
+
+	static class ByteKey
+	{
+		final byte[] mBuffer;
 
 
 		public ByteKey(byte[] aBuffer)
@@ -207,7 +234,7 @@ class BinaryEncoder
 		@Override
 		public boolean equals(Object aOther)
 		{
-			return aOther instanceof ByteKey && Arrays.equals(mBuffer, ((ByteKey)aOther).mBuffer);
+			return aOther == this || aOther instanceof ByteKey v && Arrays.equals(mBuffer, v.mBuffer);
 		}
 	}
 }
