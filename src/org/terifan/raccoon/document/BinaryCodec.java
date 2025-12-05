@@ -187,7 +187,8 @@ public enum BinaryCodec
 		if (Document.class == cls || Document.class.isAssignableFrom(cls)) return DOCUMENT;
 		if (Array.class == cls || Array.class.isAssignableFrom(cls)) return ARRAY;
 		if (ObjectId.class == cls) return OBJECTID;
-		if (aValue instanceof String v) return v.isEmpty() ? EMPTY_STRING : isCompactString(v) ? COMPACT_STRING : STRING;
+//		if (aValue instanceof String v) return v.isEmpty() ? EMPTY_STRING : isCompactString(v) ? COMPACT_STRING : STRING;
+		if (aValue instanceof String v) return v.isEmpty() ? EMPTY_STRING : STRING;
 		if (aValue instanceof Integer v) return v == 0 ? ZERO_INT : INT;
 		if (aValue instanceof Long v) return v == 0 ? ZERO_LONG : LONG;
 		if (aValue instanceof Double v) return v == 0 ? ZERO_DOUBLE : DOUBLE;

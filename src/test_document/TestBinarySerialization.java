@@ -38,8 +38,8 @@ public class TestBinarySerialization
 
 //			_Log.hexDump(data);
 
-//			System.out.println(a.toJson().length()+"\t"+Support.zip(a.toJson().getBytes()).length);
-//			System.out.println(data.length+"\t"+Support.zip(data).length);
+			System.out.println(a.toJson().length()+"\t"+Support.zip(a.toJson().getBytes()).length);
+			System.out.println(data.length+"\t"+Support.zip(data).length);
 
 			Collection doc = Document.parseByteArray(data);
 

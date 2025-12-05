@@ -14,6 +14,7 @@ class BinaryEncoder extends BinaryOutputStream
 {
 	private HashMap<Object, Integer> mObjectLookup;
 	private HashMap<ByteKey, Integer> mStructLookup;
+	private HashMap<String, Integer> mStringLookup;
 
 
 	public BinaryEncoder(OutputStream aOutputStream)
@@ -22,6 +23,7 @@ class BinaryEncoder extends BinaryOutputStream
 
 		mObjectLookup = new HashMap<>();
 		mStructLookup = new HashMap<>();
+		mStringLookup = new HashMap<>();
 	}
 
 
@@ -178,6 +180,21 @@ class BinaryEncoder extends BinaryOutputStream
 				else
 				{
 					writeUnsignedVarint((Integer)aValue);
+				}
+				break;
+			case STRING:
+			case COMPACT_STRING:
+				String s = (String)aValue;
+				Integer ref = mStringLookup.get(s);
+				if (ref != null)
+				{
+					writeVarint(-ref-1);
+				}
+				else
+				{
+					writeVarint(s.length());
+					writeUTF(s);
+					mStringLookup.put(s, mStringLookup.size());
 				}
 				break;
 			case REFERENCE:

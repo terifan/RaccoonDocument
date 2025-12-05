@@ -12,6 +12,7 @@ public class BinaryDecoder extends BinaryInputStream
 {
 	private ArrayList<Object> mObjectLookup;
 	private ArrayList<ArrayList<Entry>> mStructLookup;
+	private ArrayList<String> mStringLookup;
 
 
 	BinaryDecoder(InputStream aInputStream)
@@ -24,6 +25,7 @@ public class BinaryDecoder extends BinaryInputStream
 	{
 		mObjectLookup = new ArrayList<>();
 		mStructLookup = new ArrayList<>();
+		mStringLookup = new ArrayList<>();
 
 		Entry entry = readEntry();
 
@@ -150,6 +152,18 @@ public class BinaryDecoder extends BinaryInputStream
 				break;
 			case ARRAY:
 				value = readArray(new Array(), null);
+				break;
+			case STRING:
+				int v = (int)readVarint();
+				if (v < 0)
+				{
+					value = mStringLookup.get(-v - 1);
+				}
+				else
+				{
+					value = readUTF(v);
+					mStringLookup.add((String)value);
+				}
 				break;
 			case REFERENCE:
 				throw new IllegalStateException();
