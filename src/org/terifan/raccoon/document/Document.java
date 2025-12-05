@@ -3,7 +3,6 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -289,55 +288,6 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	/**
-	 * Order independent equals comparison.
-	 */
-	@Override
-	public boolean same(Document aOther)
-	{
-		if (!(aOther instanceof Document))
-		{
-			return false;
-		}
-		if (aOther.size() != mValues.size())
-		{
-//			System.out.println("Different number of entries: found: " + aOther.size() + ", expected: " + size());
-			return false;
-		}
-
-		HashSet<String> otherKeys = new HashSet<>(aOther.keySet());
-
-		for (String key : keySet())
-		{
-			Object value = get(key);
-			Object otherValue = aOther.get(key);
-
-			if ((value instanceof Array v1) && (otherValue instanceof Array v2))
-			{
-				if (!v1.same(v2))
-				{
-					return false;
-				}
-			}
-			else if ((value instanceof Document v1) && (otherValue instanceof Document v2))
-			{
-				if (!v1.same(v2))
-				{
-					return false;
-				}
-			}
-			else if (!value.equals(otherValue))
-			{
-//				System.out.println("Value of key '" + key + "' missmatch: found: " + otherValue + ", expected: " + value);
-				return false;
-			}
-			otherKeys.remove(key);
-		}
-
-		return true;
-	}
-
-
-	/**
 	 * Key/Value iterator
 	 */
 	@Override
@@ -356,10 +306,19 @@ public class Document extends Collection<String, Document> implements Externaliz
 		try
 		{
 			Document doc = (Document)super.clone();
-
-			// ???
-			doc.mValues = new LinkedHashMap<>();
-			return doc.fromByteArray(toByteArray());
+			for (String s : keys().iterable(String.class))
+			{
+				Object v = get(s);
+				if (v instanceof Array c)
+				{
+					doc.put(s, c.clone());
+				}
+				else if (v instanceof Document c)
+				{
+					doc.put(s, c.clone());
+				}
+			}
+			return doc;
 		}
 		catch (CloneNotSupportedException e)
 		{

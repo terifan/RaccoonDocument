@@ -65,12 +65,13 @@ public class JSONEncoder
 
 	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, Path aPath, boolean aNewLineOnClose) throws IOException
 	{
-		if (aReferenceMap.contains(aDocument))
-		{
-			printReference(aReferenceMap, aDocument);
-			warn("A cyclic reference was encountered during evaluation: " + aPath);
-			return;
-		}
+		// TODO:
+//		if (aReferenceMap.contains(aDocument))
+//		{
+//			printReference(aReferenceMap, aDocument);
+//			warn("A cyclic reference was encountered during evaluation: " + aPath);
+//			return;
+//		}
 
 		aReferenceMap.add(aDocument, aPath.toString());
 
@@ -143,12 +144,13 @@ public class JSONEncoder
 
 	private void marshalArray(Array aArray, ReferenceMap aReferenceMap, Path aPath) throws IOException
 	{
-		if (aReferenceMap.contains(aArray))
-		{
-			printReference(aReferenceMap, aArray);
-			warn("A cyclic reference was encountered during evaluation: " + aPath);
-			return;
-		}
+		// TODO:
+//		if (aReferenceMap.contains(aArray))
+//		{
+//			printReference(aReferenceMap, aArray);
+//			warn("A cyclic reference was encountered during evaluation: " + aPath);
+//			return;
+//		}
 
 		aReferenceMap.add(aArray, aPath.toString());
 

@@ -333,51 +333,6 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 
 
 	/**
-	 * Order independent equals comparison.
-	 */
-	@Override
-	public boolean same(Array aOther)
-	{
-		if (!(aOther instanceof Array))
-		{
-			return false;
-		}
-		if (aOther.size() != mValues.size())
-		{
-//			System.out.println("Different number of entries in provided Array: found: " + aOther.size() + ", expected: " + size());
-			return false;
-		}
-
-		for (int i = 0; i < mValues.size(); i++)
-		{
-			Object value = getImpl(i);
-			Object otherValue = aOther.getImpl(i);
-
-			if ((value instanceof Array v1) && (otherValue instanceof Array v2))
-			{
-				if (!v1.same(v2))
-				{
-					return false;
-				}
-			}
-			else if ((value instanceof Document v1) && (otherValue instanceof Document v2))
-			{
-				if (!v1.same(v2))
-				{
-					return false;
-				}
-			}
-			else if (!value.equals(otherValue))
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-
-	/**
 	 * Create an array of item provided including primitives and arrays.
 	 *
 	 * @param aValue an array of objects
@@ -502,8 +457,18 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 		try
 		{
 			Array arr = (Array)super.clone();
-			arr.mValues = new ArrayList<>();
-			arr.fromByteArray(toByteArray());
+			for (int i = 0, sz = size(); i < sz; i++)
+			{
+				Object v = get(i);
+				if (v instanceof Array c)
+				{
+					arr.put(i, c.clone());
+				}
+				else if (v instanceof Document c)
+				{
+					arr.put(i, c.clone());
+				}
+			}
 			return arr;
 		}
 		catch (CloneNotSupportedException e)

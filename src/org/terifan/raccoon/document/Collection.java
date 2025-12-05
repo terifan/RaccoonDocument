@@ -194,9 +194,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public abstract R clear();
 
 
-	public abstract boolean same(R aOther);
-
-
 	public abstract Set<K> keySet();
 
 
