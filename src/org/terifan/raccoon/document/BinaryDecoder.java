@@ -3,16 +3,19 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Objects;
 import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
 import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
-import static org.terifan.raccoon.document.BinaryCodec.TERMINATOR;
 
 
 public class BinaryDecoder extends BinaryInputStream
 {
 	private ArrayList<Object> mObjectLookup;
-	private ArrayList<ArrayList<Entry>> mStructLookup;
+	private ArrayList<ArrayList<Entry>> mDocStructLookup;
+	private ArrayList<ArrayList<Entry>> mArrStructLookup;
 	private ArrayList<String> mStringLookup;
+	private ArrayList<String> mKeyLookup;
+	private ArrayList<Object> mValueLookup;
 
 
 	BinaryDecoder(InputStream aInputStream)
@@ -24,8 +27,11 @@ public class BinaryDecoder extends BinaryInputStream
 	Object unmarshal() throws IOException
 	{
 		mObjectLookup = new ArrayList<>();
-		mStructLookup = new ArrayList<>();
+		mDocStructLookup = new ArrayList<>();
+		mArrStructLookup = new ArrayList<>();
 		mStringLookup = new ArrayList<>();
+		mKeyLookup = new ArrayList<>();
+		mValueLookup = new ArrayList<>();
 
 		Entry entry = readEntry();
 
@@ -35,8 +41,8 @@ public class BinaryDecoder extends BinaryInputStream
 				return readDocument(new Document(), entry);
 			case ARRAY:
 				return readArray(new Array(), entry);
-			case TERMINATOR:
-				return entry.type;
+//			case TERMINATOR:
+//				return entry.type;
 			default:
 				return readValue(entry.type);
 		}
@@ -92,7 +98,7 @@ public class BinaryDecoder extends BinaryInputStream
 		ArrayList<Entry> entries;
 		if (header.type == BinaryCodec.BINARY)
 		{
-			entries = mStructLookup.get(header.value);
+			entries = mDocStructLookup.get(header.value);
 		}
 		else
 		{
@@ -100,10 +106,20 @@ public class BinaryDecoder extends BinaryInputStream
 			for (int i = 0; i < header.value; i++)
 			{
 				Entry entry = readEntry();
-				entry.name = readUTF(entry.value);
+
+				if ((entry.value & 1) == 1)
+				{
+					entry.name = mKeyLookup.get(entry.value >> 1);
+				}
+				else
+				{
+					entry.name = readUTF(entry.value >> 1);
+					mKeyLookup.add(entry.name);
+				}
+
 				entries.add(entry);
 			}
-			mStructLookup.add(entries);
+			mDocStructLookup.add(entries);
 		}
 
 		for (Entry entry : entries)
@@ -126,11 +142,24 @@ public class BinaryDecoder extends BinaryInputStream
 			return (Array)mObjectLookup.get(header.value);
 		}
 
-		for (int i = 0; i < header.value;)
+		ArrayList<Entry> entries;
+		if (header.type == BinaryCodec.BINARY)
 		{
-			Entry entry = readEntry();
+			entries = mArrStructLookup.get(header.value);
+		}
+		else
+		{
+			entries = new ArrayList<>();
+			for (int i = 0; i < header.value; i++)
+			{
+				entries.add(readEntry());
+			}
+			mArrStructLookup.add(entries);
+		}
 
-			for (int j = 0; j < entry.value; j++, i++)
+		for (Entry entry : entries)
+		{
+			for (int i = 0; i < entry.value; i++)
 			{
 				aArray.add(readValue(entry.type));
 			}
@@ -158,21 +187,20 @@ public class BinaryDecoder extends BinaryInputStream
 				mStringLookup.add((String)value);
 				break;
 			case STRING:
-				int v = (int)readVarint();
-				if (v < 0)
+				int i = (int)readVarint();
+				if (i < 0)
 				{
-					value = mStringLookup.get(-v - 1);
+					value = mStringLookup.get(-i - 1);
 				}
 				else
 				{
-					value = readUTF(v);
+					value = readUTF(i);
 					mStringLookup.add((String)value);
 				}
 				break;
 			case REFERENCE:
-				throw new IllegalStateException();
-//				value = mObjectLookup.get((int)readUnsignedVarint());
-//				break;
+				value = mValueLookup.get((int)readUnsignedVarint());
+				break;
 			default:
 				value = aType.decoder.decode(this);
 				break;
@@ -199,6 +227,60 @@ public class BinaryDecoder extends BinaryInputStream
 		BinaryCodec type;
 		int value;
 		String name;
+		Object object;
+
+
+		public Entry()
+		{
+		}
+
+
+		public Entry(BinaryCodec aType, int aValue)
+		{
+			this.type = aType;
+			this.value = aValue;
+		}
+
+
+		public Entry(BinaryCodec aType, Object aObject)
+		{
+			this.type = aType;
+			this.object = aObject;
+		}
+
+
+		@Override
+		public int hashCode()
+		{
+			int hash = 3;
+			hash = 29 * hash + Objects.hashCode(this.type);
+			hash = 29 * hash + this.value;
+			return hash;
+		}
+
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+			{
+				return true;
+			}
+			if (obj == null)
+			{
+				return false;
+			}
+			if (getClass() != obj.getClass())
+			{
+				return false;
+			}
+			final Entry other = (Entry)obj;
+			if (this.value != other.value)
+			{
+				return false;
+			}
+			return this.type == other.type;
+		}
 
 
 		@Override

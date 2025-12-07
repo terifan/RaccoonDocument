@@ -138,18 +138,9 @@ public class BinaryOutputStream
 	}
 
 
-	public void writeInterleaved(int aX, int aY) throws IOException
+	public void writeInterleaved(BinaryCodec aX, int aY) throws IOException
 	{
-		writeUnsignedVarint((shift(aX) << 1) | shift(aY));
-	}
-
-
-	/**
-	 * note: this implementation will not close the underlying stream.
-	 */
-	public void close() throws IOException
-	{
-		mOutputStream = null;
+		writeUnsignedVarint((shift(aY) << 1) | shift(aX.ordinal()));
 	}
 
 
@@ -194,5 +185,14 @@ public class BinaryOutputStream
 			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
 			writeByte(a << 4);
 		}
+	}
+
+
+	/**
+	 * note: this implementation will not close the underlying stream.
+	 */
+	public void close() throws IOException
+	{
+		mOutputStream = null;
 	}
 }

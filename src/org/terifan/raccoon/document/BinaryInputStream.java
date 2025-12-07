@@ -183,7 +183,7 @@ public class BinaryInputStream
 	public long readInterleaved() throws IOException
 	{
 		long p = readUnsignedVarint();
-		return (reverseShift(p) << 32) | reverseShift(p >>> 1);
+		return (reverseShift(p >>> 1) << 32) | reverseShift(p);
 	}
 
 
@@ -196,29 +196,6 @@ public class BinaryInputStream
 		aWord = (aWord | (aWord >> 4)) & 0x00ff00ff00ff00ffL;
 		aWord = (aWord | (aWord >> 8)) & 0x0000ffff0000ffffL;
 		aWord = (aWord | (aWord >> 16)) & 0x00000000ffffffffL;
-
-		return aWord;
-	}
-
-
-	/**
-	 * note: this implementation will not close the underlying stream.
-	 */
-	public void close() throws IOException
-	{
-		mInputStream = null;
-	}
-
-
-	private static long shift(long aWord)
-	{
-		aWord &= 0xffffffffL;
-
-		aWord = (aWord | (aWord << 16)) & 0x0000ffff0000ffffL;
-		aWord = (aWord | (aWord << 8)) & 0x00ff00ff00ff00ffL;
-		aWord = (aWord | (aWord << 4)) & 0x0f0f0f0f0f0f0f0fL;
-		aWord = (aWord | (aWord << 2)) & 0x3333333333333333L;
-		aWord = (aWord | (aWord << 1)) & 0x5555555555555555L;
 
 		return aWord;
 	}
@@ -247,5 +224,14 @@ public class BinaryInputStream
 			}
 		}
 		return new BigDecimal(s);
+	}
+
+
+	/**
+	 * note: this implementation will not close the underlying stream.
+	 */
+	public void close() throws IOException
+	{
+		mInputStream = null;
 	}
 }
