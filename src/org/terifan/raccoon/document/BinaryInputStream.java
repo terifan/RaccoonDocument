@@ -121,24 +121,6 @@ public class BinaryInputStream
 	}
 
 
-	public String readCompactString() throws IOException
-	{
-		StringBuilder sb = new StringBuilder();
-
-		for (;;)
-		{
-			int c = readByte();
-			sb.append((char)(0x7f & c));
-			if (c >= 128)
-			{
-				break;
-			}
-		}
-
-		return sb.toString();
-	}
-
-
 	public String readString() throws IOException
 	{
 		return readUTF((int)readUnsignedVarint());
@@ -180,7 +162,7 @@ public class BinaryInputStream
 	}
 
 
-	public long readInterleaved() throws IOException
+	long readInterleaved() throws IOException
 	{
 		long p = readUnsignedVarint();
 		return (reverseShift(p >>> 1) << 32) | reverseShift(p);

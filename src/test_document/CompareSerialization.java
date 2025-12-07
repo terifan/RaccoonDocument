@@ -34,7 +34,7 @@ public class CompareSerialization
 				tinies.add(Document.of("_id:" + rnd.nextInt(10000) + ",name:" + name + ",age:" + rnd.nextInt(100) + ",phone:'" + rnd.nextInt(100) + "-" + rnd.nextInt(100000000) + "',email:'" + name + "@mail.com'"));
 			}
 
-			run("person", _Person.createPerson(new Random(0)));
+			run("person", _Person.createPerson(new Random(1)));
 			run("100 people", tinies);
 			run("tiny", Document.of("_id:3164,name:steve,age:45,phone:'34-35656464',email:'steve@mail.com'"));
 			run("100 tiny", tinies);

@@ -93,20 +93,6 @@ public class BinaryOutputStream
 	}
 
 
-	public void writeCompactString(String aInput) throws IOException
-	{
-		for (int i = 0, len = aInput.length(); i < len; i++)
-		{
-			int c = aInput.charAt(i);
-			if (i == len - 1)
-			{
-				c |= 128;
-			}
-			writeByte(c);
-		}
-	}
-
-
 	public void writeString(String aInput) throws IOException
 	{
 		writeUnsignedVarint(aInput.length());
@@ -138,7 +124,7 @@ public class BinaryOutputStream
 	}
 
 
-	public void writeInterleaved(BinaryCodec aX, int aY) throws IOException
+	void writeInterleaved(BinaryCodec aX, int aY) throws IOException
 	{
 		writeUnsignedVarint((shift(aY) << 1) | shift(aX.ordinal()));
 	}

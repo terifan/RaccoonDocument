@@ -34,7 +34,13 @@ public class BinaryEncoder extends BinaryOutputStream
 	}
 
 
-	void marshal(Object aObject) throws IOException
+//	public void writeTerminate() throws IOException
+//	{
+//		writeInterleaved(BinaryCodec.TERMINATE, 0);
+//	}
+
+
+	public void writeObject(Object aObject) throws IOException
 	{
 		if (aObject instanceof Document v)
 		{
@@ -46,14 +52,7 @@ public class BinaryEncoder extends BinaryOutputStream
 		}
 		else
 		{
-			BinaryCodec type = BinaryCodec.identify(aObject);
-
-			if (type == null)
-			{
-				throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
-			}
-
-			writeValue(type, aObject);
+			writeField(aObject);
 		}
 
 		if (DEBUG)
@@ -86,6 +85,47 @@ public class BinaryEncoder extends BinaryOutputStream
 	}
 
 
+	private void writeField(Object aObject) throws IOException, IllegalArgumentException
+	{
+		BinaryCodec type = BinaryCodec.identify(aObject);
+
+		if (type == null)
+		{
+			throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
+		}
+
+		if (mValueLookup.containsKey(aObject))
+		{
+			type = BinaryCodec.REFERENCE;
+			aObject = mValueLookup.get(aObject);
+		}
+
+		if (type == BinaryCodec.INT && ((Integer)aObject) > 0 && ((Integer)aObject) < 200)
+		{
+			writeInterleaved(type, (Integer)aObject);
+		}
+		else if (type == BinaryCodec.REFERENCE && ((Integer)aObject) < 200)
+		{
+			writeInterleaved(type, ((Integer)aObject)+1);
+		}
+		else if (type == BinaryCodec.STRING && mStringLookup.containsKey(aObject) && mStringLookup.get(aObject) < 200)
+		{
+			writeInterleaved(BinaryCodec.STRING_REFERENCE, mStringLookup.get(aObject) + 1);
+		}
+		else if (type == BinaryCodec.STRING && ((String)aObject).length() < 200 && !mStringLookup.containsKey(aObject))
+		{
+			writeInterleaved(type, ((String)aObject).length());
+			writeUTF((String)aObject);
+			mStringLookup.put((String)aObject, mStringLookup.size());
+		}
+		else
+		{
+			writeInterleaved(type, 0);
+			writeValue(type, aObject);
+		}
+	}
+
+
 	void writeDocument(Document aDocument) throws IOException
 	{
 		Integer ref2 = mObjectLookup.get(aDocument);
@@ -104,11 +144,7 @@ public class BinaryEncoder extends BinaryOutputStream
 			Object value = entry.getValue();
 			BinaryCodec type = BinaryCodec.identify(value);
 
-			if (type == BinaryCodec.COMPACT_STRING && mStringLookup.containsKey(value))
-			{
-				type = BinaryCodec.STRING;
-			}
-//			if (isReferencableValue(type, value) && mValueLookup.containsKey(value))
+//			if (mValueLookup.containsKey(value))
 //			{
 //				type = BinaryCodec.REFERENCE;
 //				value = mValueLookup.get(value);
@@ -173,11 +209,7 @@ public class BinaryEncoder extends BinaryOutputStream
 				Object value = aArray.get(i);
 				BinaryCodec type = BinaryCodec.identify(value);
 
-				if (type == BinaryCodec.COMPACT_STRING && mStringLookup.containsKey(value))
-				{
-					type = BinaryCodec.STRING;
-				}
-//				if (isReferencableValue(type, value) && mValueLookup.containsKey(value))
+//				if (mValueLookup.containsKey(value))
 //				{
 //					type = BinaryCodec.REFERENCE;
 //					value = mValueLookup.get(value);
@@ -247,9 +279,6 @@ public class BinaryEncoder extends BinaryOutputStream
 				{
 					writeUnsignedVarint((Integer)aValue);
 				}
-				break;
-			case COMPACT_STRING:
-				aType.encoder.encode(this, aValue);
 				break;
 			case STRING:
 				String s = (String)aValue;

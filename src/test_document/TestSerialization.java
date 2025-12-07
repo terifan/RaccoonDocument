@@ -15,7 +15,7 @@ import org.terifan.raccoon.document.Document;
 import org.terifan.raccoon.document.Support;
 
 
-public class TestBinarySerialization
+public class TestSerialization
 {
 	public static void main(String... args)
 	{

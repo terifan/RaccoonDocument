@@ -11,6 +11,8 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 
 
+// add ZonedDateTime
+
 public enum BinaryCodec
 {
 	DOCUMENT(0),
@@ -25,32 +27,68 @@ public enum BinaryCodec
 //		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
 //		aDecoder -> (int)aDecoder.readVarint()
 //	),
-	/** type: org.terifan.raccoon.document.ObjectId */
-	OBJECTID(3,
-		(aEncoder, aValue) -> aEncoder.writeBytes(((ObjectId)aValue).toByteArray()),
-		aDecoder -> ObjectId.fromByteArray(aDecoder.readBytes(new byte[ObjectId.LENGTH]))
-	),
-	STRING(4,
+	STRING(3,
 //		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
 //		aDecoder -> (int)aDecoder.readUnsignedVarint()
 		(aEncoder, aValue) -> aEncoder.writeString(aValue.toString()),
 		aDecoder -> aDecoder.readString()
 	),
-	INT(5,
+	INT(4,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Integer)aValue),
 		aDecoder -> (int)aDecoder.readVarint()
+	),
+	LONG(5,
+		(aEncoder, aValue) -> aEncoder.writeVarint((Long)aValue),
+		aDecoder -> aDecoder.readVarint()
 	),
 	DOUBLE(6,
 		(aEncoder, aValue) -> aEncoder.writeLong(Double.doubleToLongBits((Double)aValue)),
 		aDecoder -> Double.longBitsToDouble(aDecoder.readLong())
 	),
-	BOOLEAN(7,
+	FLOAT(7,
+		(aEncoder, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
+		aDecoder -> Float.intBitsToFloat((int)aDecoder.readInt())
+	),
+	BOOLEAN(8,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Boolean)aValue ? 1 : 0),
 		aDecoder -> aDecoder.readVarint() == 1
 	),
-	NULL(8,
+	NULL(9,
 		(aEncoder, aValue) -> {},
 		aDecoder -> null
+	),
+	EMPTY_STRING(10,
+		(aEncoder, aValue) -> {},
+		aDecoder -> ""
+	),
+	ZERO_INT(11,
+		(aEncoder, aValue) -> {},
+		aDecoder -> 0
+	),
+	ZERO_LONG(12,
+		(aEncoder, aValue) -> {},
+		aDecoder -> 0L
+	),
+	ZERO_DOUBLE(13,
+		(aEncoder, aValue) -> {},
+		aDecoder -> 0.0
+	),
+	ZERO_FLOAT(14,
+		(aEncoder, aValue) -> {},
+		aDecoder -> 0f
+	),
+	ZERO_BYTE(15,
+		(aEncoder, aValue) -> {},
+		aDecoder -> (byte)0
+	),
+	ZERO_SHORT(22,
+		(aEncoder, aValue) -> {},
+		aDecoder -> (short)0
+	),
+	/** type: org.terifan.raccoon.document.ObjectId */
+	OBJECTID(3,
+		(aEncoder, aValue) -> aEncoder.writeBytes(((ObjectId)aValue).toByteArray()),
+		aDecoder -> ObjectId.fromByteArray(aDecoder.readBytes(new byte[ObjectId.LENGTH]))
 	),
 	BYTE(9,
 		(aEncoder, aValue) -> aEncoder.writeByte(0xff & (Byte)aValue),
@@ -59,14 +97,6 @@ public enum BinaryCodec
 	SHORT(10,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Short)aValue),
 		aDecoder -> (short)aDecoder.readVarint()
-	),
-	LONG(11,
-		(aEncoder, aValue) -> aEncoder.writeVarint((Long)aValue),
-		aDecoder -> aDecoder.readVarint()
-	),
-	FLOAT(12,
-		(aEncoder, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
-		aDecoder -> Float.intBitsToFloat((int)aDecoder.readInt())
 	),
 	/** type: byte[] */
 	BINARY(13,
@@ -107,38 +137,10 @@ public enum BinaryCodec
 		(aEncoder, aValue) -> aEncoder.writeVarint((Character)aValue),
 		aDecoder -> (char)aDecoder.readVarint()
 	),
-	ZERO_BYTE(21,
+	STRING_REFERENCE(-1,
 		(aEncoder, aValue) -> {},
-		aDecoder -> (byte)0
+		aDecoder -> null
 	),
-	ZERO_SHORT(22,
-		(aEncoder, aValue) -> {},
-		aDecoder -> (short)0
-	),
-	ZERO_INT(23,
-		(aEncoder, aValue) -> {},
-		aDecoder -> 0
-	),
-	ZERO_LONG(24,
-		(aEncoder, aValue) -> {},
-		aDecoder -> 0L
-	),
-	ZERO_FLOAT(25,
-		(aEncoder, aValue) -> {},
-		aDecoder -> 0f
-	),
-	ZERO_DOUBLE(26,
-		(aEncoder, aValue) -> {},
-		aDecoder -> 0.0
-	),
-	EMPTY_STRING(27,
-		(aEncoder, aValue) -> {},
-		aDecoder -> ""
-	),
-	COMPACT_STRING(28,
-		(aEncoder, aValue) -> aEncoder.writeCompactString(aValue.toString()),
-		aDecoder -> aDecoder.readCompactString()
-	)
 	;
 
 
@@ -158,6 +160,7 @@ public enum BinaryCodec
 	Encoder encoder;
 	Decoder decoder;
 
+	private static int COUNTER;
 
 	private BinaryCodec(int aCode)
 	{
@@ -167,7 +170,7 @@ public enum BinaryCodec
 
 	private BinaryCodec(int aCode, Encoder aEncoder, Decoder aDecoder)
 	{
-		assert aCode == ordinal();
+//		assert aCode == ordinal();
 
 		encoder = aEncoder;
 		decoder = aDecoder;
@@ -186,7 +189,7 @@ public enum BinaryCodec
 		if (Document.class == cls || Document.class.isAssignableFrom(cls)) return DOCUMENT;
 		if (Array.class == cls || Array.class.isAssignableFrom(cls)) return ARRAY;
 		if (ObjectId.class == cls) return OBJECTID;
-		if (aValue instanceof String v) return v.isEmpty() ? EMPTY_STRING : isCompactString(v) ? COMPACT_STRING : STRING;
+		if (aValue instanceof String v) return v.isEmpty() ? EMPTY_STRING : STRING;
 		if (aValue instanceof Integer v) return v == 0 ? ZERO_INT : INT;
 		if (aValue instanceof Long v) return v == 0 ? ZERO_LONG : LONG;
 		if (aValue instanceof Double v) return v == 0 ? ZERO_DOUBLE : DOUBLE;
