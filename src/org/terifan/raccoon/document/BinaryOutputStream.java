@@ -3,9 +3,10 @@ package org.terifan.raccoon.document;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 
-public class BinaryOutputStream
+public class BinaryOutputStream extends OutputStream implements AutoCloseable
 {
 	private final byte[] mWriteBuffer = new byte[8];
 
@@ -25,24 +26,40 @@ public class BinaryOutputStream
 	}
 
 
-	public void writeByte(int aValue) throws IOException
+	@Override
+	public void write(int aValue) throws IOException
 	{
 		mOutputStream.write(aValue);
 		mPosition++;
 	}
 
 
-	public void writeInt(int aValue) throws IOException
+	@Override
+	public void write(byte[] aBuffer) throws IOException
+	{
+		write(aBuffer, 0, aBuffer.length);
+	}
+
+
+	@Override
+	public void write(byte[] aBuffer, int aOffset, int aLength) throws IOException
+	{
+		mOutputStream.write(aBuffer, aOffset, aLength);
+		mPosition += aBuffer.length;
+	}
+
+
+	void writeInt(int aValue) throws IOException
 	{
 		mWriteBuffer[0] = (byte)(aValue >>> 24);
 		mWriteBuffer[1] = (byte)(aValue >>> 16);
 		mWriteBuffer[2] = (byte)(aValue >>> 8);
 		mWriteBuffer[3] = (byte)(aValue);
-		writeBytes(mWriteBuffer, 0, 4);
+		write(mWriteBuffer, 0, 4);
 	}
 
 
-	public void writeLong(long aValue) throws IOException
+	void writeLong(long aValue) throws IOException
 	{
 		mWriteBuffer[0] = (byte)(aValue >>> 56);
 		mWriteBuffer[1] = (byte)(aValue >>> 48);
@@ -52,20 +69,7 @@ public class BinaryOutputStream
 		mWriteBuffer[5] = (byte)(aValue >>> 16);
 		mWriteBuffer[6] = (byte)(aValue >>> 8);
 		mWriteBuffer[7] = (byte)(aValue);
-		writeBytes(mWriteBuffer, 0, 8);
-	}
-
-
-	public void writeBytes(byte[] aBuffer) throws IOException
-	{
-		writeBytes(aBuffer, 0, aBuffer.length);
-	}
-
-
-	public void writeBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
-	{
-		mOutputStream.write(aBuffer, aOffset, aLength);
-		mPosition += aBuffer.length;
+		write(mWriteBuffer, 0, 8);
 	}
 
 
@@ -75,7 +79,7 @@ public class BinaryOutputStream
 	}
 
 
-	public void writeUnsignedVarint(long aValue) throws IOException
+	void writeUnsignedVarint(long aValue) throws IOException
 	{
 		for (;;)
 		{
@@ -84,11 +88,11 @@ public class BinaryOutputStream
 
 			if (aValue == 0)
 			{
-				writeByte(b);
+				BinaryOutputStream.this.write(b);
 				return;
 			}
 
-			writeByte(128 + b);
+			BinaryOutputStream.this.write(128 + b);
 		}
 	}
 
@@ -100,25 +104,25 @@ public class BinaryOutputStream
 	}
 
 
-	public void writeUTF(String aInput) throws IOException
+	void writeUTF(String aInput) throws IOException
 	{
 		for (int i = 0, len = aInput.length(); i < len; i++)
 		{
 			char c = aInput.charAt(i);
 			if (c <= 0x007F)
 			{
-				writeByte(c & 0x7F);
+				BinaryOutputStream.this.write(c & 0x7F);
 			}
 			else if (c <= 0x07FF)
 			{
-				writeByte(0xC0 | ((c >> 6) & 0x1F));
-				writeByte(0x80 | ((c) & 0x3F));
+				BinaryOutputStream.this.write(0xC0 | ((c >> 6) & 0x1F));
+				BinaryOutputStream.this.write(0x80 | ((c) & 0x3F));
 			}
 			else
 			{
-				writeByte(0xE0 | ((c >> 12) & 0x0F));
-				writeByte(0x80 | ((c >> 6) & 0x3F));
-				writeByte(0x80 | ((c) & 0x3F));
+				BinaryOutputStream.this.write(0xE0 | ((c >> 12) & 0x0F));
+				BinaryOutputStream.this.write(0x80 | ((c >> 6) & 0x3F));
+				BinaryOutputStream.this.write(0x80 | ((c) & 0x3F));
 			}
 		}
 	}
@@ -126,6 +130,8 @@ public class BinaryOutputStream
 
 	void writeInterleaved(BinaryCodec aX, int aY) throws IOException
 	{
+		if (aX==BinaryCodec.REFERENCE && aY==0)throw new IllegalStateException();
+
 		writeUnsignedVarint((shift(aY) << 1) | shift(aX.ordinal()));
 	}
 
@@ -153,7 +159,7 @@ public class BinaryOutputStream
 	 *  0-9 48-57
 	 *  e   58
 	 */
-	public void writeDecimal(BigDecimal aValue) throws IOException
+	void writeBigDecimal(BigDecimal aValue) throws IOException
 	{
 		char[] s = aValue.toString().toCharArray();
 		writeUnsignedVarint(s.length);
@@ -163,22 +169,51 @@ public class BinaryOutputStream
 			int b = s[k++];
 			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
 			b = (b == 'e' || b == 'E' ? ':' : b) - '+';
-			writeByte((a << 4) + b);
+			BinaryOutputStream.this.write((a << 4) + b);
 		}
 		if ((s.length & 1) == 1)
 		{
 			int a = s[s.length - 1];
 			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
-			writeByte(a << 4);
+			BinaryOutputStream.this.write(a << 4);
 		}
 	}
 
 
-	/**
-	 * note: this implementation will not close the underlying stream.
+	/* Encodes two digits/symbols into a single byte:
+	 *
+	 *  +   43
+	 *  ,   44
+	 *  -   45
+	 *  .   46
+	 *  0-9 48-57
+	 *  e   58
 	 */
+	void writeBigInteger(BigInteger aValue) throws IOException
+	{
+		char[] s = aValue.toString().toCharArray();
+		writeUnsignedVarint(s.length);
+		for (int k = 0; k < s.length - 1;)
+		{
+			int a = s[k++];
+			int b = s[k++];
+			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
+			b = (b == 'e' || b == 'E' ? ':' : b) - '+';
+			BinaryOutputStream.this.write((a << 4) + b);
+		}
+		if ((s.length & 1) == 1)
+		{
+			int a = s[s.length - 1];
+			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
+			BinaryOutputStream.this.write(a << 4);
+		}
+	}
+
+
+	@Override
 	public void close() throws IOException
 	{
+		mOutputStream.close();
 		mOutputStream = null;
 	}
 }

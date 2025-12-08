@@ -1,10 +1,14 @@
 package org.terifan.raccoon.document;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -17,11 +21,16 @@ public class SupportedTypes
 	}
 
 
-	public static void assertSupported(Object aValue)
+	public static void assertSupported(Object aObject)
 	{
-		if (!isSupported(aValue))
+		if (!isSupported(aObject))
 		{
-			throw new IllegalArgumentException("Unsupported type: " + aValue.getClass());
+			if (aObject instanceof Enum)
+			{
+				throw new UnsupportedTypeException("Enums are not supported as they are inherently unsafe for serialization: " + aObject.getClass().getCanonicalName());
+			}
+
+			throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
 		}
 	}
 
@@ -56,11 +65,16 @@ public class SupportedTypes
 		return ObjectId.class == cls
 			|| byte[].class == cls
 			|| OffsetDateTime.class == cls
+			|| OffsetTime.class == cls
 			|| LocalDateTime.class == cls
 			|| LocalDate.class == cls
 			|| LocalTime.class == cls
+			|| ZonedDateTime.class == cls
+			|| Duration.class ==  cls
+			|| BigInteger.class ==  cls
 			|| BigDecimal.class == cls
-			|| UUID.class == cls;
+			|| UUID.class == cls
+		;
 	}
 
 

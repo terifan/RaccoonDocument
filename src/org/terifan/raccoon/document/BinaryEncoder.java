@@ -9,9 +9,9 @@ import java.util.Map;
 import org.terifan.raccoon.document.BinaryDecoder.Entry;
 
 
-public class BinaryEncoder extends BinaryOutputStream
+public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
-	private HashMap<Object, Integer> mObjectLookup;
+//	private HashMap<Object, Integer> mObjectLookup;
 	private HashMap<ByteKey, Integer> mDocStructLookup;
 	private HashMap<ByteKey, Integer> mArrStructLookup;
 	private HashMap<String, Integer> mStringLookup;
@@ -25,12 +25,21 @@ public class BinaryEncoder extends BinaryOutputStream
 	{
 		super(aOutputStream);
 
-		mObjectLookup = new HashMap<>();
+//		mObjectLookup = new HashMap<>();
 		mDocStructLookup = new HashMap<>();
 		mArrStructLookup = new HashMap<>();
 		mStringLookup = new HashMap<>();
 		mKeyLookup = new HashMap<>();
 		mValueLookup = new HashMap<>();
+
+		mValueLookup.put(null, 0);
+		mStringLookup.put(null, 0);
+	}
+
+
+	@Override
+	public void close()
+	{
 	}
 
 
@@ -38,8 +47,6 @@ public class BinaryEncoder extends BinaryOutputStream
 //	{
 //		writeInterleaved(BinaryCodec.TERMINATE, 0);
 //	}
-
-
 	public void writeObject(Object aObject) throws IOException
 	{
 		if (aObject instanceof Document v)
@@ -57,10 +64,10 @@ public class BinaryEncoder extends BinaryOutputStream
 
 		if (DEBUG)
 		{
-			for (Map.Entry<Object, Integer> entry : mObjectLookup.entrySet())
-			{
-				System.out.println("obj: " + entry.getKey());
-			}
+//			for (Map.Entry<Object, Integer> entry : mObjectLookup.entrySet())
+//			{
+//				System.out.println("obj: " + entry.getKey());
+//			}
 			for (Map.Entry<ByteKey, Integer> entry : mDocStructLookup.entrySet())
 			{
 				System.out.println("doc: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
@@ -85,16 +92,21 @@ public class BinaryEncoder extends BinaryOutputStream
 	}
 
 
-	private void writeField(Object aObject) throws IOException, IllegalArgumentException
+	private void writeField(Object aObject) throws IOException, UnsupportedTypeException
 	{
 		BinaryCodec type = BinaryCodec.identify(aObject);
 
 		if (type == null)
 		{
-			throw new IllegalArgumentException("Unsupported type: " + aObject.getClass().getCanonicalName());
+			if (aObject instanceof Enum)
+			{
+				throw new UnsupportedTypeException("Enums are not supported as they are inherently unsafe for serialization: " + aObject.getClass().getCanonicalName());
+			}
+
+			throw new UnsupportedTypeException(aObject.getClass().getCanonicalName());
 		}
 
-		if (mValueLookup.containsKey(aObject))
+		if (aObject != null && mValueLookup.containsKey(aObject))
 		{
 			type = BinaryCodec.REFERENCE;
 			aObject = mValueLookup.get(aObject);
@@ -106,11 +118,11 @@ public class BinaryEncoder extends BinaryOutputStream
 		}
 		else if (type == BinaryCodec.REFERENCE && ((Integer)aObject) < 200)
 		{
-			writeInterleaved(type, ((Integer)aObject)+1);
+			writeInterleaved(type, ((Integer)aObject));
 		}
 		else if (type == BinaryCodec.STRING && mStringLookup.containsKey(aObject) && mStringLookup.get(aObject) < 200)
 		{
-			writeInterleaved(BinaryCodec.STRING_REFERENCE, mStringLookup.get(aObject) + 1);
+			writeInterleaved(BinaryCodec.STRING_REFERENCE, mStringLookup.get(aObject));
 		}
 		else if (type == BinaryCodec.STRING && ((String)aObject).length() < 200 && !mStringLookup.containsKey(aObject))
 		{
@@ -128,7 +140,8 @@ public class BinaryEncoder extends BinaryOutputStream
 
 	void writeDocument(Document aDocument) throws IOException
 	{
-		Integer ref2 = mObjectLookup.get(aDocument);
+		Integer ref2 = mValueLookup.get(aDocument);
+//		Integer ref2 = mObjectLookup.get(aDocument);
 		if (ref2 != null)
 		{
 			writeInterleaved(BinaryCodec.REFERENCE, ref2);
@@ -149,7 +162,6 @@ public class BinaryEncoder extends BinaryOutputStream
 //				type = BinaryCodec.REFERENCE;
 //				value = mValueLookup.get(value);
 //			}
-
 			entries.add(new Entry(type, value));
 
 			if (mKeyLookup.containsKey(key))
@@ -174,7 +186,7 @@ public class BinaryEncoder extends BinaryOutputStream
 		else
 		{
 			writeInterleaved(BinaryCodec.DOCUMENT, aDocument.size());
-			writeBytes(headerData);
+			write(headerData);
 			mDocStructLookup.put(key, mDocStructLookup.size());
 		}
 
@@ -183,13 +195,15 @@ public class BinaryEncoder extends BinaryOutputStream
 			writeValue(entry.type, entry.object);
 		}
 
-		mObjectLookup.put(aDocument, mObjectLookup.size());
+		mValueLookup.put(aDocument, mValueLookup.size());
+//		mObjectLookup.put(aDocument, mObjectLookup.size());
 	}
 
 
 	void writeArray(Array aArray) throws IOException
 	{
-		Integer ref2 = mObjectLookup.get(aArray);
+		Integer ref2 = mValueLookup.get(aArray);
+//		Integer ref2 = mObjectLookup.get(aArray);
 		if (ref2 != null)
 		{
 			writeInterleaved(BinaryCodec.REFERENCE, ref2);
@@ -214,7 +228,6 @@ public class BinaryEncoder extends BinaryOutputStream
 //					type = BinaryCodec.REFERENCE;
 //					value = mValueLookup.get(value);
 //				}
-
 				if (nextType != type && nextType != null)
 				{
 					break;
@@ -238,7 +251,7 @@ public class BinaryEncoder extends BinaryOutputStream
 		else
 		{
 			writeInterleaved(BinaryCodec.ARRAY, entries.size());
-			writeBytes(headerData);
+			write(headerData);
 			mArrStructLookup.put(key, mArrStructLookup.size());
 		}
 
@@ -252,7 +265,8 @@ public class BinaryEncoder extends BinaryOutputStream
 			}
 		}
 
-		mObjectLookup.put(aArray, mObjectLookup.size());
+		mValueLookup.put(aArray, mValueLookup.size());
+//		mObjectLookup.put(aArray, mObjectLookup.size());
 	}
 
 

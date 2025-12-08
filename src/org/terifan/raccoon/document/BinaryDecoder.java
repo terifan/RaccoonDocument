@@ -9,29 +9,32 @@ import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryEncoder.isReferencableValue;
 
 
-public class BinaryDecoder extends BinaryInputStream
+public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 {
-	private ArrayList<Object> mObjectLookup;
+//	private ArrayList<Object> mObjectLookup;
 	private ArrayList<ArrayList<Entry>> mDocStructLookup;
 	private ArrayList<ArrayList<Entry>> mArrStructLookup;
 	private ArrayList<String> mStringLookup;
 	private ArrayList<String> mKeyLookup;
 	private ArrayList<Object> mValueLookup;
 
+	private Entry mNextEntry;
+
 
 	public BinaryDecoder(InputStream aInputStream)
 	{
 		super(aInputStream);
 
-		mObjectLookup = new ArrayList<>();
+//		mObjectLookup = new ArrayList<>();
 		mDocStructLookup = new ArrayList<>();
 		mArrStructLookup = new ArrayList<>();
 		mStringLookup = new ArrayList<>();
 		mKeyLookup = new ArrayList<>();
 		mValueLookup = new ArrayList<>();
-	}
 
-	private Entry mNextEntry;
+		mValueLookup.add(null);
+		mStringLookup.add(null);
+	}
 
 
 	public boolean next()
@@ -51,7 +54,7 @@ public class BinaryDecoder extends BinaryInputStream
 	}
 
 
-	public Object readObject() throws IOException
+	public <T> T readObject() throws IOException
 	{
 		Entry entry = mNextEntry != null ? mNextEntry : readEntry();
 
@@ -60,11 +63,13 @@ public class BinaryDecoder extends BinaryInputStream
 		switch (entry.type)
 		{
 			case DOCUMENT:
-				return readDocument(new Document(), entry);
+				return (T)readDocument(new Document(), entry);
 			case ARRAY:
-				return readArray(new Array(), entry);
+				return (T)readArray(new Array(), entry);
+			case NULL:
+				return null;
 			default:
-				return readField(entry);
+				return (T)readField(entry);
 		}
 	}
 
@@ -107,7 +112,7 @@ public class BinaryDecoder extends BinaryInputStream
 			}
 			if (aEntry.type == BinaryCodec.REFERENCE)
 			{
-				return mValueLookup.get(aEntry.value - 1);
+				return mValueLookup.get(aEntry.value );
 			}
 			if (aEntry.type == BinaryCodec.STRING)
 			{
@@ -117,7 +122,7 @@ public class BinaryDecoder extends BinaryInputStream
 			}
 			if (aEntry.type == BinaryCodec.STRING_REFERENCE)
 			{
-				return mStringLookup.get(aEntry.value - 1);
+				return mStringLookup.get(aEntry.value );
 			}
 		}
 		return readValue(aEntry.type);
@@ -167,7 +172,8 @@ public class BinaryDecoder extends BinaryInputStream
 
 		if (header.type == BinaryCodec.REFERENCE)
 		{
-			return (Document)mObjectLookup.get(header.value);
+			return (Document)mValueLookup.get(header.value);
+//			return (Document)mObjectLookup.get(header.value);
 		}
 
 		ArrayList<Entry> entries;
@@ -202,7 +208,8 @@ public class BinaryDecoder extends BinaryInputStream
 			aDocument.put(entry.name, readValue(entry.type));
 		}
 
-		mObjectLookup.add(aDocument);
+		mValueLookup.add(aDocument);
+//		mObjectLookup.add(aDocument);
 
 		return aDocument;
 	}
@@ -214,7 +221,8 @@ public class BinaryDecoder extends BinaryInputStream
 
 		if (header.type == BinaryCodec.REFERENCE)
 		{
-			return (Array)mObjectLookup.get(header.value);
+			return (Array)mValueLookup.get(header.value);
+//			return (Array)mObjectLookup.get(header.value);
 		}
 
 		ArrayList<Entry> entries;
@@ -240,7 +248,8 @@ public class BinaryDecoder extends BinaryInputStream
 			}
 		}
 
-		mObjectLookup.add(aArray);
+		mValueLookup.add(aArray);
+//		mObjectLookup.add(aArray);
 
 		return aArray;
 	}

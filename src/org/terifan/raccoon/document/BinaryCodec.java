@@ -2,16 +2,19 @@ package org.terifan.raccoon.document;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.DateTimeException;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
-
-// add ZonedDateTime
 
 public enum BinaryCodec
 {
@@ -23,13 +26,11 @@ public enum BinaryCodec
 //		(aEncoder, aValue) -> aEncoder.writeArray((Array)aValue),
 //		aDecoder -> aDecoder.readArray(new Array())
 //	),
-	REFERENCE(2),
-//		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
-//		aDecoder -> (int)aDecoder.readVarint()
-//	),
+	REFERENCE(2,
+		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
+		aDecoder -> (int)aDecoder.readVarint()
+	),
 	STRING(3,
-//		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
-//		aDecoder -> (int)aDecoder.readUnsignedVarint()
 		(aEncoder, aValue) -> aEncoder.writeString(aValue.toString()),
 		aDecoder -> aDecoder.readString()
 	),
@@ -87,12 +88,12 @@ public enum BinaryCodec
 	),
 	/** type: org.terifan.raccoon.document.ObjectId */
 	OBJECTID(3,
-		(aEncoder, aValue) -> aEncoder.writeBytes(((ObjectId)aValue).toByteArray()),
-		aDecoder -> ObjectId.fromByteArray(aDecoder.readBytes(new byte[ObjectId.LENGTH]))
+		(aEncoder, aValue) -> aEncoder.write(((ObjectId)aValue).toByteArray()),
+		aDecoder -> {byte[] buf = new byte[ObjectId.LENGTH];aDecoder.read(buf);return ObjectId.fromByteArray(buf);}
 	),
 	BYTE(9,
-		(aEncoder, aValue) -> aEncoder.writeByte(0xff & (Byte)aValue),
-		aDecoder -> (byte)aDecoder.readByte()
+		(aEncoder, aValue) -> aEncoder.write(0xff & (Byte)aValue),
+		aDecoder -> (byte)aDecoder.read()
 	),
 	SHORT(10,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Short)aValue),
@@ -100,8 +101,8 @@ public enum BinaryCodec
 	),
 	/** type: byte[] */
 	BINARY(13,
-		(aEncoder, aValue) -> {aEncoder.writeUnsignedVarint(((byte[])aValue).length); aEncoder.writeBytes((byte[])aValue);},
-		aDecoder -> aDecoder.readBytes(new byte[(int)aDecoder.readUnsignedVarint()])
+		(aEncoder, aValue) -> {aEncoder.writeUnsignedVarint(((byte[])aValue).length); aEncoder.write((byte[])aValue);},
+		aDecoder -> {byte[] buf = new byte[(int)aDecoder.readUnsignedVarint()]; aDecoder.read(buf); return buf;}
 	),
 	/** type: java.util.UUID */
 	UUID(14,
@@ -128,39 +129,48 @@ public enum BinaryCodec
 		(aEncoder, aValue) -> {aEncoder.writeInt(localDateToNumber(((OffsetDateTime)aValue).toLocalDate()));aEncoder.writeLong(localTimeToNumber(((OffsetDateTime)aValue).toLocalTime()));aEncoder.writeVarint(((OffsetDateTime)aValue).getOffset().getTotalSeconds());},
 		aDecoder -> OffsetDateTime.of(numberToLocalDate((int)aDecoder.readInt()), numberToLocalTime(aDecoder.readLong()), ZoneOffset.ofTotalSeconds((int)aDecoder.readVarint()))
 	),
-	/** type: java.lang.BigDecimal */
-	DECIMAL(19,
-		(aEncoder, aValue) -> aEncoder.writeDecimal((BigDecimal)aValue),
-		aDecoder -> aDecoder.readDecimal()
+	/** type: java.time.OffsetTime */
+	OFFSETTIME(18,
+		(aEncoder, aValue) -> {aEncoder.writeLong(localTimeToNumber(((OffsetTime)aValue).toLocalTime()));aEncoder.writeVarint(((OffsetTime)aValue).getOffset().getTotalSeconds());},
+		aDecoder -> OffsetTime.of(numberToLocalTime(aDecoder.readLong()), ZoneOffset.ofTotalSeconds((int)aDecoder.readVarint()))
 	),
-	CHAR(20,
+	/** type: java.time.Duration */
+	DURATION(18,
+		(aEncoder, aValue) -> {aEncoder.writeVarint(((Duration)aValue).getSeconds()); aEncoder.writeUnsignedVarint(((Duration)aValue).getNano());},
+		aDecoder -> Duration.ofSeconds(aDecoder.readVarint(), aDecoder.readUnsignedVarint())
+	),
+	/** type: java.time.ZonedDateTime */
+	ZONEDDATETIME(18,
+		(aEncoder, aValue) -> {
+			aEncoder.writeInt(localDateToNumber(((ZonedDateTime)aValue).toLocalDate()));
+			aEncoder.writeLong(localTimeToNumber(((ZonedDateTime)aValue).toLocalTime()));
+			aEncoder.writeString(((ZonedDateTime)aValue).getZone().getId());
+			aEncoder.writeVarint(((ZonedDateTime)aValue).getOffset().getTotalSeconds());
+		},
+		aDecoder -> ZonedDateTime.ofLocal(LocalDateTime.of(numberToLocalDate((int)aDecoder.readInt()), numberToLocalTime(aDecoder.readLong())), ZoneId.of(aDecoder.readString()), ZoneOffset.ofTotalSeconds((int)aDecoder.readVarint()))
+	),
+	BIGDECIMAL(19,
+		(aEncoder, aValue) -> aEncoder.writeBigDecimal((BigDecimal)aValue),
+		aDecoder -> aDecoder.readBigDecimal()
+	),
+	BIGINTEGER(20,
+		(aEncoder, aValue) -> aEncoder.writeBigInteger((BigInteger)aValue),
+		aDecoder -> aDecoder.readBigInteger()
+	),
+	CHAR(21,
 		(aEncoder, aValue) -> aEncoder.writeVarint((Character)aValue),
 		aDecoder -> (char)aDecoder.readVarint()
 	),
-	STRING_REFERENCE(-1,
+	STRING_REFERENCE(22,
 		(aEncoder, aValue) -> {},
 		aDecoder -> null
 	),
 	;
 
 
-	/**
-	 * @return true if all characters in the String provided are 7-bit
-	 */
-	static boolean isCompactString(String aString)
-	{
-		for (char c : aString.toCharArray())
-		{
-			if (c >= 128) return false;
-		}
-		return true;
-	}
-
-
 	Encoder encoder;
 	Decoder decoder;
 
-	private static int COUNTER;
 
 	private BinaryCodec(int aCode)
 	{
@@ -199,9 +209,13 @@ public enum BinaryCodec
 		if (Boolean.class == cls || Boolean.TYPE == cls) return BOOLEAN;
 		if (byte[].class == cls) return BINARY;
 		if (UUID.class == cls) return UUID;
-		if (BigDecimal.class == cls) return DECIMAL;
+		if (BigInteger.class == cls) return BIGINTEGER;
+		if (BigDecimal.class == cls) return BIGDECIMAL;
 		if (OffsetDateTime.class == cls) return OFFSETDATETIME;
+		if (OffsetTime.class == cls) return OFFSETTIME;
 		if (LocalDateTime.class == cls) return DATETIME;
+		if (ZonedDateTime.class == cls) return ZONEDDATETIME;
+		if (Duration.class == cls) return DURATION;
 		if (LocalDate.class == cls) return DATE;
 		if (LocalTime.class == cls) return TIME;
 		if (Character.class == cls || Character.TYPE == cls) return CHAR;
