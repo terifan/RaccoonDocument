@@ -11,11 +11,10 @@ import static org.terifan.raccoon.document.BinaryEncoder.isReferencableValue;
 
 public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 {
-//	private ArrayList<Object> mObjectLookup;
 	private ArrayList<ArrayList<Entry>> mDocStructLookup;
 	private ArrayList<ArrayList<Entry>> mArrStructLookup;
 	private ArrayList<String> mStringLookup;
-	private ArrayList<String> mKeyLookup;
+	private ArrayList<String> mNameLookup;
 	private ArrayList<Object> mValueLookup;
 
 	private Entry mNextEntry;
@@ -25,11 +24,10 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 	{
 		super(aInputStream);
 
-//		mObjectLookup = new ArrayList<>();
 		mDocStructLookup = new ArrayList<>();
 		mArrStructLookup = new ArrayList<>();
 		mStringLookup = new ArrayList<>();
-		mKeyLookup = new ArrayList<>();
+		mNameLookup = new ArrayList<>();
 		mValueLookup = new ArrayList<>();
 
 		mValueLookup.add(null);
@@ -173,7 +171,6 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 		if (header.type == BinaryCodec.REFERENCE)
 		{
 			return (Document)mValueLookup.get(header.value);
-//			return (Document)mObjectLookup.get(header.value);
 		}
 
 		ArrayList<Entry> entries;
@@ -190,12 +187,12 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 				if ((entry.value & 1) == 1)
 				{
-					entry.name = mKeyLookup.get(entry.value >> 1);
+					entry.name = mNameLookup.get(entry.value >> 1);
 				}
 				else
 				{
 					entry.name = readUTF(entry.value >> 1);
-					mKeyLookup.add(entry.name);
+					mNameLookup.add(entry.name);
 				}
 
 				entries.add(entry);
@@ -209,7 +206,6 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 		}
 
 		mValueLookup.add(aDocument);
-//		mObjectLookup.add(aDocument);
 
 		return aDocument;
 	}
@@ -222,7 +218,6 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 		if (header.type == BinaryCodec.REFERENCE)
 		{
 			return (Array)mValueLookup.get(header.value);
-//			return (Array)mObjectLookup.get(header.value);
 		}
 
 		ArrayList<Entry> entries;
@@ -249,7 +244,6 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 		}
 
 		mValueLookup.add(aArray);
-//		mObjectLookup.add(aArray);
 
 		return aArray;
 	}
@@ -374,27 +368,4 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 			return "{type=" + type + ", value=" + value + ", name=" + name + "}";
 		}
 	}
-
-//	public static enum VisitorResult
-//	{
-//		TERMINATE,
-//		SKIP,
-//		SKIP_SIBLINGS,
-//		SKIP_SUBTREE,
-//		CONTINUE;
-//
-//
-//		boolean isSkip()
-//		{
-//			switch (this)
-//			{
-//				case VisitorResult.SKIP_SUBTREE:
-//				case VisitorResult.SKIP_SIBLINGS:
-//				case VisitorResult.SKIP:
-//					return true;
-//				default:
-//					return false;
-//			}
-//		}
-//	}
 }

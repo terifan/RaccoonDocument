@@ -11,11 +11,10 @@ import org.terifan.raccoon.document.BinaryDecoder.Entry;
 
 public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
-//	private HashMap<Object, Integer> mObjectLookup;
 	private HashMap<ByteKey, Integer> mDocStructLookup;
 	private HashMap<ByteKey, Integer> mArrStructLookup;
 	private HashMap<String, Integer> mStringLookup;
-	private HashMap<String, Integer> mKeyLookup;
+	private HashMap<String, Integer> mNameLookup;
 	private HashMap<Object, Integer> mValueLookup;
 
 	public static boolean DEBUG;
@@ -25,11 +24,10 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 	{
 		super(aOutputStream);
 
-//		mObjectLookup = new HashMap<>();
 		mDocStructLookup = new HashMap<>();
 		mArrStructLookup = new HashMap<>();
 		mStringLookup = new HashMap<>();
-		mKeyLookup = new HashMap<>();
+		mNameLookup = new HashMap<>();
 		mValueLookup = new HashMap<>();
 
 		mValueLookup.put(null, 0);
@@ -64,10 +62,6 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 		if (DEBUG)
 		{
-//			for (Map.Entry<Object, Integer> entry : mObjectLookup.entrySet())
-//			{
-//				System.out.println("obj: " + entry.getKey());
-//			}
 			for (Map.Entry<ByteKey, Integer> entry : mDocStructLookup.entrySet())
 			{
 				System.out.println("doc: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
@@ -80,7 +74,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			{
 				System.out.println("str: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
 			}
-			for (Map.Entry<String, Integer> entry : mKeyLookup.entrySet())
+			for (Map.Entry<String, Integer> entry : mNameLookup.entrySet())
 			{
 				System.out.println("key: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
 			}
@@ -92,7 +86,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 	}
 
 
-	private void writeField(Object aObject) throws IOException, UnsupportedTypeException
+	void writeField(Object aObject) throws IOException, UnsupportedTypeException
 	{
 		BinaryCodec type = BinaryCodec.identify(aObject);
 
@@ -141,7 +135,6 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 	void writeDocument(Document aDocument) throws IOException
 	{
 		Integer ref2 = mValueLookup.get(aDocument);
-//		Integer ref2 = mObjectLookup.get(aDocument);
 		if (ref2 != null)
 		{
 			writeInterleaved(BinaryCodec.REFERENCE, ref2);
@@ -153,7 +146,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 		for (Map.Entry<String, Object> entry : aDocument.entrySet())
 		{
-			String key = entry.getKey();
+			String name = entry.getKey();
 			Object value = entry.getValue();
 			BinaryCodec type = BinaryCodec.identify(value);
 
@@ -164,15 +157,15 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 //			}
 			entries.add(new Entry(type, value));
 
-			if (mKeyLookup.containsKey(key))
+			if (mNameLookup.containsKey(name))
 			{
-				header.writeInterleaved(type, mKeyLookup.get(key) * 2 + 1);
+				header.writeInterleaved(type, mNameLookup.get(name) * 2 + 1);
 			}
 			else
 			{
-				header.writeInterleaved(type, key.length() * 2);
-				header.writeUTF(key);
-				mKeyLookup.put(key, mKeyLookup.size());
+				header.writeInterleaved(type, name.length() * 2);
+				header.writeUTF(name);
+				mNameLookup.put(name, mNameLookup.size());
 			}
 		}
 
@@ -196,14 +189,12 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 		}
 
 		mValueLookup.put(aDocument, mValueLookup.size());
-//		mObjectLookup.put(aDocument, mObjectLookup.size());
 	}
 
 
 	void writeArray(Array aArray) throws IOException
 	{
 		Integer ref2 = mValueLookup.get(aArray);
-//		Integer ref2 = mObjectLookup.get(aArray);
 		if (ref2 != null)
 		{
 			writeInterleaved(BinaryCodec.REFERENCE, ref2);
@@ -266,7 +257,6 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 		}
 
 		mValueLookup.put(aArray, mValueLookup.size());
-//		mObjectLookup.put(aArray, mObjectLookup.size());
 	}
 
 

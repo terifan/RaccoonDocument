@@ -165,6 +165,14 @@ public enum BinaryCodec
 		(aEncoder, aValue) -> {},
 		aDecoder -> null
 	),
+	TERMINATOR(23,
+		(aEncoder, aValue) -> {},
+		aDecoder -> null
+	),
+	FIELD(23,
+		(aEncoder, aValue) -> {},
+		aDecoder -> null
+	),
 	;
 
 
