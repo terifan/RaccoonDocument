@@ -13,7 +13,8 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
- 
+
+
 /*
     iss (issuer): Issuer of the JWT
     sub (subject): Subject of the JWT (the user)
@@ -22,8 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
     nbf (not before time): Time before which the JWT must not be accepted for processing
     iat (issued at time): Time at which the JWT was issued; can be used to determine age of the JWT
     jti (JWT ID): Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
-*/
-
+ */
 /**
  * The Signer class performs JWT (JSON Web Token) compatible encoding, decoding and verification of a document.
  *
@@ -37,8 +37,18 @@ public class Signer
 
 	public enum Algorithm
 	{
-		HS256, HS384, HS512,
-		/** unsupported by JWT */
+		HS256,
+		HS384,
+		HS512,
+		//		RS256,
+		//		RS384,
+		//		RS512,
+		//		ES256,
+		//		ES384,
+		//		ES512,
+		/**
+		 * unsupported by JWT
+		 */
 		MD5_HMAC
 	}
 
@@ -180,7 +190,9 @@ public class Signer
 
 
 	/**
-	 * Return a signed compressed binary representation of this Document. Signing algorithm is HS256.
+	 * Return a signed compressed binary representation of provided document. Signing algorithm is HS256.
+	 *
+	 * note: This format is not compatible with the text version!
 	 */
 	public byte[] toSignedByteArray(Document aMessage)
 	{
@@ -189,9 +201,11 @@ public class Signer
 
 
 	/**
-	 * Return a signed compressed binary representation of this Document.
+	 * Return a signed compressed binary representation of provided document and header.
 	 *
 	 * note: if the header contains an "alg" field that will algorithm is used when signing a message.
+	 *
+	 * note: This format is not compatible with the text version!
 	 *
 	 * @param aHeader an optional custom header document.
 	 */

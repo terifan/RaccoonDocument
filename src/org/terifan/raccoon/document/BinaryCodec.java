@@ -18,6 +18,7 @@ import java.util.UUID;
 
 public enum BinaryCodec
 {
+	TERMINATOR(0),
 	DOCUMENT(0),
 //		(aEncoder, aValue) -> aEncoder.writeDocument((Document)aValue),
 //		aDecoder -> aDecoder.readDocument(new Document())
@@ -26,10 +27,10 @@ public enum BinaryCodec
 //		(aEncoder, aValue) -> aEncoder.writeArray((Array)aValue),
 //		aDecoder -> aDecoder.readArray(new Array())
 //	),
-	REFERENCE(2,
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
-		aDecoder -> (int)aDecoder.readVarint()
-	),
+	REFERENCE(2),
+//		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((int)aValue),
+//		aDecoder -> (int)aDecoder.readUnsignedVarint()
+//	),
 	STRING(3,
 		(aEncoder, aValue) -> aEncoder.writeString(aValue.toString()),
 		aDecoder -> aDecoder.readString()
@@ -161,15 +162,7 @@ public enum BinaryCodec
 		(aEncoder, aValue) -> aEncoder.writeVarint((Character)aValue),
 		aDecoder -> (char)aDecoder.readVarint()
 	),
-	STRING_REFERENCE(22,
-		(aEncoder, aValue) -> {},
-		aDecoder -> null
-	),
-	TERMINATOR(23,
-		(aEncoder, aValue) -> {},
-		aDecoder -> null
-	),
-	FIELD(23,
+	FIELD(22,
 		(aEncoder, aValue) -> {},
 		aDecoder -> null
 	),
@@ -281,5 +274,23 @@ public enum BinaryCodec
 		{
 			throw new StreamException(e.getMessage());
 		}
+	}
+
+
+	static boolean isReferencableValue(BinaryCodec aType, Object aValue)
+	{
+		assert aType != BinaryCodec.REFERENCE;
+		assert aType != BinaryCodec.STRING;
+
+		if (aType == BinaryCodec.BOOLEAN || aType == BinaryCodec.NULL)
+		{
+			return false;
+		}
+		if (aType == BinaryCodec.INT || aType == BinaryCodec.LONG || aType == BinaryCodec.BYTE || aType == BinaryCodec.SHORT)
+		{
+			long v = ((Number)aValue).longValue();
+			return v < -63 || v > 63;
+		}
+		return true;
 	}
 }

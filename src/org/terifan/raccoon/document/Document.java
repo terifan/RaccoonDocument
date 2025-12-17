@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
@@ -14,7 +15,7 @@ import java.util.function.Function;
 import static org.terifan.raccoon.document.SupportedTypes.assertSupported;
 
 
-public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
+public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, CollectionEntity
 {
 	private final static long serialVersionUID = 1L;
 
@@ -234,48 +235,68 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	MurmurHash3 hashCode(MurmurHash3 aChecksum, ReferenceMap aLinkedList)
+	MurmurHash3 hashCode(MurmurHash3 aChecksum)
 	{
-		aChecksum.updateInt("document".hashCode());
-		aChecksum.updateInt(size());
-
-		if (aLinkedList.contains(this))
-		{
-			aChecksum.updateInt(aLinkedList.indexOf(this));
-			return aChecksum;
-		}
-
-		aLinkedList.add(this, null);
-
-		mValues.entrySet().forEach(entry ->
-		{
-			aChecksum.updateUTF8(entry.getKey());
-			super.hashCode(aChecksum, entry.getValue(), aLinkedList);
-		});
-
-		aLinkedList.remove(this);
+//		mValues.entrySet().forEach(entry -> hashCodeUpdate(aChecksum.updateUTF8(entry.getKey()), entry.getValue()));
+		aChecksum.updateUTF8(toJson(true));
 
 		return aChecksum;
 	}
 
 
-	/**
-	 * This implementation disregard the order of keys.
-	 */
 	@Override
 	public boolean equals(Object aOther)
 	{
-		if (aOther instanceof Document v)
+		return toJson(true).equals(((Document)aOther).toJson(true));
+//		if (aOther == this)
+//		{
+//			return true;
+//		}
+//		if (aOther instanceof Document v)
+//		{
+//			if (size() != v.size() || !keys().equals(v.keys()))
+//			{
+//				return false;
+//			}
+//			for (Entry<String, Object> entry : entrySet())
+//			{
+//				if (!Objects.equals(entry.getValue(), v.get(entry.getKey())))
+//				{
+//					return false;
+//				}
+//			}
+//			return true;
+//		}
+//
+//		return false;
+	}
+
+
+	/**
+	 * Return true if this Document has the same key/values as the provided Document. This implementation disregard the order of keys.
+	 */
+	public boolean same(Object aOther)
+	{
+		if (aOther == this)
 		{
-			if (size() != v.size())
+			return true;
+		}
+		if (aOther instanceof Document other)
+		{
+			if (size() != other.size())
 			{
 				return false;
 			}
-			Array keys = keys();
-			for (int i = 0, sz = size(); i < sz; i++)
+			for (Entry<String, Object> entry : entrySet())
 			{
-				String key = keys.get(i);
-				if (!get(key).equals(v.get(key)))
+				if (entry.getValue() instanceof Document v)
+				{
+					if (!v.same(other.get(entry.getKey())))
+					{
+						return false;
+					}
+				}
+				else if (!Objects.equals(entry.getValue(), other.get(entry.getKey())))
 				{
 					return false;
 				}
@@ -539,5 +560,49 @@ public class Document extends Collection<String, Document> implements Externaliz
 			aMap.put(entry.getKey(), entry.getValue());
 		}
 		return aMap;
+	}
+
+
+	public Document insert(String aName, Object aValue)
+	{
+		Object o = get(aName);
+		if (o instanceof Array v)
+		{
+			v.add(aValue);
+		}
+		else if (o == null)
+		{
+			put(aName, aValue);
+		}
+		else
+		{
+			put(aName, Array.of(o, aValue));
+		}
+
+		return this;
+	}
+
+
+	public Document remove(String aName, Object aValue)
+	{
+		Object o = get(aName);
+		if (o instanceof Array v)
+		{
+			v.removeValue(aValue);
+			if (v.size() == 1)
+			{
+				put(aName, v.get(0));
+			}
+			else if (v.isEmpty())
+			{
+				remove(aName);
+			}
+		}
+		else if (o != null && o.equals(aValue))
+		{
+			remove(aName);
+		}
+
+		return this;
 	}
 }

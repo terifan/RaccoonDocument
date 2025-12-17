@@ -6,82 +6,43 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.terifan.raccoon.document.BinaryDecoder.Entry;
+import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
+import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
+import static org.terifan.raccoon.document.BinaryCodec.isReferencableValue;
 
 
-public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
+class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
-	private HashMap<ByteKey, Integer> mDocStructLookup;
-	private HashMap<ByteKey, Integer> mArrStructLookup;
 	private HashMap<String, Integer> mStringLookup;
 	private HashMap<String, Integer> mNameLookup;
 	private HashMap<Object, Integer> mValueLookup;
-
-	public static boolean DEBUG;
 
 
 	public BinaryEncoder(OutputStream aOutputStream)
 	{
 		super(aOutputStream);
 
-		mDocStructLookup = new HashMap<>();
-		mArrStructLookup = new HashMap<>();
 		mStringLookup = new HashMap<>();
 		mNameLookup = new HashMap<>();
 		mValueLookup = new HashMap<>();
-
-		mValueLookup.put(null, 0);
-		mStringLookup.put(null, 0);
 	}
 
 
-	@Override
-	public void close()
-	{
-	}
-
-
-//	public void writeTerminate() throws IOException
-//	{
-//		writeInterleaved(BinaryCodec.TERMINATE, 0);
-//	}
 	public void writeObject(Object aObject) throws IOException
 	{
 		if (aObject instanceof Document v)
 		{
+			writeInterleaved(BinaryCodec.DOCUMENT, 0);
 			writeDocument(v);
 		}
 		else if (aObject instanceof Array v)
 		{
+			writeInterleaved(BinaryCodec.ARRAY, 0);
 			writeArray(v);
 		}
 		else
 		{
 			writeField(aObject);
-		}
-
-		if (DEBUG)
-		{
-			for (Map.Entry<ByteKey, Integer> entry : mDocStructLookup.entrySet())
-			{
-				System.out.println("doc: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
-			}
-			for (Map.Entry<ByteKey, Integer> entry : mArrStructLookup.entrySet())
-			{
-				System.out.println("arr: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
-			}
-			for (Map.Entry<String, Integer> entry : mStringLookup.entrySet())
-			{
-				System.out.println("str: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
-			}
-			for (Map.Entry<String, Integer> entry : mNameLookup.entrySet())
-			{
-				System.out.println("key: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
-			}
-			for (Map.Entry<Object, Integer> entry : mValueLookup.entrySet())
-			{
-				System.out.println("val: " + entry.getKey().toString().replace('\r', '-').replace('\n', '-').replace('\t', '-'));
-			}
 		}
 	}
 
@@ -100,163 +61,98 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			throw new UnsupportedTypeException(aObject.getClass().getCanonicalName());
 		}
 
-		if (aObject != null && mValueLookup.containsKey(aObject))
-		{
-			type = BinaryCodec.REFERENCE;
-			aObject = mValueLookup.get(aObject);
-		}
-
-		if (type == BinaryCodec.INT && ((Integer)aObject) > 0 && ((Integer)aObject) < 200)
-		{
-			writeInterleaved(type, (Integer)aObject);
-		}
-		else if (type == BinaryCodec.REFERENCE && ((Integer)aObject) < 200)
-		{
-			writeInterleaved(type, ((Integer)aObject));
-		}
-		else if (type == BinaryCodec.STRING && mStringLookup.containsKey(aObject) && mStringLookup.get(aObject) < 200)
-		{
-			writeInterleaved(BinaryCodec.STRING_REFERENCE, mStringLookup.get(aObject));
-		}
-		else if (type == BinaryCodec.STRING && ((String)aObject).length() < 200 && !mStringLookup.containsKey(aObject))
-		{
-			writeInterleaved(type, ((String)aObject).length());
-			writeUTF((String)aObject);
-			mStringLookup.put((String)aObject, mStringLookup.size());
-		}
-		else
-		{
-			writeInterleaved(type, 0);
-			writeValue(type, aObject);
-		}
+		writeInterleaved(type, 0);
+		writeValue(type, aObject);
 	}
 
 
 	void writeDocument(Document aDocument) throws IOException
 	{
-		Integer ref2 = mValueLookup.get(aDocument);
-		if (ref2 != null)
-		{
-			writeInterleaved(BinaryCodec.REFERENCE, ref2);
-			return;
-		}
-
-		ArrayList<Entry> entries = new ArrayList<>();
-		BinaryBufferedOutputStream header = new BinaryBufferedOutputStream();
-
 		for (Map.Entry<String, Object> entry : aDocument.entrySet())
 		{
 			String name = entry.getKey();
 			Object value = entry.getValue();
-			BinaryCodec type = BinaryCodec.identify(value);
+			BinaryCodec type;
 
-//			if (mValueLookup.containsKey(value))
-//			{
-//				type = BinaryCodec.REFERENCE;
-//				value = mValueLookup.get(value);
-//			}
-			entries.add(new Entry(type, value));
-
-			if (mNameLookup.containsKey(name))
+			Integer tmp = mValueLookup.get(value);
+			if (tmp != null)
 			{
-				header.writeInterleaved(type, mNameLookup.get(name) * 2 + 1);
+				type = BinaryCodec.REFERENCE;
+				value = tmp;
 			}
 			else
 			{
-				header.writeInterleaved(type, name.length() * 2);
-				header.writeUTF(name);
+				type = BinaryCodec.identify(value);
+			}
+
+			tmp = mNameLookup.get(name);
+			if (tmp != null)
+			{
+				writeInterleaved(type, tmp * 2 + 1);
+			}
+			else
+			{
+				writeInterleaved(type, name.length() * 2);
+				writeUTF(name);
 				mNameLookup.put(name, mNameLookup.size());
 			}
+
+			writeValue(type, value);
+
+			if (type==DOCUMENT||type==ARRAY)mValueLookup.put(value, mValueLookup.size());
 		}
 
-		byte[] headerData = header.finish();
-		ByteKey key = new ByteKey(headerData);
-		Integer ref = mDocStructLookup.get(key);
-		if (ref != null)
-		{
-			writeInterleaved(BinaryCodec.BINARY, ref);
-		}
-		else
-		{
-			writeInterleaved(BinaryCodec.DOCUMENT, aDocument.size());
-			write(headerData);
-			mDocStructLookup.put(key, mDocStructLookup.size());
-		}
-
-		for (Entry entry : entries)
-		{
-			writeValue(entry.type, entry.object);
-		}
-
-		mValueLookup.put(aDocument, mValueLookup.size());
+		writeInterleaved(BinaryCodec.TERMINATOR, 0);
 	}
 
 
 	void writeArray(Array aArray) throws IOException
 	{
-		Integer ref2 = mValueLookup.get(aArray);
-		if (ref2 != null)
-		{
-			writeInterleaved(BinaryCodec.REFERENCE, ref2);
-			return;
-		}
+		ArrayList<Object> values = new ArrayList<>();
 
-		ArrayList<Entry> entries = new ArrayList<>();
-		BinaryBufferedOutputStream header = new BinaryBufferedOutputStream();
-
-		for (int offset = 0, elementCount = aArray.size(); offset < elementCount;)
+		for (int offset = 0; offset < aArray.size();)
 		{
 			BinaryCodec nextType = null;
-			int runLen = 0;
 
-			for (int i = offset; i < elementCount; i++, runLen++)
+			for (int i = offset; i < aArray.size(); i++)
 			{
 				Object value = aArray.get(i);
-				BinaryCodec type = BinaryCodec.identify(value);
+				BinaryCodec type;
 
-//				if (mValueLookup.containsKey(value))
-//				{
-//					type = BinaryCodec.REFERENCE;
-//					value = mValueLookup.get(value);
-//				}
+				Integer tmp = mValueLookup.get(value);
+				if (tmp != null)
+				{
+					type = BinaryCodec.REFERENCE;
+					value = tmp;
+				}
+				else
+				{
+					type = BinaryCodec.identify(value);
+				}
+
 				if (nextType != type && nextType != null)
 				{
 					break;
 				}
 
+				values.add(value);
 				nextType = type;
+
+				if (type==DOCUMENT||type==ARRAY)mValueLookup.put(value, mValueLookup.size());
 			}
 
-			entries.add(new Entry(nextType, runLen));
-			header.writeInterleaved(nextType, runLen);
-			offset += runLen;
-		}
+			writeInterleaved(nextType, values.size());
 
-		byte[] headerData = header.finish();
-		ByteKey key = new ByteKey(headerData);
-		Integer ref = mArrStructLookup.get(key);
-		if (ref != null)
-		{
-			writeInterleaved(BinaryCodec.BINARY, ref);
-		}
-		else
-		{
-			writeInterleaved(BinaryCodec.ARRAY, entries.size());
-			write(headerData);
-			mArrStructLookup.put(key, mArrStructLookup.size());
-		}
-
-		int i = 0;
-		for (Entry entry : entries)
-		{
-			for (int j = 0; j < entry.value; j++)
+			for (Object value : values)
 			{
-				Object v = aArray.get(i++);
-				writeValue(entry.type, v);
+				writeValue(nextType, value);
 			}
+
+			offset += values.size();
+			values.clear();
 		}
 
-		mValueLookup.put(aArray, mValueLookup.size());
+		writeInterleaved(BinaryCodec.TERMINATOR, 0);
 	}
 
 
@@ -265,24 +161,13 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 		switch (aType)
 		{
 			case DOCUMENT:
-				if (aValue instanceof Document v)
-				{
-					writeDocument(v);
-				}
-				else
-				{
-					writeUnsignedVarint((Integer)aValue);
-				}
+				writeDocument((Document)aValue);
 				break;
 			case ARRAY:
-				if (aValue instanceof Array v)
-				{
-					writeArray(v);
-				}
-				else
-				{
-					writeUnsignedVarint((Integer)aValue);
-				}
+				writeArray((Array)aValue);
+				break;
+			case REFERENCE:
+				writeUnsignedVarint((Integer)aValue);
 				break;
 			case STRING:
 				String s = (String)aValue;
@@ -297,33 +182,15 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 					mStringLookup.put(s, mStringLookup.size());
 				}
 				break;
-			case REFERENCE:
-				writeUnsignedVarint((Integer)aValue);
-				break;
 			default:
 				aType.encoder.encode(this, aValue);
 
 				if (isReferencableValue(aType, aValue))
 				{
-					mValueLookup.put(aValue, mValueLookup.size());
+//					mValueLookup.put(aValue, mValueLookup.size());
 				}
 				break;
 		}
-	}
-
-
-	static boolean isReferencableValue(BinaryCodec aType, Object aValue)
-	{
-		if (aType == BinaryCodec.BOOLEAN || aType == BinaryCodec.REFERENCE || aType == BinaryCodec.ARRAY || aType == BinaryCodec.DOCUMENT || aType == BinaryCodec.STRING)
-		{
-			return false;
-		}
-		if (aType == BinaryCodec.INT || aType == BinaryCodec.LONG || aType == BinaryCodec.BYTE || aType == BinaryCodec.SHORT)
-		{
-			long v = ((Number)aValue).longValue();
-			return v < -63 || v > 63;
-		}
-		return true;
 	}
 
 

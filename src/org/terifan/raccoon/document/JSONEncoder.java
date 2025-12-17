@@ -13,7 +13,6 @@ public class JSONEncoder
 	private boolean mCompact;
 	private boolean mNewLine;
 	private boolean mFirst;
-	private boolean mReferenceSharedObjects;
 	private char mQuote;
 	private int mIndent;
 	private String mIntentSymbol;
@@ -24,7 +23,6 @@ public class JSONEncoder
 		mCompact = aCompact;
 		mTyped = aTyped;
 		mQuote = aApostrophes ? '\'' : '\"';
-		mReferenceSharedObjects = aReferenceSharedObjects;
 
 		mIntentSymbol = "\t";
 	}
@@ -41,9 +39,9 @@ public class JSONEncoder
 			switch (aContainer)
 			{
 				case Document v ->
-					marshalDocument(v, new ReferenceMap(), new Path(), true);
+					marshalDocument(v, new Path(), true);
 				case Array v ->
-					marshalArray(v, new ReferenceMap(), new Path());
+					marshalArray(v, new Path());
 				default ->
 					throw new IllegalArgumentException();
 			}
@@ -57,24 +55,14 @@ public class JSONEncoder
 	}
 
 
-	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, Path aPath) throws IOException
+	private void marshalDocument(Document aDocument, Path aPath) throws IOException
 	{
-		marshalDocument(aDocument, aReferenceMap, aPath, true);
+		marshalDocument(aDocument, aPath, true);
 	}
 
 
-	private void marshalDocument(Document aDocument, ReferenceMap aReferenceMap, Path aPath, boolean aNewLineOnClose) throws IOException
+	private void marshalDocument(Document aDocument, Path aPath, boolean aNewLineOnClose) throws IOException
 	{
-		// TODO:
-//		if (aReferenceMap.contains(aDocument))
-//		{
-//			printReference(aReferenceMap, aDocument);
-//			warn("A cyclic reference was encountered during evaluation: " + aPath);
-//			return;
-//		}
-
-		aReferenceMap.add(aDocument, aPath.toString());
-
 		int size = aDocument.size();
 
 		if (size == 0)
@@ -107,7 +95,7 @@ public class JSONEncoder
 			print(mQuote + escapeString(entry.getKey()) + mQuote + ": ");
 
 			aPath.enter(entry.getKey());
-			marshal(entry.getValue(), aReferenceMap, aPath);
+			marshal(entry.getValue(), aPath);
 			aPath.exit();
 
 			if (--size > 0)
@@ -128,32 +116,11 @@ public class JSONEncoder
 			indent(-1);
 			print("}");
 		}
-
-		if (!mReferenceSharedObjects)
-		{
-			aReferenceMap.remove(aDocument);
-		}
 	}
 
 
-	private void printReference(ReferenceMap aReferenceMap, Collection aKey) throws IOException
+	private void marshalArray(Array aArray, Path aPath) throws IOException
 	{
-		print(mQuote + "$reference(" + aReferenceMap.get(aKey) + ")" + mQuote);
-	}
-
-
-	private void marshalArray(Array aArray, ReferenceMap aReferenceMap, Path aPath) throws IOException
-	{
-		// TODO:
-//		if (aReferenceMap.contains(aArray))
-//		{
-//			printReference(aReferenceMap, aArray);
-//			warn("A cyclic reference was encountered during evaluation: " + aPath);
-//			return;
-//		}
-
-		aReferenceMap.add(aArray, aPath.toString());
-
 		int size = aArray.size();
 
 		if (size == 0)
@@ -192,7 +159,7 @@ public class JSONEncoder
 			aPath.enter(i);
 			if (first)
 			{
-				marshalDocument((Document)value, aReferenceMap, aPath, false);
+				marshalDocument((Document)value, aPath, false);
 
 				if (--size > 0)
 				{
@@ -201,7 +168,7 @@ public class JSONEncoder
 			}
 			else
 			{
-				marshal(value, aReferenceMap, aPath);
+				marshal(value, aPath);
 
 				if (--size > 0)
 				{
@@ -228,32 +195,27 @@ public class JSONEncoder
 			indent(-1);
 			println("]");
 		}
-
-		if (!mReferenceSharedObjects)
-		{
-			aReferenceMap.remove(aArray);
-		}
 	}
 
 
-	private void marshal(Object aValue, ReferenceMap aReferenceMap, Path aPath) throws IOException
+	private void marshal(Object aValue, Path aPath) throws IOException
 	{
 		if (aValue instanceof Document v)
 		{
-			marshalDocument(v, aReferenceMap, aPath);
+			marshalDocument(v, aPath);
 		}
 		else if (aValue instanceof Array v)
 		{
-			marshalArray(v, aReferenceMap, aPath);
+			marshalArray(v, aPath);
 		}
 		else
 		{
-			marshalValue(aValue, aReferenceMap, aPath);
+			marshalValue(aValue, aPath);
 		}
 	}
 
 
-	private void marshalValue(Object aValue, ReferenceMap aReferenceMap, Path aPath) throws IOException
+	private void marshalValue(Object aValue, Path aPath) throws IOException
 	{
 		if (aValue instanceof String v)
 		{

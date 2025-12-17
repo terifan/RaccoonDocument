@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import static org.terifan.raccoon.document.SupportedTypes.assertSupported;
 
 
-public class Array extends Collection<Integer, Array> implements Iterable<Object>, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
+public class Array extends Collection<Integer, Array> implements Iterable<Object>, Externalizable, Cloneable, Comparable<Array>, CollectionEntity
 {
 	private final static long serialVersionUID = 1L;
 
@@ -299,22 +299,10 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 
 
 	@Override
-	MurmurHash3 hashCode(MurmurHash3 aChecksum, ReferenceMap aLinkedList)
+	MurmurHash3 hashCode(MurmurHash3 aChecksum)
 	{
-		aChecksum.updateInt("array".hashCode());
-		aChecksum.updateInt(size());
-
-		if (aLinkedList.contains(this))
-		{
-			aChecksum.updateInt(aLinkedList.indexOf(this));
-			return aChecksum;
-		}
-
-		aLinkedList.add(this, null);
-
-		mValues.forEach(value -> super.hashCode(aChecksum, value, aLinkedList));
-
-		aLinkedList.remove(this);
+		mValues.forEach(value -> hashCodeUpdate(aChecksum, value));
+//		aChecksum.updateUTF8(toJson(true));
 
 		return aChecksum;
 	}
@@ -323,6 +311,10 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 	@Override
 	public boolean equals(Object aOther)
 	{
+		if (aOther == this)
+		{
+			return true;
+		}
 		if (aOther instanceof Array v)
 		{
 			return mValues.equals(v.mValues);

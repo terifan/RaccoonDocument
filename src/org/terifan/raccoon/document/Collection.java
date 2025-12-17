@@ -214,7 +214,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	abstract Object remove(K aKey);
 
 
-	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum, ReferenceMap aLinkedList);
+	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum);
 
 
 	@SuppressWarnings("unchecked")
@@ -1063,15 +1063,15 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	@Override
 	public int hashCode()
 	{
-		return hashCode(new MurmurHash3(0), new ReferenceMap()).getValue();
+		return hashCode(new MurmurHash3(0)).getValue();
 	}
 
 
-	void hashCode(MurmurHash3 aChecksum, Object aValue, ReferenceMap aLinkedList)
+	void hashCodeUpdate(MurmurHash3 aChecksum, Object aValue)
 	{
 		if (aValue instanceof Collection v)
 		{
-			v.hashCode(aChecksum, aLinkedList);
+			v.hashCode(aChecksum);
 		}
 		else if (aValue instanceof CharSequence v)
 		{
@@ -1099,7 +1099,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 
 	/**
-	 * Decodes a JSON (version 1 &amp; 2) into a Document or Array.
+	 * Decodes a JSON into a Document or Array.
 	 */
 	public R fromJson(String aJson)
 	{
@@ -1115,7 +1115,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 
 	/**
-	 * Decodes a JSON (version 1 &amp; 2) into a Document or Array.
+	 * Decodes a JSON into a Document or Array.
 	 */
 	public static <T extends Collection> T parseJson(String aJson)
 	{
@@ -1306,7 +1306,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 
 	/**
-	 * Decodes a JSON (version 1 &amp; 2) into a Document or Array.
+	 * Decodes a JSON into a Document or Array.
 	 */
 	public static <T extends Collection> T parseByteArray(byte[] aBinaryData)
 	{
@@ -1315,7 +1315,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 
 	/**
-	 * Decodes a JSON (version 1 &amp; 2) into a Document or Array.
+	 * Decodes a JSON into a Document or Array.
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends Collection> T parseByteArray(byte[] aBinaryData, int aOffset, int aLength)

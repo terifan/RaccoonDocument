@@ -88,11 +88,11 @@ public class BinaryOutputStream extends OutputStream implements AutoCloseable
 
 			if (aValue == 0)
 			{
-				BinaryOutputStream.this.write(b);
+				write(b);
 				return;
 			}
 
-			BinaryOutputStream.this.write(128 + b);
+			write(128 + b);
 		}
 	}
 
@@ -111,18 +111,18 @@ public class BinaryOutputStream extends OutputStream implements AutoCloseable
 			char c = aInput.charAt(i);
 			if (c <= 0x007F)
 			{
-				BinaryOutputStream.this.write(c & 0x7F);
+				write(c & 0x7F);
 			}
 			else if (c <= 0x07FF)
 			{
-				BinaryOutputStream.this.write(0xC0 | ((c >> 6) & 0x1F));
-				BinaryOutputStream.this.write(0x80 | ((c) & 0x3F));
+				write(0xC0 | ((c >> 6) & 0x1F));
+				write(0x80 | ((c) & 0x3F));
 			}
 			else
 			{
-				BinaryOutputStream.this.write(0xE0 | ((c >> 12) & 0x0F));
-				BinaryOutputStream.this.write(0x80 | ((c >> 6) & 0x3F));
-				BinaryOutputStream.this.write(0x80 | ((c) & 0x3F));
+				write(0xE0 | ((c >> 12) & 0x0F));
+				write(0x80 | ((c >> 6) & 0x3F));
+				write(0x80 | ((c) & 0x3F));
 			}
 		}
 	}
@@ -130,8 +130,6 @@ public class BinaryOutputStream extends OutputStream implements AutoCloseable
 
 	void writeInterleaved(BinaryCodec aX, int aY) throws IOException
 	{
-		if (aX==BinaryCodec.REFERENCE && aY==0)throw new IllegalStateException();
-
 		writeUnsignedVarint((shift(aY) << 1) | shift(aX.ordinal()));
 	}
 
@@ -169,13 +167,13 @@ public class BinaryOutputStream extends OutputStream implements AutoCloseable
 			int b = s[k++];
 			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
 			b = (b == 'e' || b == 'E' ? ':' : b) - '+';
-			BinaryOutputStream.this.write((a << 4) + b);
+			write((a << 4) + b);
 		}
 		if ((s.length & 1) == 1)
 		{
 			int a = s[s.length - 1];
 			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
-			BinaryOutputStream.this.write(a << 4);
+			write(a << 4);
 		}
 	}
 
@@ -199,13 +197,13 @@ public class BinaryOutputStream extends OutputStream implements AutoCloseable
 			int b = s[k++];
 			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
 			b = (b == 'e' || b == 'E' ? ':' : b) - '+';
-			BinaryOutputStream.this.write((a << 4) + b);
+			write((a << 4) + b);
 		}
 		if ((s.length & 1) == 1)
 		{
 			int a = s[s.length - 1];
 			a = (a == 'e' || a == 'E' ? ':' : a) - '+';
-			BinaryOutputStream.this.write(a << 4);
+			write(a << 4);
 		}
 	}
 

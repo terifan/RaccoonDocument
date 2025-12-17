@@ -1,48 +1,56 @@
 package org.terifan.raccoon.document;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 
-public class DocumentWriter
+public class CollectionWriter implements AutoCloseable
 {
 	private BinaryEncoder mEncoder;
 
 
-	public DocumentWriter(BinaryEncoder aEncoder)
+	public CollectionWriter(OutputStream aOutputStream)
 	{
-		mEncoder = aEncoder;
+		mEncoder = new BinaryEncoder(aOutputStream);
 	}
 
 
-	public DocumentWriter beginDocument() throws IOException
+	@Override
+	public void close() throws IOException
+	{
+		mEncoder.close();
+	}
+
+
+	public CollectionWriter beginDocument() throws IOException
 	{
 		mEncoder.writeInterleaved(BinaryCodec.DOCUMENT, 0);
 		return this;
 	}
 
 
-	public DocumentWriter endDocument() throws IOException
+	public CollectionWriter endDocument() throws IOException
 	{
 		mEncoder.writeInterleaved(BinaryCodec.TERMINATOR, 0);
 		return this;
 	}
 
 
-	public DocumentWriter beginArray() throws IOException
+	public CollectionWriter beginArray() throws IOException
 	{
 		mEncoder.writeInterleaved(BinaryCodec.ARRAY, 0);
 		return this;
 	}
 
 
-	public DocumentWriter endArray() throws IOException
+	public CollectionWriter endArray() throws IOException
 	{
 		mEncoder.writeInterleaved(BinaryCodec.TERMINATOR, 0);
 		return this;
 	}
 
 
-	public DocumentWriter name(String aName) throws IOException
+	public CollectionWriter name(String aName) throws IOException
 	{
 		mEncoder.writeInterleaved(BinaryCodec.FIELD, 0);
 		mEncoder.writeString(aName);
@@ -50,14 +58,14 @@ public class DocumentWriter
 	}
 
 
-	public DocumentWriter nullValue() throws IOException
+	public CollectionWriter nullValue() throws IOException
 	{
 		mEncoder.writeInterleaved(BinaryCodec.NULL, 0);
 		return this;
 	}
 
 
-	public DocumentWriter value(Object aValue) throws IOException
+	public CollectionWriter value(Object aValue) throws IOException
 	{
 		BinaryCodec type = BinaryCodec.identify(aValue);
 

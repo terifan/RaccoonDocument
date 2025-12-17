@@ -1,15 +1,9 @@
 package test_document;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.Random;
 import org.terifan.raccoon.document.Array;
-import org.terifan.raccoon.document.BinaryCodec;
-import org.terifan.raccoon.document.BinaryEncoder;
-import org.terifan.raccoon.document.BinaryInputStream;
 import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Document;
 import org.terifan.raccoon.document.Support;
@@ -21,33 +15,31 @@ public class TestSerialization
 	{
 		try
 		{
-//			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("c:/data/json_testdata/manifest_2.json")));
+//			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_4.json")));
+//			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_2.json")));
+//			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/log.json")));
 //			Document a = _Person.createPerson(new Random(1));
 //			Document a = Document.of("id:641,name:something,properties:[{id:1,value:red},{id:7,value:long},{id:4,value:heavy,properties:[{id:8794,value:stone}]},{id:48,value:shreak}]");
-			Document a = Document.of("id:641,category:something,type:something,name:something");
+//			Document a = Document.of("id:641,category:something,type:something,name:something");
 //			Document a = Document.of("id:641,values:[1,2,3]");
+//			Array a = Array.of(1,2,3);
 //			Document a = Document.of("id:641,data:[[{ape:1,banana:{crow:1}},  {ape:2,banana:{crow:1}},  {ape:3,banana:{crow:1}},  {ape:4,banana:{crow:1}}], [{ape:1,banana:{crow:1}},  {ape:2,banana:{crow:1}},  {ape:3,banana:{crow:1}},  {ape:4,banana:{crow:1}}]]");
-//			Document a = Document.of("id:641,data:[[{ape:1}], [{ape:1}]]");
-//			System.out.println(a);
+//			Document a = Document.of("id:641,data:[{ape:123}, {ape:123}]");
+			Document a = Document.of("id:641,data:{data2:[{a:{ape:123,banana:456}}]},data2:{ape:123,banana:456}");
 
-//for (int i = 0; i <100;i++)
-//{
-//	System.out.println(i);
-//			byte[] data = a.toByteArray();
-//}
-
-//			BinaryEncoder.DEBUG = true;
+//			System.out.println(a.toJson(false));
+			System.out.println(a);
 
 			byte[] data = a.toByteArray();
 
 			_Log.hexDump(data);
 
-			System.out.println(a.toJson().length() + "\t" + Support.zip(a.toJson().getBytes()).length);
-			System.out.println(data.length + "\t" + Support.zip(data).length);
+//			System.out.println(a.toJson().length() + "\t" + Support.zip(a.toJson().getBytes()).length);
+//			System.out.println(data.length + "\t" + Support.zip(data).length);
 
 			Collection doc = Document.parseByteArray(data);
 
-			System.out.println(a);
+//			System.out.println(a);
 			System.out.println(doc);
 
 			System.out.println(doc.equals(a));
