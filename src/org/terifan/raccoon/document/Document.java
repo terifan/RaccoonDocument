@@ -247,28 +247,28 @@ public class Document extends Collection<String, Document> implements Externaliz
 	@Override
 	public boolean equals(Object aOther)
 	{
-		return toJson(true).equals(((Document)aOther).toJson(true));
-//		if (aOther == this)
-//		{
-//			return true;
-//		}
-//		if (aOther instanceof Document v)
-//		{
-//			if (size() != v.size() || !keys().equals(v.keys()))
-//			{
-//				return false;
-//			}
-//			for (Entry<String, Object> entry : entrySet())
-//			{
-//				if (!Objects.equals(entry.getValue(), v.get(entry.getKey())))
-//				{
-//					return false;
-//				}
-//			}
-//			return true;
-//		}
-//
-//		return false;
+//		return toJson(true).equals(((Document)aOther).toJson(true));
+		if (aOther == this)
+		{
+			return true;
+		}
+		if (aOther instanceof Document v)
+		{
+			if (size() != v.size() || !keys().equals(v.keys()))
+			{
+				return false;
+			}
+			for (Entry<String, Object> entry : entrySet())
+			{
+				if (!Objects.equals(entry.getValue(), v.get(entry.getKey())))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		return false;
 	}
 
 

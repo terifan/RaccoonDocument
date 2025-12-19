@@ -16,7 +16,7 @@ public class TestSerialization
 		try
 		{
 //			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_4.json")));
-//			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_2.json")));
+			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_2.json")));
 //			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/log.json")));
 //			Document a = _Person.createPerson(new Random(1));
 //			Document a = Document.of("id:641,name:something,properties:[{id:1,value:red},{id:7,value:long},{id:4,value:heavy,properties:[{id:8794,value:stone}]},{id:48,value:shreak}]");
@@ -25,22 +25,22 @@ public class TestSerialization
 //			Array a = Array.of(1,2,3);
 //			Document a = Document.of("id:641,data:[[{ape:1,banana:{crow:1}},  {ape:2,banana:{crow:1}},  {ape:3,banana:{crow:1}},  {ape:4,banana:{crow:1}}], [{ape:1,banana:{crow:1}},  {ape:2,banana:{crow:1}},  {ape:3,banana:{crow:1}},  {ape:4,banana:{crow:1}}]]");
 //			Document a = Document.of("id:641,data:[{ape:123}, {ape:123}]");
-			Document a = Document.of("id:641,data:{data2:[{a:{ape:123,banana:456}}]},data2:{ape:123,banana:456}");
+//			Document a = Document.of("id:641,data:{data2:[{a:{ape:123,banana:456}}]},data2:{ape:123,banana:456}");
 
 //			System.out.println(a.toJson(false));
-			System.out.println(a);
+//			System.out.println(a);
 
 			byte[] data = a.toByteArray();
 
-			_Log.hexDump(data);
+//			_Log.hexDump(data);
 
-//			System.out.println(a.toJson().length() + "\t" + Support.zip(a.toJson().getBytes()).length);
-//			System.out.println(data.length + "\t" + Support.zip(data).length);
+			System.out.println(a.toJson().length() + "\t" + Support.zip(a.toJson().getBytes()).length);
+			System.out.println(data.length + "\t" + Support.zip(data).length);
 
 			Collection doc = Document.parseByteArray(data);
 
 //			System.out.println(a);
-			System.out.println(doc);
+//			System.out.println(doc);
 
 			System.out.println(doc.equals(a));
 

@@ -30,8 +30,21 @@ public class TestBinary
 	{
 		try
 		{
-			testDocument();
+//			testDocument();
 //			testDocumentWriter();
+
+			byte[] data = new byte[1024*1024];
+			new Random().nextBytes(data);
+
+			Document doc = new Document().put("name","olle").put("data",data).put("metadata",new Document().put("age",7));
+
+			byte[] bin = doc.toByteArray();
+
+			//Document.parseByteArray(bin);
+
+			//Document.get(bin, "metadata").get("age");
+			//Document.findFirst(bin, "metadata");
+			//Document.findMany(bin, "metadata");
 		}
 		catch (Throwable e)
 		{

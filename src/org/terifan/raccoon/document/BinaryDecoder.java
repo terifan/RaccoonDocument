@@ -12,9 +12,11 @@ import static org.terifan.raccoon.document.BinaryCodec.isReferencableValue;
 
 public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 {
-	private ArrayList<String> mStringLookup;
-	private ArrayList<String> mNameLookup;
-	private HashMap<Integer,Object> mValueLookup;
+	private LRU<String> mStringLookup;
+	private LRU<String> mNameLookup;
+	private LRU<Object> mValueLookup;
+	private LRU<Array> mArrayLookup;
+	private LRU<Document> mDocumentLookup;
 
 	private Entry mNextEntry;
 
@@ -23,9 +25,11 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 	{
 		super(aInputStream);
 
-		mStringLookup = new ArrayList<>();
-		mNameLookup = new ArrayList<>();
-		mValueLookup = new HashMap<>();
+		mStringLookup = new LRU<>();
+		mNameLookup = new LRU<>();
+		mValueLookup = new LRU<>();
+		mArrayLookup = new LRU<>();
+		mDocumentLookup = new LRU<>();
 	}
 
 
@@ -151,12 +155,20 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 	Document readDocument() throws IOException
 	{
-		Document document = new Document();
-		for (Entry entry; (entry = readEntry()).type != BinaryCodec.TERMINATOR;)
+		int ref = (int)readVarint();
+		if (ref < 0)
 		{
+			return mDocumentLookup.valueAt(-ref-1);
+		}
+
+		Document document = new Document();
+		for (int i = 0; i < ref; i++)
+		{
+			Entry entry = readEntry();
+
 			if ((entry.value & 1) == 1)
 			{
-				entry.name = mNameLookup.get(entry.value / 2);
+				entry.name = mNameLookup.valueAt(entry.value / 2);
 			}
 			else
 			{
@@ -167,29 +179,35 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 			Object value = readValue(entry.type);
 
 			document.put(entry.name, value);
-
-//			if (entry.type==DOCUMENT||entry.type==ARRAY)mValueLookup.put(mValueLookup.size(), value);
 		}
-		mValueLookup.put(mValueLookup.size(), document);
+
+		mDocumentLookup.add(document);
 		return document;
 	}
 
 
 	Array readArray() throws IOException
 	{
-		Array array = new Array();
-		for (Entry entry; (entry = readEntry()).type != BinaryCodec.TERMINATOR;)
+		int ref = (int)readVarint();
+		if (ref < 0)
 		{
-			for (int i = 0; i < entry.value; i++)
+			return mArrayLookup.valueAt(-ref-1);
+		}
+
+		Array array = new Array();
+		for (int i = 0; i < ref; )
+		{
+			Entry entry = readEntry();
+
+			for (int j = 0; j < entry.value; j++,i++)
 			{
 				Object value = readValue(entry.type);
 
 				array.add(value);
-
-//				if (entry.type==DOCUMENT||entry.type==ARRAY)mValueLookup.put(mValueLookup.size(), value);
 			}
 		}
-		mValueLookup.put(mValueLookup.size(), array);
+
+		mArrayLookup.add(array);
 		return array;
 	}
 
@@ -206,13 +224,13 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 				value = readArray();
 				break;
 			case REFERENCE:
-				value = mValueLookup.get((int)readUnsignedVarint());
+				value = mValueLookup.valueAt((int)readUnsignedVarint());
 				break;
 			case STRING:
 				int i = (int)readVarint();
 				if (i < 0)
 				{
-					value = mStringLookup.get(-i - 1);
+					value = mStringLookup.valueAt(-i - 1);
 				}
 				else
 				{
@@ -225,7 +243,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 				if (isReferencableValue(aType, value))
 				{
-//					mValueLookup.put(mValueLookup.size(), value);
+					mValueLookup.add(value);
 				}
 				break;
 		}

@@ -21,10 +21,10 @@ public class CompareSerialization
 
 			Random rnd = new Random(0);
 
-			Array persons = new Array();
+			Array people = new Array();
 			for (int i = 0; i < 100; i++)
 			{
-				persons.add(_Person.createPerson(rnd));
+				people.add(_Person.createPerson(rnd));
 			}
 			Array tinies = new Array();
 			for (int i = 0; i < 100; i++)
@@ -35,7 +35,7 @@ public class CompareSerialization
 			}
 
 			run("person", _Person.createPerson(new Random(1)));
-			run("100 people", tinies);
+			run("100 people", people);
 			run("tiny", Document.of("_id:3164,name:steve,age:45,phone:'34-35656464',email:'steve@mail.com'"));
 			run("100 tiny", tinies);
 			run("invoice", Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/invoice.json"))));

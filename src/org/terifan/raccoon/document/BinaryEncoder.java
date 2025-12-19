@@ -13,18 +13,22 @@ import static org.terifan.raccoon.document.BinaryCodec.isReferencableValue;
 
 class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
-	private HashMap<String, Integer> mStringLookup;
-	private HashMap<String, Integer> mNameLookup;
-	private HashMap<Object, Integer> mValueLookup;
+	private LRU<String> mStringLookup;
+	private LRU<String> mNameLookup;
+	private LRU<Object> mValueLookup;
+	private LRU<Document> mDocumentLookup;
+	private LRU<Array> mArrayLookup;
 
 
 	public BinaryEncoder(OutputStream aOutputStream)
 	{
 		super(aOutputStream);
 
-		mStringLookup = new HashMap<>();
-		mNameLookup = new HashMap<>();
-		mValueLookup = new HashMap<>();
+		mStringLookup = new LRU<>();
+		mNameLookup = new LRU<>();
+		mValueLookup = new LRU<>();
+		mDocumentLookup = new LRU<>();
+		mArrayLookup = new LRU<>();
 	}
 
 
@@ -68,14 +72,23 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 	void writeDocument(Document aDocument) throws IOException
 	{
+		int ref = mDocumentLookup.indexOf(aDocument);
+		if (ref != -1)
+		{
+			writeVarint(-ref - 1);
+			return;
+		}
+
+		writeVarint(aDocument.size());
+
 		for (Map.Entry<String, Object> entry : aDocument.entrySet())
 		{
 			String name = entry.getKey();
 			Object value = entry.getValue();
 			BinaryCodec type;
 
-			Integer tmp = mValueLookup.get(value);
-			if (tmp != null)
+			int tmp = mValueLookup.indexOf(value);
+			if (tmp != -1)
 			{
 				type = BinaryCodec.REFERENCE;
 				value = tmp;
@@ -85,8 +98,8 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 				type = BinaryCodec.identify(value);
 			}
 
-			tmp = mNameLookup.get(name);
-			if (tmp != null)
+			tmp = mNameLookup.indexOf(name);
+			if (tmp != -1)
 			{
 				writeInterleaved(type, tmp * 2 + 1);
 			}
@@ -94,20 +107,27 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			{
 				writeInterleaved(type, name.length() * 2);
 				writeUTF(name);
-				mNameLookup.put(name, mNameLookup.size());
+				mNameLookup.add(name);
 			}
 
 			writeValue(type, value);
-
-			if (type==DOCUMENT||type==ARRAY)mValueLookup.put(value, mValueLookup.size());
 		}
 
-		writeInterleaved(BinaryCodec.TERMINATOR, 0);
+		mDocumentLookup.add(aDocument);
 	}
 
 
 	void writeArray(Array aArray) throws IOException
 	{
+		int ref = mArrayLookup.indexOf(aArray);
+		if (ref != -1)
+		{
+			writeVarint(-ref - 1);
+			return;
+		}
+
+		writeVarint(aArray.size());
+
 		ArrayList<Object> values = new ArrayList<>();
 
 		for (int offset = 0; offset < aArray.size();)
@@ -119,8 +139,8 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 				Object value = aArray.get(i);
 				BinaryCodec type;
 
-				Integer tmp = mValueLookup.get(value);
-				if (tmp != null)
+				int tmp = mValueLookup.indexOf(value);
+				if (tmp != -1)
 				{
 					type = BinaryCodec.REFERENCE;
 					value = tmp;
@@ -137,8 +157,6 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 				values.add(value);
 				nextType = type;
-
-				if (type==DOCUMENT||type==ARRAY)mValueLookup.put(value, mValueLookup.size());
 			}
 
 			writeInterleaved(nextType, values.size());
@@ -152,7 +170,7 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			values.clear();
 		}
 
-		writeInterleaved(BinaryCodec.TERMINATOR, 0);
+		mArrayLookup.add(aArray);
 	}
 
 
@@ -171,15 +189,16 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 				break;
 			case STRING:
 				String s = (String)aValue;
-				if (mStringLookup.containsKey(s))
+				int i = mStringLookup.indexOf(s);
+				if (i != -1)
 				{
-					writeVarint(-mStringLookup.get(s) - 1);
+					writeVarint(-i - 1);
 				}
 				else
 				{
 					writeVarint(s.length());
 					writeUTF(s);
-					mStringLookup.put(s, mStringLookup.size());
+					mStringLookup.add(s);
 				}
 				break;
 			default:
@@ -187,7 +206,7 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 				if (isReferencableValue(aType, aValue))
 				{
-//					mValueLookup.put(aValue, mValueLookup.size());
+					mValueLookup.add(aValue);
 				}
 				break;
 		}
