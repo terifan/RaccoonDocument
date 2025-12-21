@@ -128,9 +128,15 @@ public class BinaryOutputStream extends OutputStream implements AutoCloseable
 	}
 
 
-	void writeInterleaved(BinaryCodec aX, int aY) throws IOException
+	void writeInterleaved(BinaryType aX, int aY) throws IOException
 	{
 		writeUnsignedVarint((shift(aY) << 1) | shift(aX.ordinal()));
+	}
+
+
+	void writeType(BinaryType aType) throws IOException
+	{
+		write(aType.ordinal());
 	}
 
 

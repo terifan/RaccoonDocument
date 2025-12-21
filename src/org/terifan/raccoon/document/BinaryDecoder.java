@@ -5,31 +5,19 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
-import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
-import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
-import static org.terifan.raccoon.document.BinaryCodec.isReferencableValue;
+import static org.terifan.raccoon.document.BinaryType.ARRAY;
+import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
+import static org.terifan.raccoon.document.BinaryType.isReferencableValue;
 
 
 public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 {
-	private LRU<String> mStringLookup;
-	private LRU<String> mNameLookup;
-	private LRU<Object> mValueLookup;
-	private LRU<Array> mArrayLookup;
-	private LRU<Document> mDocumentLookup;
-
 	private Entry mNextEntry;
 
 
 	public BinaryDecoder(InputStream aInputStream)
 	{
 		super(aInputStream);
-
-		mStringLookup = new LRU<>();
-		mNameLookup = new LRU<>();
-		mValueLookup = new LRU<>();
-		mArrayLookup = new LRU<>();
-		mDocumentLookup = new LRU<>();
 	}
 
 
@@ -52,79 +40,21 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 	public <T> T readObject() throws IOException
 	{
-		Entry entry = mNextEntry != null ? mNextEntry : readEntry();
-		mNextEntry = null;
-
-		return (T)readValue(entry.type);
-	}
-
-
-	private Object readField(Entry aEntry) throws IOException
-	{
-//		if (aEntry.value != 0)
-//		{
-//			if (aEntry.type == BinaryCodec.INT)
-//			{
-//				return aEntry.value;
-//			}
-//			if (aEntry.type == BinaryCodec.SHORT)
-//			{
-//				return (short)aEntry.value;
-//			}
-//			if (aEntry.type == BinaryCodec.BYTE)
-//			{
-//				return (byte)aEntry.value;
-//			}
-//			if (aEntry.type == BinaryCodec.LONG)
-//			{
-//				return (long)aEntry.value;
-//			}
-//			if (aEntry.type == BinaryCodec.FLOAT)
-//			{
-//				return (float)aEntry.value;
-//			}
-//			if (aEntry.type == BinaryCodec.DOCUMENT)
-//			{
-//				return (double)aEntry.value;
-//			}
-//			if (aEntry.type == BinaryCodec.CHAR)
-//			{
-//				return (char)aEntry.value;
-//			}
-//			if (aEntry.type == BinaryCodec.BOOLEAN)
-//			{
-//				return aEntry.value == 1;
-//			}
-//			if (aEntry.type == BinaryCodec.REFERENCE)
-//			{
-//				return mValueLookup.get(aEntry.value);
-//			}
-//			if (aEntry.type == BinaryCodec.STRING)
-//			{
-//				String s = readUTF(aEntry.value);
-//				mStringLookup.add(s);
-//				return s;
-//			}
-//			if (aEntry.type == BinaryCodec.STRING_REFERENCE)
-//			{
-//				return mStringLookup.get(aEntry.value);
-//			}
-//		}
-		return readValue(aEntry.type);
+		return (T)readValue(readType());
 	}
 
 
 	void unmarshal(Collection aContainer) throws IOException
 	{
-		Entry entry = readEntry();
+		BinaryType type = readType();
 
 		if (aContainer instanceof Document v)
 		{
-			if (entry.type == BinaryCodec.ARRAY)
+			if (type == BinaryType.ARRAY)
 			{
 				throw new StreamException("Attempt to unmarshal a Document when binary stream contains an Array.");
 			}
-			if (entry.type != BinaryCodec.DOCUMENT)
+			if (type != BinaryType.DOCUMENT)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
@@ -134,11 +64,11 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 		}
 		else if (aContainer instanceof Array v)
 		{
-			if (entry.type == BinaryCodec.DOCUMENT)
+			if (type == BinaryType.DOCUMENT)
 			{
 				throw new StreamException("Attempt to unmarshal an Array when binary stream contains a Document.");
 			}
-			if (entry.type != BinaryCodec.ARRAY)
+			if (type != BinaryType.ARRAY)
 			{
 				throw new StreamException("Stream corrupted.");
 			}
@@ -155,64 +85,43 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 	Document readDocument() throws IOException
 	{
-		int ref = (int)readVarint();
-		if (ref < 0)
-		{
-			return mDocumentLookup.valueAt(-ref-1);
-		}
+		int len = (int)readUnsignedVarint();
 
 		Document document = new Document();
-		for (int i = 0; i < ref; i++)
+		for (int i = 0; i < len; i++)
 		{
-			Entry entry = readEntry();
+			String name = readString();
+			BinaryType type = readType();
+			Object value = readValue(type);
 
-			if ((entry.value & 1) == 1)
-			{
-				entry.name = mNameLookup.valueAt(entry.value / 2);
-			}
-			else
-			{
-				entry.name = readUTF(entry.value / 2);
-				mNameLookup.add(entry.name);
-			}
-
-			Object value = readValue(entry.type);
-
-			document.put(entry.name, value);
+			document.put(name, value);
 		}
 
-		mDocumentLookup.add(document);
 		return document;
 	}
 
 
 	Array readArray() throws IOException
 	{
-		int ref = (int)readVarint();
-		if (ref < 0)
-		{
-			return mArrayLookup.valueAt(-ref-1);
-		}
+		int len = (int)readUnsignedVarint();
 
 		Array array = new Array();
-		for (int i = 0; i < ref; )
+		for (int offset = 0; offset < len; )
 		{
-			Entry entry = readEntry();
+			BinaryType type = readType();
+			int runLen = (int)readUnsignedVarint();
 
-			for (int j = 0; j < entry.value; j++,i++)
+			for (; --runLen >= 0; offset++)
 			{
-				Object value = readValue(entry.type);
-
-				array.add(value);
+				array.add(readValue(type));
 			}
 		}
 
-		mArrayLookup.add(array);
 		return array;
 	}
 
 
-	private Object readValue(BinaryCodec aType) throws IOException
+	private Object readValue(BinaryType aType) throws IOException
 	{
 		Object value;
 		switch (aType)
@@ -223,28 +132,11 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 			case ARRAY:
 				value = readArray();
 				break;
-			case REFERENCE:
-				value = mValueLookup.valueAt((int)readUnsignedVarint());
-				break;
 			case STRING:
-				int i = (int)readVarint();
-				if (i < 0)
-				{
-					value = mStringLookup.valueAt(-i - 1);
-				}
-				else
-				{
-					value = readUTF(i);
-					mStringLookup.add((String)value);
-				}
+				value = readString();
 				break;
 			default:
 				value = aType.decoder.decode(this);
-
-				if (isReferencableValue(aType, value))
-				{
-					mValueLookup.add(value);
-				}
 				break;
 		}
 
@@ -258,7 +150,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 		Entry token = new Entry();
 		token.value = (int)(params >>> 32);
-		token.type = BinaryCodec.values()[(int)params];
+		token.type = BinaryType.values()[(int)params];
 
 		return token;
 	}
@@ -266,7 +158,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 	static class Entry
 	{
-		BinaryCodec type;
+		BinaryType type;
 		int value;
 		String name;
 
@@ -276,7 +168,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 		}
 
 
-		public Entry(BinaryCodec aType, int aValue)
+		public Entry(BinaryType aType, int aValue)
 		{
 			this.type = aType;
 			this.value = aValue;

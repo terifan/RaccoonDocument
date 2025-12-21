@@ -167,6 +167,12 @@ public class BinaryInputStream extends InputStream implements AutoCloseable
 	}
 
 
+	public BinaryType readType() throws IOException
+	{
+		return BinaryType.values()[read()];
+	}
+
+
 	private static long reverseShift(long aWord)
 	{
 		aWord &= 0x5555555555555555L;

@@ -2,33 +2,18 @@ package org.terifan.raccoon.document;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
-import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
-import static org.terifan.raccoon.document.BinaryCodec.isReferencableValue;
+import java.util.Map.Entry;
+import static org.terifan.raccoon.document.BinaryType.ARRAY;
+import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
+import static org.terifan.raccoon.document.BinaryType.STRING;
 
 
 class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
-	private LRU<String> mStringLookup;
-	private LRU<String> mNameLookup;
-	private LRU<Object> mValueLookup;
-	private LRU<Document> mDocumentLookup;
-	private LRU<Array> mArrayLookup;
-
-
 	public BinaryEncoder(OutputStream aOutputStream)
 	{
 		super(aOutputStream);
-
-		mStringLookup = new LRU<>();
-		mNameLookup = new LRU<>();
-		mValueLookup = new LRU<>();
-		mDocumentLookup = new LRU<>();
-		mArrayLookup = new LRU<>();
 	}
 
 
@@ -36,178 +21,97 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 	{
 		if (aObject instanceof Document v)
 		{
-			writeInterleaved(BinaryCodec.DOCUMENT, 0);
+			writeType(BinaryType.DOCUMENT);
 			writeDocument(v);
 		}
 		else if (aObject instanceof Array v)
 		{
-			writeInterleaved(BinaryCodec.ARRAY, 0);
+			writeType(BinaryType.ARRAY);
 			writeArray(v);
 		}
-		else
-		{
-			writeField(aObject);
-		}
-	}
-
-
-	void writeField(Object aObject) throws IOException, UnsupportedTypeException
-	{
-		BinaryCodec type = BinaryCodec.identify(aObject);
-
-		if (type == null)
-		{
-			if (aObject instanceof Enum)
-			{
-				throw new UnsupportedTypeException("Enums are not supported as they are inherently unsafe for serialization: " + aObject.getClass().getCanonicalName());
-			}
-
-			throw new UnsupportedTypeException(aObject.getClass().getCanonicalName());
-		}
-
-		writeInterleaved(type, 0);
-		writeValue(type, aObject);
 	}
 
 
 	void writeDocument(Document aDocument) throws IOException
 	{
-		int ref = mDocumentLookup.indexOf(aDocument);
-		if (ref != -1)
-		{
-			writeVarint(-ref - 1);
-			return;
-		}
+		writeUnsignedVarint(aDocument.size());
 
-		writeVarint(aDocument.size());
-
-		for (Map.Entry<String, Object> entry : aDocument.entrySet())
+		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
-			String name = entry.getKey();
 			Object value = entry.getValue();
-			BinaryCodec type;
+			BinaryType type = BinaryType.identify(value);
 
-			int tmp = mValueLookup.indexOf(value);
-			if (tmp != -1)
-			{
-				type = BinaryCodec.REFERENCE;
-				value = tmp;
-			}
-			else
-			{
-				type = BinaryCodec.identify(value);
-			}
+			writeString(entry.getKey());
+			writeType(type);
 
-			tmp = mNameLookup.indexOf(name);
-			if (tmp != -1)
+			switch (type)
 			{
-				writeInterleaved(type, tmp * 2 + 1);
+				case DOCUMENT:
+					writeDocument((Document)value);
+					break;
+				case ARRAY:
+					writeArray((Array)value);
+					break;
+				case STRING:
+					writeString((String)value);
+					break;
+				default:
+					type.encoder.encode(this, value);
+					break;
 			}
-			else
-			{
-				writeInterleaved(type, name.length() * 2);
-				writeUTF(name);
-				mNameLookup.add(name);
-			}
-
-			writeValue(type, value);
 		}
-
-		mDocumentLookup.add(aDocument);
 	}
 
 
 	void writeArray(Array aArray) throws IOException
 	{
-		int ref = mArrayLookup.indexOf(aArray);
-		if (ref != -1)
-		{
-			writeVarint(-ref - 1);
-			return;
-		}
-
-		writeVarint(aArray.size());
-
-		ArrayList<Object> values = new ArrayList<>();
+		writeUnsignedVarint(aArray.size());
 
 		for (int offset = 0; offset < aArray.size();)
 		{
-			BinaryCodec nextType = null;
+			int runLen = 0;
+			BinaryType nextType = null;
 
 			for (int i = offset; i < aArray.size(); i++)
 			{
 				Object value = aArray.get(i);
-				BinaryCodec type;
-
-				int tmp = mValueLookup.indexOf(value);
-				if (tmp != -1)
-				{
-					type = BinaryCodec.REFERENCE;
-					value = tmp;
-				}
-				else
-				{
-					type = BinaryCodec.identify(value);
-				}
+				BinaryType type = BinaryType.identify(value);
 
 				if (nextType != type && nextType != null)
 				{
 					break;
 				}
 
-				values.add(value);
+				runLen++;
 				nextType = type;
 			}
 
-			writeInterleaved(nextType, values.size());
+			writeType(nextType);
+			writeUnsignedVarint(runLen);
 
-			for (Object value : values)
+			for (; --runLen >= 0 && offset < aArray.size(); )
 			{
-				writeValue(nextType, value);
+				writeValue(nextType, aArray.get(offset++));
 			}
-
-			offset += values.size();
-			values.clear();
 		}
-
-		mArrayLookup.add(aArray);
 	}
 
 
-	private void writeValue(BinaryCodec aType, Object aValue) throws IOException
+	private void writeValue(BinaryType type, Object value) throws IOException
 	{
-		switch (aType)
+		switch (type)
 		{
 			case DOCUMENT:
-				writeDocument((Document)aValue);
+				writeDocument((Document)value);
 				break;
 			case ARRAY:
-				writeArray((Array)aValue);
-				break;
-			case REFERENCE:
-				writeUnsignedVarint((Integer)aValue);
+				writeArray((Array)value);
 				break;
 			case STRING:
-				String s = (String)aValue;
-				int i = mStringLookup.indexOf(s);
-				if (i != -1)
-				{
-					writeVarint(-i - 1);
-				}
-				else
-				{
-					writeVarint(s.length());
-					writeUTF(s);
-					mStringLookup.add(s);
-				}
+				writeString((String)value);
 				break;
 			default:
-				aType.encoder.encode(this, aValue);
-
-				if (isReferencableValue(aType, aValue))
-				{
-					mValueLookup.add(aValue);
-				}
+				type.encoder.encode(this, value);
 				break;
 		}
 	}

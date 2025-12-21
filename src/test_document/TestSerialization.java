@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.Random;
 import org.terifan.raccoon.document.Array;
+import org.terifan.raccoon.document.BinaryType;
 import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Document;
 import org.terifan.raccoon.document.Support;
@@ -15,6 +16,8 @@ public class TestSerialization
 	{
 		try
 		{
+			System.out.println(BinaryType.values().length);
+
 //			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_4.json")));
 			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_2.json")));
 //			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/log.json")));
@@ -32,14 +35,14 @@ public class TestSerialization
 
 			byte[] data = a.toByteArray();
 
-//			_Log.hexDump(data);
+			_Log.hexDump(data);
 
 			System.out.println(a.toJson().length() + "\t" + Support.zip(a.toJson().getBytes()).length);
 			System.out.println(data.length + "\t" + Support.zip(data).length);
 
 			Collection doc = Document.parseByteArray(data);
 
-//			System.out.println(a);
+//			System.out.println(doc.toJson(false));
 //			System.out.println(doc);
 
 			System.out.println(doc.equals(a));

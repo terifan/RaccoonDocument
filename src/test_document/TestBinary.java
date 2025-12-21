@@ -122,68 +122,68 @@ public class TestBinary
 	}
 
 
-	public static void testDocumentWriter() throws IOException
-	{
-//		BinaryEncoder.DEBUG = true;
-
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-		new CollectionWriter(baos)
-			.beginDocument()
-			.name("name")
-			.value("bob")
-			.name("values")
-			.beginArray()
-			.value(346131916191L)
-			.value(346131916191L)
-			.value("hello")
-			.value("hello")
-			.value("hello")
-			.value(LocalDate.now())
-			.value(LocalDateTime.now())
-			.value(LocalTime.now())
-			.value(OffsetDateTime.now())
-			.value(OffsetTime.now())
-			.value(ZonedDateTime.now())
-			.value(Duration.ofSeconds(4, 656431984))
-			.value(UUID.randomUUID())
-			.value(new BigInteger("34169131061654613198432165462984651619"))
-			.value(new BigDecimal("3416913106165461319.432165462984651619"))
-			.nullValue()
-			.value("")
-			.value(true)
-			.value((byte)17)
-			.value((short)1547)
-			.value((int)17016454)
-			.value((long)2651415726794265464L)
-			.value((float)Math.PI)
-			.value((double)Math.PI)
-			.value((byte)0)
-			.value((short)0)
-			.value((int)0)
-			.value((long)0)
-			.value((float)0)
-			.value((double)0)
-			.value('a')
-			.value(new byte[]
-			{
-				1, 2, 3
-		})
-			.value(ObjectId.randomId())
-			.value(Document.of("id:[7,8,9],text:hello"))
-			.value(Array.of(7, 8, 9))
-			.endArray()
-			.endDocument();
-
-		System.out.println("length: " + baos.size());
-		_Log.hexDump(baos.toByteArray());
-		System.out.println();
-
-		BinaryDecoder in = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
-		while (in.next())
-		{
-			Object v = in.readObject();
-			System.out.printf("%20s = %s%n", v == null ? null : v.getClass().getSimpleName(), v);
-		}
-	}
+//	public static void testDocumentWriter() throws IOException
+//	{
+////		BinaryEncoder.DEBUG = true;
+//
+//		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//
+//		new CollectionWriter(baos)
+//			.beginDocument()
+//			.name("name")
+//			.value("bob")
+//			.name("values")
+//			.beginArray()
+//			.value(346131916191L)
+//			.value(346131916191L)
+//			.value("hello")
+//			.value("hello")
+//			.value("hello")
+//			.value(LocalDate.now())
+//			.value(LocalDateTime.now())
+//			.value(LocalTime.now())
+//			.value(OffsetDateTime.now())
+//			.value(OffsetTime.now())
+//			.value(ZonedDateTime.now())
+//			.value(Duration.ofSeconds(4, 656431984))
+//			.value(UUID.randomUUID())
+//			.value(new BigInteger("34169131061654613198432165462984651619"))
+//			.value(new BigDecimal("3416913106165461319.432165462984651619"))
+//			.nullValue()
+//			.value("")
+//			.value(true)
+//			.value((byte)17)
+//			.value((short)1547)
+//			.value((int)17016454)
+//			.value((long)2651415726794265464L)
+//			.value((float)Math.PI)
+//			.value((double)Math.PI)
+//			.value((byte)0)
+//			.value((short)0)
+//			.value((int)0)
+//			.value((long)0)
+//			.value((float)0)
+//			.value((double)0)
+//			.value('a')
+//			.value(new byte[]
+//			{
+//				1, 2, 3
+//		})
+//			.value(ObjectId.randomId())
+//			.value(Document.of("id:[7,8,9],text:hello"))
+//			.value(Array.of(7, 8, 9))
+//			.endArray()
+//			.endDocument();
+//
+//		System.out.println("length: " + baos.size());
+//		_Log.hexDump(baos.toByteArray());
+//		System.out.println();
+//
+//		BinaryDecoder in = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
+//		while (in.next())
+//		{
+//			Object v = in.readObject();
+//			System.out.printf("%20s = %s%n", v == null ? null : v.getClass().getSimpleName(), v);
+//		}
+//	}
 }
