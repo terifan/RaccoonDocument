@@ -81,7 +81,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 			{
 				mNext = new Object[]
 				{
-					read(readObjectImpl())
+					readObjectImpl()
 				};
 			}
 			catch (IOException e)
@@ -99,7 +99,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	}
 
 
-	public <T> T readObjectImpl() throws IOException
+	private <T> T readObjectImpl() throws IOException
 	{
 		BinaryType type = readType();
 		if (type == BinaryType.TERMINATOR)
