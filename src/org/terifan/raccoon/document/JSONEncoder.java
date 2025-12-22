@@ -39,9 +39,9 @@ public class JSONEncoder
 			switch (aContainer)
 			{
 				case Document v ->
-					marshalDocument(v, new Path(), true);
+					marshalDocument(v, true);
 				case Array v ->
-					marshalArray(v, new Path());
+					marshalArray(v);
 				default ->
 					throw new IllegalArgumentException();
 			}
@@ -55,13 +55,13 @@ public class JSONEncoder
 	}
 
 
-	private void marshalDocument(Document aDocument, Path aPath) throws IOException
+	private void marshalDocument(Document aDocument) throws IOException
 	{
-		marshalDocument(aDocument, aPath, true);
+		marshalDocument(aDocument, true);
 	}
 
 
-	private void marshalDocument(Document aDocument, Path aPath, boolean aNewLineOnClose) throws IOException
+	private void marshalDocument(Document aDocument, boolean aNewLineOnClose) throws IOException
 	{
 		int size = aDocument.size();
 
@@ -94,9 +94,7 @@ public class JSONEncoder
 		{
 			print(mQuote + escapeString(entry.getKey()) + mQuote + ": ");
 
-			aPath.enter(entry.getKey());
-			marshal(entry.getValue(), aPath);
-			aPath.exit();
+			marshal(entry.getValue());
 
 			if (--size > 0)
 			{
@@ -119,7 +117,7 @@ public class JSONEncoder
 	}
 
 
-	private void marshalArray(Array aArray, Path aPath) throws IOException
+	private void marshalArray(Array aArray) throws IOException
 	{
 		int size = aArray.size();
 
@@ -156,10 +154,9 @@ public class JSONEncoder
 		for (int i = 0; i < aArray.size(); i++)
 		{
 			Object value = aArray.get(i);
-			aPath.enter(i);
 			if (first)
 			{
-				marshalDocument((Document)value, aPath, false);
+				marshalDocument((Document)value, false);
 
 				if (--size > 0)
 				{
@@ -168,14 +165,13 @@ public class JSONEncoder
 			}
 			else
 			{
-				marshal(value, aPath);
+				marshal(value);
 
 				if (--size > 0)
 				{
 					print(", ", false);
 				}
 			}
-			aPath.exit();
 
 			first = false;
 		}
@@ -198,24 +194,24 @@ public class JSONEncoder
 	}
 
 
-	private void marshal(Object aValue, Path aPath) throws IOException
+	private void marshal(Object aValue) throws IOException
 	{
 		if (aValue instanceof Document v)
 		{
-			marshalDocument(v, aPath);
+			marshalDocument(v);
 		}
 		else if (aValue instanceof Array v)
 		{
-			marshalArray(v, aPath);
+			marshalArray(v);
 		}
 		else
 		{
-			marshalValue(aValue, aPath);
+			marshalValue(aValue);
 		}
 	}
 
 
-	private void marshalValue(Object aValue, Path aPath) throws IOException
+	private void marshalValue(Object aValue) throws IOException
 	{
 		if (aValue instanceof String v)
 		{

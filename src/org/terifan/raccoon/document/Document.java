@@ -2,6 +2,7 @@ package org.terifan.raccoon.document;
 
 import java.io.Externalizable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -237,8 +238,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 	@Override
 	MurmurHash3 hashCode(MurmurHash3 aChecksum)
 	{
-//		mValues.entrySet().forEach(entry -> hashCodeUpdate(aChecksum.updateUTF8(entry.getKey()), entry.getValue()));
-		aChecksum.updateUTF8(toJson(true));
+		mValues.entrySet().forEach(entry -> hashCodeUpdate(aChecksum.updateUTF8(entry.getKey()), entry.getValue()));
 
 		return aChecksum;
 	}
@@ -247,20 +247,29 @@ public class Document extends Collection<String, Document> implements Externaliz
 	@Override
 	public boolean equals(Object aOther)
 	{
-//		return toJson(true).equals(((Document)aOther).toJson(true));
 		if (aOther == this)
 		{
 			return true;
 		}
-		if (aOther instanceof Document v)
+		if (aOther instanceof Document other)
 		{
-			if (size() != v.size() || !keys().equals(v.keys()))
+			Array keys = keys();
+			if (size() != other.size() || !keys.equals(other.keys()))
 			{
 				return false;
 			}
-			for (Entry<String, Object> entry : entrySet())
+			for (String key : keys.iterable(String.class))
 			{
-				if (!Objects.equals(entry.getValue(), v.get(entry.getKey())))
+				Object t = get(key);
+				Object o = other.get(key);
+				if (t instanceof byte[] v && o instanceof byte[] w)
+				{
+					if (!Arrays.equals(v, w))
+					{
+						return false;
+					}
+				}
+				else if (!Objects.equals(t, o))
 				{
 					return false;
 				}

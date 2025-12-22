@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -93,13 +94,13 @@ public class SupportedTypes
 		{
 			if (aValue instanceof byte[] v)
 			{
-				return "\"" + marshalBinary(v) + "\"";
+				return Arrays.toString(v);
 			}
 			return "\"" + escapeString(aValue.toString()) + "\"";
 		}
 		if (aValue instanceof byte[] v)
 		{
-			return "Base64(" + marshalBinary(v) + ")";
+			return "Base64(" + Base64.getEncoder().withoutPadding().encodeToString(v) + ")";
 		}
 		return aValue.getClass().getSimpleName() + "(" + aValue + ")";
 	}
@@ -159,12 +160,6 @@ public class SupportedTypes
 			return Double.valueOf(aText);
 		}
 		return null;
-	}
-
-
-	private static String marshalBinary(byte[] aBuffer)
-	{
-		return Base64.getEncoder().withoutPadding().encodeToString(aBuffer);
 	}
 
 

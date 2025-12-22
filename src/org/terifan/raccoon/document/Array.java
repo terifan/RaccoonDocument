@@ -3,9 +3,11 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -302,7 +304,6 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 	MurmurHash3 hashCode(MurmurHash3 aChecksum)
 	{
 		mValues.forEach(value -> hashCodeUpdate(aChecksum, value));
-//		aChecksum.updateUTF8(toJson(true));
 
 		return aChecksum;
 	}
@@ -315,9 +316,29 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 		{
 			return true;
 		}
-		if (aOther instanceof Array v)
+		if (aOther instanceof Array other)
 		{
-			return mValues.equals(v.mValues);
+			if (size() != other.size())
+			{
+				return false;
+			}
+			for (int key = 0, sz = size(); key < sz; key++)
+			{
+				Object t = get(key);
+				Object o = other.get(key);
+				if (t instanceof byte[] v && o instanceof byte[] w)
+				{
+					if (!Arrays.equals(v, w))
+					{
+						return false;
+					}
+				}
+				else if (!Objects.equals(t, o))
+				{
+					return false;
+				}
+			}
+			return true;
 		}
 
 		return false;

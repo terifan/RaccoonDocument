@@ -10,7 +10,7 @@ import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryType.STRING;
 
 
-class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
+public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
 	private Lookup mDocStructs = new Lookup(true);
 	private Lookup mArrStructs = new Lookup(true);
@@ -23,7 +23,7 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 	}
 
 
-	public void writeObject(Object aObject) throws IOException
+	public BinaryEncoder writeObject(Object aObject) throws IOException
 	{
 		if (aObject instanceof Document v)
 		{
@@ -35,6 +35,13 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			writeType(BinaryType.ARRAY);
 			writeArray(v);
 		}
+		else
+		{
+			BinaryType type = BinaryType.identify(aObject);
+			writeType(type);
+			writeValue(type, aObject);
+		}
+		return this;
 	}
 
 
@@ -144,37 +151,20 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 				}
 				break;
 			}
-//			case INT:
-//			{
-//				Lookup<Object> lookup = mValueLookup.computeIfAbsent(type, t->new Lookup<>());
-//
-//				int ref = lookup.indexOf(value);
-//				if (ref == -1)
-//				{
-//					lookup.add(value);
-//					type.encoder.encode(this, (Integer)value*2);
-//				}
-//				else
-//				{
-//					writeVarint(ref*2+1);
-//				}
-//				break;
-//			}
 			default:
-				type.encoder.encode(this, value);
-//				Lookup<Object> lookup = mValueLookup.computeIfAbsent(type, t->new Lookup<>());
-//
-//				int ref = lookup.indexOf(value);
-//				if (ref == -1)
-//				{
-//					writeVarint(0);
-//					lookup.add(value);
-//					type.encoder.encode(this, value);
-//				}
-//				else
-//				{
-//					writeVarint(ref);
-//				}
+//				type.encoder.encode(this, value);
+				LRU lookup = mValueLookup.computeIfAbsent(type, t->new LRU<>(true));
+				int ref = lookup.indexOf(value);
+				if (ref == -1)
+				{
+					writeUnsignedVarint(0);
+					type.encoder.encode(this, value);
+					lookup.add(value);
+				}
+				else
+				{
+					writeUnsignedVarint(ref + 1);
+				}
 				break;
 		}
 	}

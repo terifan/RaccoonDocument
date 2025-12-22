@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 
-public class BinaryOutputStream extends OutputStream implements AutoCloseable
+class BinaryOutputStream extends OutputStream implements AutoCloseable
 {
 	private final byte[] mWriteBuffer = new byte[8];
 
@@ -73,7 +73,7 @@ public class BinaryOutputStream extends OutputStream implements AutoCloseable
 	}
 
 
-	public void writeVarint(long aValue) throws IOException
+	void writeVarint(long aValue) throws IOException
 	{
 		writeUnsignedVarint((aValue << 1) ^ (aValue >> 63));
 	}
@@ -98,7 +98,7 @@ public class BinaryOutputStream extends OutputStream implements AutoCloseable
 	}
 
 
-	public void writeString(String aInput) throws IOException
+	void writeString(String aInput) throws IOException
 	{
 		writeUnsignedVarint(aInput.length());
 		writeUTF(aInput);

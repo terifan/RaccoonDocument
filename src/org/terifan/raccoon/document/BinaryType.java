@@ -34,7 +34,7 @@ public enum BinaryType
 		aDecoder -> (byte)aDecoder.read()
 	),
 	SHORT(
-		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((Short)aValue),
+		(aEncoder, aValue) -> aEncoder.writeVarint((Short)aValue),
 		aDecoder -> (short)aDecoder.readVarint()
 	),
 	CHAR(

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 
-public class Lookup
+class Lookup
 {
 	private LRU<ByteKey> mLRU;
 

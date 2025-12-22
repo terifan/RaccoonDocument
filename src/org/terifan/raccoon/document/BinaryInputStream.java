@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 
-public class BinaryInputStream extends InputStream implements AutoCloseable
+class BinaryInputStream extends InputStream implements AutoCloseable
 {
 	private final byte[] mReadBuffer = new byte[8];
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-public class LRU<T>
+class LRU<T>
 {
 	private HashMap<T, Integer> mEncoder;
 	private ArrayList<T> mDecoder;
