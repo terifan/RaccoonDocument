@@ -271,6 +271,8 @@ public class Document extends Collection<String, Document> implements Externaliz
 				}
 				else if (!Objects.equals(t, o))
 				{
+//				System.out.println("#"+t.getClass()+" "+t);
+//				System.out.println("#"+o.getClass()+" "+o);
 					return false;
 				}
 			}
@@ -341,11 +343,11 @@ public class Document extends Collection<String, Document> implements Externaliz
 				Object v = get(s);
 				if (v instanceof Array c)
 				{
-					doc.put(s, c.clone());
+					doc.put(s, new Array().addAll(c));
 				}
 				else if (v instanceof Document c)
 				{
-					doc.put(s, c.clone());
+					doc.put(s, new Document().putAll(c));
 				}
 			}
 			return doc;

@@ -475,11 +475,11 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 				Object v = get(i);
 				if (v instanceof Array c)
 				{
-					arr.put(i, c.clone());
+					arr.add(new Array().addAll(c));
 				}
 				else if (v instanceof Document c)
 				{
-					arr.put(i, c.clone());
+					arr.add(new Document().putAll(c));
 				}
 			}
 			return arr;

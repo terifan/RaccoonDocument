@@ -1094,7 +1094,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	@Override
 	public String toString()
 	{
-		return new JSONEncoder(true, true, false, false).marshal(this, new StringBuilder()).toString();
+		return new JSONEncoder(true, true, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1103,14 +1103,14 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public R fromJson(String aJson)
 	{
-		return (R)new JSONDecoder(false, false).unmarshal(new StringReader(aJson), this);
+		return (R)new JSONDecoder().unmarshal(new StringReader(aJson), this);
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public R fromJson(Reader aJson)
 	{
-		return (R)new JSONDecoder(false, false).unmarshal(aJson, this);
+		return (R)new JSONDecoder().unmarshal(aJson, this);
 	}
 
 
@@ -1119,14 +1119,14 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public static <T extends Collection> T parseJson(String aJson)
 	{
-		return new JSONDecoder(false, false).unmarshal(new StringReader(aJson), null);
+		return new JSONDecoder().unmarshal(new StringReader(aJson), null);
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public static <T extends Collection> T parseJson(Reader aJson)
 	{
-		return (T)new JSONDecoder(false, false).unmarshal(aJson, null);
+		return (T)new JSONDecoder().unmarshal(aJson, null);
 	}
 
 
@@ -1137,7 +1137,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public String toJson()
 	{
-		return new JSONEncoder(true, false, false, false).marshal(this, new StringBuilder()).toString();
+		return new JSONEncoder(true, false, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1146,7 +1146,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public String toTypedJson()
 	{
-		return new JSONEncoder(true, true, false, false).marshal(this, new StringBuilder()).toString();
+		return new JSONEncoder(true, true, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1158,13 +1158,13 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public String toJson(boolean aCompact)
 	{
-		return new JSONEncoder(aCompact, false, false, false).marshal(this, new StringBuilder()).toString();
+		return new JSONEncoder(aCompact, false, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
 	public String toJson(boolean aCompact, boolean aApostrophes)
 	{
-		return new JSONEncoder(aCompact, false, aApostrophes, false).marshal(this, new StringBuilder()).toString();
+		return new JSONEncoder(aCompact, false, aApostrophes).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1173,7 +1173,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public String toTypedJson(boolean aCompact)
 	{
-		return new JSONEncoder(aCompact, true, false, false).marshal(this, new StringBuilder()).toString();
+		return new JSONEncoder(aCompact, true, false).marshal(this, new StringBuilder()).toString();
 	}
 
 
@@ -1185,7 +1185,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public Appendable toJson(Appendable aAppendable)
 	{
-		return new JSONEncoder(true, false, false, false).marshal(this, aAppendable);
+		return new JSONEncoder(true, false, false).marshal(this, aAppendable);
 	}
 
 
@@ -1194,7 +1194,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public Appendable toTypedJson(Appendable aAppendable)
 	{
-		return new JSONEncoder(true, true, false, false).marshal(this, aAppendable);
+		return new JSONEncoder(true, true, false).marshal(this, aAppendable);
 	}
 
 
@@ -1206,7 +1206,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public Appendable toJson(Appendable aAppendable, boolean aCompact)
 	{
-		return new JSONEncoder(aCompact, false, false, false).marshal(this, aAppendable);
+		return new JSONEncoder(aCompact, false, false).marshal(this, aAppendable);
 	}
 
 
@@ -1215,7 +1215,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public Appendable toTypedJson(Appendable aAppendable, boolean aCompact)
 	{
-		return new JSONEncoder(aCompact, true, false, false).marshal(this, aAppendable);
+		return new JSONEncoder(aCompact, true, false).marshal(this, aAppendable);
 	}
 
 

@@ -71,7 +71,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			writeValue(type, value);
 		}
 	}
-// string,4,int,float,string,uuid
+
 
 	void writeArray(Array aArray) throws IOException
 	{

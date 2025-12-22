@@ -65,16 +65,16 @@ public class SupportedTypes
 
 		return ObjectId.class == cls
 			|| byte[].class == cls
-			|| OffsetDateTime.class == cls
-			|| OffsetTime.class == cls
+			|| UUID.class == cls
+			|| BigInteger.class ==  cls
+			|| BigDecimal.class == cls
 			|| LocalDateTime.class == cls
 			|| LocalDate.class == cls
 			|| LocalTime.class == cls
+			|| OffsetDateTime.class == cls
+			|| OffsetTime.class == cls
 			|| ZonedDateTime.class == cls
 			|| Duration.class ==  cls
-			|| BigInteger.class ==  cls
-			|| BigDecimal.class == cls
-			|| UUID.class == cls
 		;
 	}
 
@@ -131,9 +131,17 @@ public class SupportedTypes
 		{
 			return UUID.fromString(aText.substring(5, aText.length() - 1));
 		}
+		if (aText.startsWith("BigInteger("))
+		{
+			return new BigInteger(aText.substring(11, aText.length() - 1));
+		}
 		if (aText.startsWith("BigDecimal("))
 		{
 			return new BigDecimal(aText.substring(11, aText.length() - 1));
+		}
+		if (aText.startsWith("LocalDateTime("))
+		{
+			return LocalDateTime.parse(aText.substring(14, aText.length() - 1));
 		}
 		if (aText.startsWith("LocalDate("))
 		{
@@ -143,17 +151,33 @@ public class SupportedTypes
 		{
 			return LocalTime.parse(aText.substring(10, aText.length() - 1));
 		}
-		if (aText.startsWith("LocalDateTime("))
-		{
-			return LocalDateTime.parse(aText.substring(14, aText.length() - 1));
-		}
 		if (aText.startsWith("OffsetDateTime("))
 		{
 			return OffsetDateTime.parse(aText.substring(15, aText.length() - 1));
 		}
+		if (aText.startsWith("OffsetTime("))
+		{
+			return OffsetTime.parse(aText.substring(11, aText.length() - 1));
+		}
+		if (aText.startsWith("ZonedDateTime("))
+		{
+			return ZonedDateTime.parse(aText.substring(14, aText.length() - 1));
+		}
+		if (aText.startsWith("Duration("))
+		{
+			return Duration.parse(aText.substring(9, aText.length() - 1));
+		}
 		if (aText.startsWith("0x"))
 		{
 			return Long.valueOf(aText.substring(2), 16);
+		}
+		if (aText.endsWith("f") || aText.endsWith("F"))
+		{
+			return Float.valueOf(aText.substring(0, aText.length() - 1));
+		}
+		if (aText.endsWith("L") || aText.endsWith("l"))
+		{
+			return Long.valueOf(aText.substring(0, aText.length() - 1));
 		}
 		if (aText.contains("."))
 		{

@@ -10,13 +10,17 @@ public class JSONDecoder
 {
 	private PushbackReader mReader;
 	private boolean mRestoreShortValues;
-	private boolean mReferenceSharedObjects;
 
 
-	public JSONDecoder(boolean aReferenceSharedObjects, boolean aRestoreShortValues)
+	public JSONDecoder()
 	{
-		mReferenceSharedObjects = aReferenceSharedObjects;
+	}
+
+
+	public JSONDecoder setRestoreShortValues(boolean aRestoreShortValues)
+	{
 		mRestoreShortValues = aRestoreShortValues;
+		return this;
 	}
 
 
@@ -47,20 +51,22 @@ public class JSONDecoder
 				}
 				mReader.unread(c);
 			}
+			else
+			{
+				int c = mReader.read();
+				if (c != '[' && c != '{')
+				{
+					mReader.unread(c);
+				}
+			}
 
 			switch (aContainer)
 			{
-				case Document v ->
-				{
-					mReader.read();
+				case Document v:
 					return (T)readDocument(v);
-				}
-				case Array v ->
-				{
-					mReader.read();
+				case Array v:
 					return (T)readArray(v);
-				}
-				default ->
+				default:
 					throw new IllegalArgumentException();
 			}
 		}
@@ -166,7 +172,7 @@ public class JSONDecoder
 				return readString(aChar);
 			default:
 				mReader.unread(aChar);
-				return readValue();
+				return readLiteral();
 		}
 	}
 
@@ -204,14 +210,24 @@ public class JSONDecoder
 	}
 
 
-	private Object readValue() throws IOException
+	private Object readLiteral() throws IOException
 	{
 		StringBuilder sb = new StringBuilder();
 		boolean terminator = false;
 
 		for (;;)
 		{
-			char c = readByte();
+			char c;
+			try
+			{
+				c = readByte();
+			}
+			catch (Exception e)
+			{
+				terminator = true;
+				mReader.unread('}');
+				break;
+			}
 
 			if (c == '}' || c == ']' || c == ',' || Character.isWhitespace(c))
 			{

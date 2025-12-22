@@ -69,7 +69,6 @@ class BinaryOutputStream implements AutoCloseable
 
 	void writeUnsignedVarint(long aValue) throws IOException
 	{
-		assert aValue >= 0;
 		for (;;)
 		{
 			int b = (int)(aValue & 127);

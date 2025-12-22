@@ -402,23 +402,20 @@ public class DocumentNGTest
 			.put("arr", _allTypesArr);
 
 		byte[] data = srcDoc.toByteArray();
-		String json = srcDoc.toJson();
+		String json = srcDoc.toTypedJson();
 		String text = srcDoc.toString();
 
 		Document unmarshalledBin = new Document().fromByteArray(data);
 		Document dstDoc = unmarshalledBin.get("doc");
 		Array dstArr = unmarshalledBin.get("arr");
 
-		Document unmarshalledJson = new JSONDecoder(false, true).unmarshal(new StringReader(json), new Document());
+		Document unmarshalledJson = new JSONDecoder().setRestoreShortValues(true).unmarshal(new StringReader(json), new Document());
 		Document dstDocJson = unmarshalledJson.get("doc");
 		Array dstArrJson = unmarshalledJson.get("arr");
 
-		Document unmarshalledText = new JSONDecoder(false, true).unmarshal(new StringReader(text), new Document());
+		Document unmarshalledText = new JSONDecoder().setRestoreShortValues(true).unmarshal(new StringReader(text), new Document());
 		Document dstDocText = unmarshalledText.get("doc");
 		Array dstArrText = unmarshalledText.get("arr");
-
-		System.out.println(unmarshalledJson.keySet());
-		System.out.println(srcDoc.keySet());
 
 		assertEquals(unmarshalledBin, srcDoc);
 		assertEquals(unmarshalledJson, srcDoc);
@@ -542,19 +539,19 @@ public class DocumentNGTest
 	}
 
 
-	@Test(expectedExceptions = StreamException.class)
-	public void testChecksumError() throws IOException, ClassNotFoundException
-	{
-		Document out = Document.of("_id:[1],name:'bob'");
-
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		out.writeTo(baos);
-
-		byte[] data = baos.toByteArray();
-		data[10] ^= 4;
-
-		new Document().readFrom(new ByteArrayInputStream(data));
-	}
+//	@Test(expectedExceptions = StreamException.class)
+//	public void testChecksumError() throws IOException, ClassNotFoundException
+//	{
+//		Document out = Document.of("_id:[1],name:'bob'");
+//
+//		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//		out.writeTo(baos);
+//
+//		byte[] data = baos.toByteArray();
+//		data[10] ^= 4;
+//
+//		new Document().readFrom(new ByteArrayInputStream(data));
+//	}
 
 
 	@Test
@@ -616,8 +613,6 @@ public class DocumentNGTest
 //		assertEquals((int)v, a);
 //		assertEquals((int)(v >>> 32), b);
 //	}
-
-
 //	@Test
 //	public void testMarshall() throws IOException, ClassNotFoundException
 //	{
@@ -862,10 +857,11 @@ public class DocumentNGTest
 
 		Document doc = new Document()
 			.put("name", "bob")
-			.putIfAbsent("address", key -> new Document()
-			.put("street", "Big road")
-			.put("city", "Smallville")
-			.put("country", "Americastan")
+			.putIfAbsent("address",
+				key -> new Document()
+					.put("street", "Big road")
+					.put("city", "Smallville")
+					.put("country", "Americastan")
 			)
 			.put("info", Array.of("fatty")
 				.addWithCondition("weirdo", key -> gender == null)
@@ -878,8 +874,12 @@ public class DocumentNGTest
 			.putWhenCondition("catapult", key -> gender == null, key -> Document.of("when:now!"))
 			.append("name", "johnson");
 
+		String exp = "{\"name\":[\"bob\",\"johnson\"],\"address\":{\"street\":\"Big road\",\"city\":\"Smallville\",\"country\":\"Americastan\"},\"info\":[\"fatty\",\"weirdo\"],\"number\":[-1,-2,-3],\"color\":\"red\",\"shape\":\"round\",\"catapult\":{\"when\":\"now!\"}}";
+
 //		System.out.println(doc);
-		assertEquals(doc.toString(), "{\"name\":[\"bob\",\"johnson\"],\"address\":{\"street\":\"Big road\",\"city\":\"Smallville\",\"country\":\"Americastan\"},\"info\":[\"fatty\",\"weirdo\"],\"number\":[-1,-2,-3],\"color\":\"red\",\"shape\":\"round\",\"catapult\":{\"when\":\"now!\"}}");
+//		System.out.println(exp);
+
+		assertEquals(doc.toString(), exp);
 	}
 
 

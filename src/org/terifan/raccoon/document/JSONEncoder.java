@@ -15,16 +15,16 @@ public class JSONEncoder
 	private boolean mFirst;
 	private char mQuote;
 	private int mIndent;
-	private String mIntentSymbol;
+	private String mIndentSymbol;
 
 
-	public JSONEncoder(boolean aCompact, boolean aTyped, boolean aApostrophes, boolean aReferenceSharedObjects)
+	public JSONEncoder(boolean aCompact, boolean aTyped, boolean aApostrophes)
 	{
 		mCompact = aCompact;
 		mTyped = aTyped;
 		mQuote = aApostrophes ? '\'' : '\"';
 
-		mIntentSymbol = "\t";
+		mIndentSymbol = "\t";
 	}
 
 
@@ -229,7 +229,15 @@ public class JSONEncoder
 		{
 			print(SupportedTypes.encode(aValue, mTyped));
 		}
-		else if (aValue instanceof Number || aValue instanceof Boolean) // note: bigdecimal is number
+		else if (aValue instanceof Float f && mTyped)
+		{
+			print(f + "f");
+		}
+		else if (aValue instanceof Long f && mTyped)
+		{
+			print(f + "L");
+		}
+		else if (aValue instanceof Number || aValue instanceof Boolean)
 		{
 			print(aValue);
 		}
@@ -367,7 +375,7 @@ public class JSONEncoder
 			mAppendable.append("\n");
 			for (int i = 0; i < mIndent; i++)
 			{
-				mAppendable.append(mIntentSymbol);
+				mAppendable.append(mIndentSymbol);
 			}
 			mNewLine = false;
 		}
