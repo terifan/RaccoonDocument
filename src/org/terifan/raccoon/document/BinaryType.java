@@ -25,20 +25,16 @@ public enum BinaryType
 		(aEncoder, aValue) -> {},
 		aDecoder -> null
 	),
-	TRUE(
-		(aEncoder, aValue) -> {},
-		aDecoder -> true
-	),
-	FALSE(
-		(aEncoder, aValue) -> {},
-		aDecoder -> false
+	BOOLEAN(
+		(aEncoder, aValue) -> aEncoder.write((Boolean)aValue?1:0),
+		aDecoder -> aDecoder.read()!=0
 	),
 	BYTE(
 		(aEncoder, aValue) -> aEncoder.write(0xff & (Byte)aValue),
 		aDecoder -> (byte)aDecoder.read()
 	),
 	SHORT(
-		(aEncoder, aValue) -> aEncoder.writeVarint((Short)aValue),
+		(aEncoder, aValue) -> aEncoder.writeUnsignedVarint((Short)aValue),
 		aDecoder -> (short)aDecoder.readVarint()
 	),
 	CHAR(
@@ -53,7 +49,8 @@ public enum BinaryType
 		(aEncoder, aValue) -> aEncoder.writeVarint((Long)aValue),
 		aDecoder -> aDecoder.readVarint()
 	),
-	FLOAT(		(aEncoder, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
+	FLOAT(
+		(aEncoder, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
 		aDecoder -> Float.intBitsToFloat((int)aDecoder.readInt())
 	),
 	DOUBLE(
@@ -129,15 +126,6 @@ public enum BinaryType
 	}
 
 
-	private BinaryType(Object aConstant)
-	{
-		this(
-			(aEncoder, aValue) ->{},
-			aDecoder -> aConstant
-		);
-	}
-
-
 	private BinaryType(Encoder aEncoder, Decoder aDecoder)
 	{
 		encoder = aEncoder;
@@ -164,8 +152,7 @@ public enum BinaryType
 		if (aValue instanceof Float) return FLOAT;
 		if (aValue instanceof Byte) return BYTE;
 		if (aValue instanceof Short) return SHORT;
-		if (aValue == Boolean.TRUE) return TRUE;
-		if (aValue == Boolean.FALSE) return FALSE;
+		if (aValue instanceof Boolean) return BOOLEAN;
 		if (byte[].class == cls) return BINARY;
 		if (UUID.class == cls) return UUID;
 		if (BigInteger.class == cls) return BIGINTEGER;
@@ -180,6 +167,13 @@ public enum BinaryType
 		if (Character.class == cls || Character.TYPE == cls) return CHAR;
 
 		return null;
+	}
+
+
+	@FunctionalInterface
+	static interface Reference
+	{
+		void encode(BinaryOutputStream aEncoder, Integer aIndex) throws IOException;
 	}
 
 
@@ -239,7 +233,7 @@ public enum BinaryType
 	{
 		assert aType != BinaryType.STRING;
 
-		if (aType == BinaryType.TRUE || aType == BinaryType.FALSE|| aType == BinaryType.NULL)
+		if (aType == BinaryType.BOOLEAN|| aType == BinaryType.NULL)
 		{
 			return false;
 		}

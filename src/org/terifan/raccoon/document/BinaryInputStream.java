@@ -169,7 +169,12 @@ public class BinaryInputStream extends InputStream implements AutoCloseable
 
 	public BinaryType readType() throws IOException
 	{
-		return BinaryType.values()[read()];
+		int i = mInputStream.read();
+		if (i == -1)
+		{
+			return BinaryType.TERMINATOR;
+		}
+		return BinaryType.values()[i];
 	}
 
 

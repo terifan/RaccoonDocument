@@ -3,9 +3,9 @@ package org.terifan.raccoon.document;
 import java.io.ByteArrayOutputStream;
 
 
-public class BinaryBufferedOutputStream extends BinaryOutputStream
+public class BufferedBinaryOutputStream extends BinaryOutputStream
 {
-	public BinaryBufferedOutputStream()
+	public BufferedBinaryOutputStream()
 	{
 		super(new ByteArrayOutputStream());
 	}

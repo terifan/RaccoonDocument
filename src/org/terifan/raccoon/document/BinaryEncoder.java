@@ -1,8 +1,9 @@
 package org.terifan.raccoon.document;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map.Entry;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
 import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
@@ -11,6 +12,11 @@ import static org.terifan.raccoon.document.BinaryType.STRING;
 
 class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
+	private Lookup mDocStructs = new Lookup(true);
+	private Lookup mArrStructs = new Lookup(true);
+	private HashMap<BinaryType, LRU<?>> mValueLookup = new HashMap<>();
+
+
 	public BinaryEncoder(OutputStream aOutputStream)
 	{
 		super(aOutputStream);
@@ -34,64 +40,72 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 	void writeDocument(Document aDocument) throws IOException
 	{
-		writeUnsignedVarint(aDocument.size());
-
+		BufferedBinaryOutputStream bos = new BufferedBinaryOutputStream();
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
 			Object value = entry.getValue();
 			BinaryType type = BinaryType.identify(value);
+			bos.writeType(type);
+			bos.writeString(entry.getKey());
+		}
 
-			writeString(entry.getKey());
-			writeType(type);
+		byte[] header = bos.finish();
 
-			switch (type)
-			{
-				case DOCUMENT:
-					writeDocument((Document)value);
-					break;
-				case ARRAY:
-					writeArray((Array)value);
-					break;
-				case STRING:
-					writeString((String)value);
-					break;
-				default:
-					type.encoder.encode(this, value);
-					break;
-			}
+		mDocStructs.write(this, header);
+
+		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
+
+		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
+		{
+			String name = fields.readString();
+			Object value = aDocument.get(name);
+
+			writeValue(type, value);
 		}
 	}
-
+// string,4,int,float,string,uuid
 
 	void writeArray(Array aArray) throws IOException
 	{
-		writeUnsignedVarint(aArray.size());
-
+		BufferedBinaryOutputStream bos = new BufferedBinaryOutputStream();
 		for (int offset = 0; offset < aArray.size();)
 		{
 			int runLen = 0;
-			BinaryType nextType = null;
+			BinaryType type = null;
 
 			for (int i = offset; i < aArray.size(); i++)
 			{
 				Object value = aArray.get(i);
-				BinaryType type = BinaryType.identify(value);
+				BinaryType tmp = BinaryType.identify(value);
 
-				if (nextType != type && nextType != null)
+				if (type != tmp && type != null)
 				{
 					break;
 				}
 
 				runLen++;
-				nextType = type;
+				type = tmp;
 			}
 
-			writeType(nextType);
-			writeUnsignedVarint(runLen);
+			bos.writeType(type);
+			bos.writeUnsignedVarint(runLen);
+			offset += runLen;
+		}
 
-			for (; --runLen >= 0 && offset < aArray.size(); )
+		byte[] header = bos.finish();
+
+		mArrStructs.write(this, header);
+
+		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
+
+		int offset = 0;
+		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
+		{
+			long runLen = fields.readUnsignedVarint();
+
+			while (--runLen >= 0)
 			{
-				writeValue(nextType, aArray.get(offset++));
+				writeValue(type, aArray.get(offset++));
 			}
 		}
 	}
@@ -107,45 +121,61 @@ class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			case ARRAY:
 				writeArray((Array)value);
 				break;
-			case STRING:
-				writeString((String)value);
-				break;
-			default:
+			case NULL:
+			case BYTE:
+			case BOOLEAN:
 				type.encoder.encode(this, value);
 				break;
-		}
-	}
+			case STRING:
+			{
+				String s = (String)value;
+				LRU lookup = mValueLookup.computeIfAbsent(type, t->new LRU<String>(true));
 
-
-	static class ByteKey
-	{
-		final byte[] mBuffer;
-
-
-		public ByteKey(byte[] aBuffer)
-		{
-			mBuffer = aBuffer;
-		}
-
-
-		@Override
-		public String toString()
-		{
-			return new String(mBuffer);
-		}
-
-
-		@Override
-		public int hashCode()
-		{
-			return Arrays.hashCode(mBuffer);
-		}
-
-
-		@Override
-		public boolean equals(Object aOther)
-		{
-			return aOther == this || aOther instanceof ByteKey v && Arrays.equals(mBuffer, v.mBuffer);
+				int ref = lookup.indexOf(s);
+				if (ref == -1)
+				{
+					writeVarint(s.length());
+					writeUTF(s);
+					lookup.add(s);
+				}
+				else
+				{
+					writeVarint(-ref-1);
+				}
+				break;
+			}
+//			case INT:
+//			{
+//				Lookup<Object> lookup = mValueLookup.computeIfAbsent(type, t->new Lookup<>());
+//
+//				int ref = lookup.indexOf(value);
+//				if (ref == -1)
+//				{
+//					lookup.add(value);
+//					type.encoder.encode(this, (Integer)value*2);
+//				}
+//				else
+//				{
+//					writeVarint(ref*2+1);
+//				}
+//				break;
+//			}
+			default:
+				type.encoder.encode(this, value);
+//				Lookup<Object> lookup = mValueLookup.computeIfAbsent(type, t->new Lookup<>());
+//
+//				int ref = lookup.indexOf(value);
+//				if (ref == -1)
+//				{
+//					writeVarint(0);
+//					lookup.add(value);
+//					type.encoder.encode(this, value);
+//				}
+//				else
+//				{
+//					writeVarint(ref);
+//				}
+				break;
 		}
 	}
 }

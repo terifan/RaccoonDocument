@@ -1,18 +1,21 @@
 package org.terifan.raccoon.document;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
+import static org.terifan.raccoon.document.BinaryType.BOOLEAN;
+import static org.terifan.raccoon.document.BinaryType.BYTE;
 import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
-import static org.terifan.raccoon.document.BinaryType.isReferencableValue;
+import static org.terifan.raccoon.document.BinaryType.NULL;
 
 
 public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 {
-	private Entry mNextEntry;
+	private Lookup mDocStructs = new Lookup(false);
+	private Lookup mArrStructs = new Lookup(false);
+	private HashMap<BinaryType, LRU<?>> mValueLookup = new HashMap<>();
 
 
 	public BinaryDecoder(InputStream aInputStream)
@@ -21,21 +24,21 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 	}
 
 
-	public boolean next()
-	{
-		if (mNextEntry == null)
-		{
-			try
-			{
-				mNextEntry = readEntry();
-			}
-			catch (Exception e)
-			{
-			}
-		}
-
-		return mNextEntry != null;
-	}
+//	public boolean next()
+//	{
+//		if (mNextEntry == null)
+//		{
+//			try
+//			{
+//				mNextEntry = readEntry();
+//			}
+//			catch (Exception e)
+//			{
+//			}
+//		}
+//
+//		return mNextEntry != null;
+//	}
 
 
 	public <T> T readObject() throws IOException
@@ -85,15 +88,16 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 	Document readDocument() throws IOException
 	{
-		int len = (int)readUnsignedVarint();
-
 		Document document = new Document();
-		for (int i = 0; i < len; i++)
-		{
-			String name = readString();
-			BinaryType type = readType();
-			Object value = readValue(type);
 
+		byte[] header = mDocStructs.read(this);
+
+		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
+
+		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
+		{
+			String name = fields.readString();
+			Object value = readValue(type);
 			document.put(name, value);
 		}
 
@@ -103,15 +107,17 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 
 	Array readArray() throws IOException
 	{
-		int len = (int)readUnsignedVarint();
-
 		Array array = new Array();
-		for (int offset = 0; offset < len; )
-		{
-			BinaryType type = readType();
-			int runLen = (int)readUnsignedVarint();
 
-			for (; --runLen >= 0; offset++)
+		byte[] header = mArrStructs.read(this);
+
+		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
+
+		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
+		{
+			long runLen = fields.readUnsignedVarint();
+
+			while (--runLen >= 0)
 			{
 				array.add(readValue(type));
 			}
@@ -132,8 +138,23 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 			case ARRAY:
 				value = readArray();
 				break;
+			case NULL:
+			case BYTE:
+			case BOOLEAN:
+				value = aType.decoder.decode(this);
+				break;
 			case STRING:
-				value = readString();
+				LRU lookup = mValueLookup.computeIfAbsent(aType, t -> new LRU<>(false));
+				int i = (int)readVarint();
+				if (i < 0)
+				{
+					value = lookup.valueAt(-i - 1);
+				}
+				else
+				{
+					value = readUTF(i);
+					lookup.add((String)value);
+				}
 				break;
 			default:
 				value = aType.decoder.decode(this);
@@ -141,78 +162,5 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable
 		}
 
 		return value;
-	}
-
-
-	Entry readEntry() throws IOException
-	{
-		long params = readInterleaved();
-
-		Entry token = new Entry();
-		token.value = (int)(params >>> 32);
-		token.type = BinaryType.values()[(int)params];
-
-		return token;
-	}
-
-
-	static class Entry
-	{
-		BinaryType type;
-		int value;
-		String name;
-
-
-		public Entry()
-		{
-		}
-
-
-		public Entry(BinaryType aType, int aValue)
-		{
-			this.type = aType;
-			this.value = aValue;
-		}
-
-
-		@Override
-		public int hashCode()
-		{
-			int hash = 3;
-			hash = 29 * hash + Objects.hashCode(this.type);
-			hash = 29 * hash + this.value;
-			return hash;
-		}
-
-
-		@Override
-		public boolean equals(Object obj)
-		{
-			if (this == obj)
-			{
-				return true;
-			}
-			if (obj == null)
-			{
-				return false;
-			}
-			if (getClass() != obj.getClass())
-			{
-				return false;
-			}
-			final Entry other = (Entry)obj;
-			if (this.value != other.value)
-			{
-				return false;
-			}
-			return this.type == other.type;
-		}
-
-
-		@Override
-		public String toString()
-		{
-			return "{type=" + type + ", value=" + value + ", name=" + name + "}";
-		}
 	}
 }

@@ -1,35 +1,85 @@
 package org.terifan.raccoon.document;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.Arrays;
 
 
-public class Lookup<T>
+public class Lookup
 {
-	private final ArrayList<T> mMap;
+	private LRU<ByteKey> mLRU;
 
 
-	public Lookup()
+	public Lookup(boolean aEncode)
 	{
-		mMap = new ArrayList<>();
+		mLRU = new LRU<>(aEncode);
 	}
 
 
-	public void add(T aValue)
+	public void write(BinaryOutputStream out, byte[] header) throws IOException
 	{
-		mMap.add(0, aValue);
+		ByteKey key = new ByteKey(header);
+		int ref = mLRU.indexOf(key);
+		if (ref == -1)
+		{
+			out.writeVarint(header.length);
+			out.write(header);
+			mLRU.add(key);
+		}
+		else
+		{
+			out.writeVarint(-ref - 1);
+		}
 	}
 
 
-	public int indexOf(T aValue)
+	byte[] read(BinaryDecoder aIn) throws IOException
 	{
-		int i = mMap.indexOf(aValue);
-		return i;
+		int ref = (int)aIn.readVarint();
+
+		byte[] header;
+		if (ref < 0)
+		{
+			header = mLRU.valueAt(-ref-1).mBuffer;
+		}
+		else
+		{
+			header = aIn.readNBytes(ref);
+			mLRU.add(new ByteKey(header));
+		}
+
+		return header;
 	}
 
 
-	public T valueAt(int aIndex)
+	static class ByteKey
 	{
-		T v = mMap.get(aIndex);
-		return v;
+		final byte[] mBuffer;
+
+
+		public ByteKey(byte[] aBuffer)
+		{
+			mBuffer = aBuffer;
+		}
+
+
+		@Override
+		public String toString()
+		{
+			return new String(mBuffer);
+		}
+
+
+		@Override
+		public int hashCode()
+		{
+			return Arrays.hashCode(mBuffer);
+		}
+
+
+		@Override
+		public boolean equals(Object aOther)
+		{
+			return aOther == this || aOther instanceof ByteKey v && Arrays.equals(mBuffer, v.mBuffer);
+		}
 	}
 }

@@ -1,42 +1,49 @@
 package org.terifan.raccoon.document;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class LRU<T>
 {
-	private final ArrayList<T> mMap;
+	private HashMap<T, Integer> mEncoder;
+	private ArrayList<T> mDecoder;
 
 
-	public LRU()
+	public LRU(boolean aEncode)
 	{
-		mMap = new ArrayList<>();
+		if (aEncode)
+		{
+			mEncoder = new HashMap<>();
+		}
+		else
+		{
+			mDecoder = new ArrayList<>();
+		}
 	}
 
 
 	public void add(T aValue)
 	{
-		mMap.add(0, aValue);
+		if (mEncoder != null)
+		{
+			mEncoder.put(aValue, mEncoder.size());
+		}
+		else
+		{
+			mDecoder.add(aValue);
+		}
 	}
 
 
 	public int indexOf(T aValue)
 	{
-		int i = mMap.indexOf(aValue);
-		if (i != -1)
-		{
-			mMap.remove(i);
-			mMap.add(0, aValue);
-		}
-		return i;
+		return mEncoder.getOrDefault(aValue, -1);
 	}
 
 
 	public T valueAt(int aIndex)
 	{
-		T v = mMap.get(aIndex);
-		mMap.remove(v);
-		mMap.add(0, v);
-		return v;
+		return mDecoder.get(aIndex);
 	}
 }

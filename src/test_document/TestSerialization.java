@@ -16,9 +16,7 @@ public class TestSerialization
 	{
 		try
 		{
-			System.out.println(BinaryType.values().length);
-
-//			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_4.json")));
+//			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_3.json")));
 			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_2.json")));
 //			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/log.json")));
 //			Document a = _Person.createPerson(new Random(1));
