@@ -16,7 +16,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 
-public enum BinaryType
+enum BinaryType
 {
 	TERMINATOR(),
 	DOCUMENT(),
@@ -171,13 +171,6 @@ public enum BinaryType
 
 
 	@FunctionalInterface
-	static interface Reference
-	{
-		void encode(BinaryOutputStream aEncoder, Integer aIndex) throws IOException;
-	}
-
-
-	@FunctionalInterface
 	static interface Encoder
 	{
 		void encode(BinaryOutputStream aEncoder, Object aValue) throws IOException;
@@ -226,22 +219,5 @@ public enum BinaryType
 		{
 			throw new StreamException(e.getMessage());
 		}
-	}
-
-
-	static boolean isReferencableValue(BinaryType aType, Object aValue)
-	{
-		assert aType != BinaryType.STRING;
-
-		if (aType == BinaryType.BOOLEAN|| aType == BinaryType.NULL)
-		{
-			return false;
-		}
-		if (aType == BinaryType.INT || aType == BinaryType.LONG || aType == BinaryType.BYTE || aType == BinaryType.SHORT)
-		{
-			long v = ((Number)aValue).longValue();
-			return v < -63 || v > 63;
-		}
-		return true;
 	}
 }

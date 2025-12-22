@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-class LRU<T>
+class LookupMap<T>
 {
 	private HashMap<T, Integer> mEncoder;
 	private ArrayList<T> mDecoder;
 
 
-	public LRU(boolean aEncode)
+	public LookupMap(boolean aEncode)
 	{
 		if (aEncode)
 		{

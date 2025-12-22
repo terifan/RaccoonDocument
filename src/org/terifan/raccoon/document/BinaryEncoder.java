@@ -3,7 +3,6 @@ package org.terifan.raccoon.document;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map.Entry;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
 import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
@@ -12,9 +11,11 @@ import static org.terifan.raccoon.document.BinaryType.STRING;
 
 public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
+	public static boolean REFS;
+
 	private Lookup mDocStructs = new Lookup(true);
 	private Lookup mArrStructs = new Lookup(true);
-	private HashMap<BinaryType, LRU<?>> mValueLookup = new HashMap<>();
+	private LookupMap<String> mStringLookup = new LookupMap<String>(true);
 
 
 	public BinaryEncoder(OutputStream aOutputStream)
@@ -136,14 +137,12 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			case STRING:
 			{
 				String s = (String)value;
-				LRU lookup = mValueLookup.computeIfAbsent(type, t->new LRU<String>(true));
-
-				int ref = lookup.indexOf(s);
+				int ref = mStringLookup.indexOf(s);
 				if (ref == -1)
 				{
 					writeVarint(s.length());
 					writeUTF(s);
-					lookup.add(s);
+					mStringLookup.add(s);
 				}
 				else
 				{
@@ -152,19 +151,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 				break;
 			}
 			default:
-//				type.encoder.encode(this, value);
-				LRU lookup = mValueLookup.computeIfAbsent(type, t->new LRU<>(true));
-				int ref = lookup.indexOf(value);
-				if (ref == -1)
-				{
-					writeUnsignedVarint(0);
-					type.encoder.encode(this, value);
-					lookup.add(value);
-				}
-				else
-				{
-					writeUnsignedVarint(ref + 1);
-				}
+				type.encoder.encode(this, value);
 				break;
 		}
 	}

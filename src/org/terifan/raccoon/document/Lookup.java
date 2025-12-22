@@ -6,12 +6,12 @@ import java.util.Arrays;
 
 class Lookup
 {
-	private LRU<ByteKey> mLRU;
+	private LookupMap<ByteKey> mLRU;
 
 
 	public Lookup(boolean aEncode)
 	{
-		mLRU = new LRU<>(aEncode);
+		mLRU = new LookupMap<>(aEncode);
 	}
 
 
@@ -43,7 +43,8 @@ class Lookup
 		}
 		else
 		{
-			header = aIn.readNBytes(ref);
+			header = new byte[ref];
+			aIn.read(header);
 			mLRU.add(new ByteKey(header));
 		}
 

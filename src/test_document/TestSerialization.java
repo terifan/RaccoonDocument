@@ -2,9 +2,6 @@ package test_document;
 
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.util.Random;
-import org.terifan.raccoon.document.Array;
-import org.terifan.raccoon.document.BinaryType;
 import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Document;
 import org.terifan.raccoon.document.Support;

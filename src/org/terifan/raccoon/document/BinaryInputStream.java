@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 
-class BinaryInputStream extends InputStream implements AutoCloseable
+class BinaryInputStream implements AutoCloseable
 {
 	private final byte[] mReadBuffer = new byte[8];
 
@@ -19,8 +19,7 @@ class BinaryInputStream extends InputStream implements AutoCloseable
 	}
 
 
-	@Override
-	public int read() throws IOException
+	int read() throws IOException
 	{
 		int c = mInputStream.read();
 		if (c == -1)
@@ -31,8 +30,7 @@ class BinaryInputStream extends InputStream implements AutoCloseable
 	}
 
 
-	@Override
-	public int read(byte[] aBuffer) throws IOException
+	int read(byte[] aBuffer) throws IOException
 	{
 		int len = mInputStream.read(aBuffer);
 		if (len != aBuffer.length)
@@ -43,8 +41,7 @@ class BinaryInputStream extends InputStream implements AutoCloseable
 	}
 
 
-	@Override
-	public int read(byte[] aBuffer, int aOffset, int aLength) throws IOException
+	int read(byte[] aBuffer, int aOffset, int aLength) throws IOException
 	{
 		int len = mInputStream.read(aBuffer, aOffset, aLength);
 		if (len != aLength)
@@ -79,7 +76,7 @@ class BinaryInputStream extends InputStream implements AutoCloseable
 	}
 
 
-	public <T> T skipBytes(int aLength) throws IOException
+	<T> T skipBytes(int aLength) throws IOException
 	{
 		byte[] t = new byte[aLength];
 		int len = mInputStream.read(t);
@@ -87,7 +84,7 @@ class BinaryInputStream extends InputStream implements AutoCloseable
 	}
 
 
-	public long readVarint() throws IOException
+	long readVarint() throws IOException
 	{
 		for (long n = 0, result = 0; n < 64; n += 7)
 		{
@@ -119,7 +116,7 @@ class BinaryInputStream extends InputStream implements AutoCloseable
 	}
 
 
-	public String readString() throws IOException
+	String readString() throws IOException
 	{
 		return readUTF((int)readUnsignedVarint());
 	}
@@ -167,7 +164,7 @@ class BinaryInputStream extends InputStream implements AutoCloseable
 	}
 
 
-	public BinaryType readType() throws IOException
+	BinaryType readType() throws IOException
 	{
 		int i = mInputStream.read();
 		if (i == -1)
@@ -247,7 +244,10 @@ class BinaryInputStream extends InputStream implements AutoCloseable
 	@Override
 	public void close() throws IOException
 	{
-		mInputStream.close();
-		mInputStream = null;
+		if (mInputStream != null)
+		{
+			mInputStream.close();
+			mInputStream = null;
+		}
 	}
 }

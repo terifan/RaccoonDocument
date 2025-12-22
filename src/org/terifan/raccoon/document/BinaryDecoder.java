@@ -3,7 +3,6 @@ package org.terifan.raccoon.document;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Iterator;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
 import static org.terifan.raccoon.document.BinaryType.BOOLEAN;
@@ -16,7 +15,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 {
 	private Lookup mDocStructs = new Lookup(false);
 	private Lookup mArrStructs = new Lookup(false);
-	private HashMap<BinaryType, LRU<?>> mValueLookup = new HashMap<>();
+	private LookupMap<String> mStringLookup = new LookupMap<String>(false);
 
 	private boolean mEnded;
 	private Object[] mNext;
@@ -42,11 +41,14 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 		{
 			try
 			{
-				mNext = new Object[]{readObject()};
+				mNext = new Object[]
+				{
+					readObjectImpl()
+				};
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
-				e.printStackTrace(System.out);
+				mEnded = true;
 			}
 		}
 		return !mEnded;
@@ -56,14 +58,32 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	@Override
 	public Object next()
 	{
+		try
+		{
+			return readObject();
+		}
+		catch (IOException e)
+		{
+			throw new IllegalStateException(e);
+		}
+	}
+
+
+	public <T> T readObject() throws IOException
+	{
 		if (mNext == null)
 		{
 			try
 			{
-				mNext = new Object[]{read(readObject())};
+				mNext = new Object[]
+				{
+					read(readObjectImpl())
+				};
 			}
-			catch (Exception e)
+			catch (IOException e)
 			{
+				mEnded = true;
+				return null;
 			}
 		}
 
@@ -71,11 +91,11 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 		mNext = null;
 
-		return value;
+		return (T)value;
 	}
 
 
-	public <T> T readObject() throws IOException
+	public <T> T readObjectImpl() throws IOException
 	{
 		BinaryType type = readType();
 		if (type == BinaryType.TERMINATOR)
@@ -185,32 +205,20 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 				break;
 			case STRING:
 			{
-				LRU lookup = mValueLookup.computeIfAbsent(aType, t -> new LRU<>(false));
 				int i = (int)readVarint();
 				if (i < 0)
 				{
-					value = lookup.valueAt(-i - 1);
+					value = mStringLookup.valueAt(-i - 1);
 				}
 				else
 				{
 					value = readUTF(i);
-					lookup.add((String)value);
+					mStringLookup.add((String)value);
 				}
 				break;
 			}
 			default:
-//				value = aType.decoder.decode(this);
-				LRU lookup = mValueLookup.computeIfAbsent(aType, t -> new LRU<>(false));
-				int ref = (int)readUnsignedVarint();
-				if (ref > 0)
-				{
-					value = lookup.valueAt(ref - 1);
-				}
-				else
-				{
-					value = aType.decoder.decode(this);
-					lookup.add(value);
-				}
+				value = aType.decoder.decode(this);
 				break;
 		}
 

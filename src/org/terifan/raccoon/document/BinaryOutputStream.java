@@ -6,12 +6,11 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 
-class BinaryOutputStream extends OutputStream implements AutoCloseable
+class BinaryOutputStream implements AutoCloseable
 {
 	private final byte[] mWriteBuffer = new byte[8];
 
 	protected OutputStream mOutputStream;
-	protected long mPosition;
 
 
 	public BinaryOutputStream(OutputStream aOutputStream)
@@ -20,32 +19,21 @@ class BinaryOutputStream extends OutputStream implements AutoCloseable
 	}
 
 
-	public long position()
-	{
-		return mPosition;
-	}
-
-
-	@Override
-	public void write(int aValue) throws IOException
+	void write(int aValue) throws IOException
 	{
 		mOutputStream.write(aValue);
-		mPosition++;
 	}
 
 
-	@Override
-	public void write(byte[] aBuffer) throws IOException
+	void write(byte[] aBuffer) throws IOException
 	{
 		write(aBuffer, 0, aBuffer.length);
 	}
 
 
-	@Override
-	public void write(byte[] aBuffer, int aOffset, int aLength) throws IOException
+	void write(byte[] aBuffer, int aOffset, int aLength) throws IOException
 	{
 		mOutputStream.write(aBuffer, aOffset, aLength);
-		mPosition += aBuffer.length;
 	}
 
 
@@ -218,7 +206,10 @@ class BinaryOutputStream extends OutputStream implements AutoCloseable
 	@Override
 	public void close() throws IOException
 	{
-		mOutputStream.close();
-		mOutputStream = null;
+		if (mOutputStream != null)
+		{
+			mOutputStream.close();
+			mOutputStream = null;
+		}
 	}
 }
