@@ -23,48 +23,115 @@ import test_document._Log;
 
 public class BinaryEncoderNGTest
 {
+	@Test(expectedExceptions = StreamException.class)
+	public void testForEach() throws Exception
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		new BinaryEncoder(baos)
+			.writeObject("test1")
+			.writeObject("test2")
+			.writeObject("test3");
+
+		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
+		assertEquals(decoder.hasNext(), true);
+		assertEquals(decoder.next(), "test1");
+		assertEquals(decoder.hasNext(), true);
+		assertEquals(decoder.next(), "test2");
+		assertEquals(decoder.hasNext(), true);
+		assertEquals(decoder.next(), "test3");
+		assertEquals(decoder.hasNext(), false);
+		assertEquals(decoder.next(), "xxx");
+	}
+
+
+	@Test(expectedExceptions = IOException.class)
+	public void testForEach2() throws Exception
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		new BinaryEncoder(baos)
+			.writeObject("test1")
+			.writeObject("test2")
+			.writeObject("test3");
+
+		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
+		assertEquals(decoder.hasNext(), true);
+		assertEquals(decoder.readObject(), "test1");
+		assertEquals(decoder.hasNext(), true);
+		assertEquals(decoder.readObject(), "test2");
+		assertEquals(decoder.hasNext(), true);
+		assertEquals(decoder.readObject(), "test3");
+		assertEquals(decoder.hasNext(), false);
+		assertEquals(decoder.readObject(), "xxx");
+	}
+
+
+	@Test
+	public void testForEach3() throws IOException
+	{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		new BinaryEncoder(baos)
+			.writeObject("test1")
+			.writeObject("test2")
+			.writeObject("test3");
+
+		Array list = Array.of("test1", "test2", "test3");
+
+		for (Object o : new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray())))
+		{
+			assertEquals(o, list.removeFirst());
+		}
+	}
+
+
 	@Test
 	public void testWritingOjectsToObjectOutputStream() throws IOException, ClassNotFoundException
 	{
-		Document doc = Document.of("id:123,text:'hello world'");
-		Array arr = Array.of(1, 2, 3);
+		Document doc1 = Document.of("id:123,text:'hello world'");
+		Document doc2 = Document.of("id:456,text:'hello world'");
+		Array arr1 = Array.of(1, 2, 3);
+		Array arr2 = Array.of(4, 5, 6);
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try (ObjectOutputStream dos = new ObjectOutputStream(baos))
 		{
 			dos.writeInt(0xcafebabe);
-			dos.writeObject(doc);
+			dos.writeObject(doc1);
+			dos.writeObject(doc2);
 			dos.writeInt(0xcafebabe);
-			dos.writeObject(arr);
+			dos.writeObject(arr1);
+			dos.writeObject(arr2);
 			dos.writeInt(0xcafebabe);
 		}
 
-		_Log.hexDump(baos.toByteArray());
+//		_Log.hexDump(baos.toByteArray());
 
 		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
 		assertEquals(in.readInt(), 0xcafebabe);
-		assertEquals(in.readObject(), doc);
+		assertEquals(in.readObject(), doc1);
+		assertEquals(in.readObject(), doc2);
 		assertEquals(in.readInt(), 0xcafebabe);
-		assertEquals(in.readObject(), arr);
+		assertEquals(in.readObject(), arr1);
+		assertEquals(in.readObject(), arr2);
 		assertEquals(in.readInt(), 0xcafebabe);
 	}
 
 
 	@Test(dataProvider = "allTypes")
-	public void testDocument(Array aAllTypes) throws IOException
+	public void testAllTypesInDocument(Array aAllTypes) throws IOException
 	{
 		Document out = new Document();
 
 		int i = 0;
 		for (Object v : aAllTypes)
 		{
-			out.put("f"+(i++), v);
+			out.put("f" + (i++), v);
 		}
 
 		Array arr = aAllTypes.clone();
 		arr.add(out.clone());
 		arr.add(out.clone());
-		out.put("f" + i, arr);
+		out.put("f" + (i++), arr);
+		out.put("f" + (i++), out.clone());
 
 		byte[] buffer = out.toByteArray();
 
@@ -77,13 +144,12 @@ public class BinaryEncoderNGTest
 
 //		System.out.println(in.toJson(false));
 //		System.out.println(in.equals(out));
-
 		assertEquals(in, out);
 	}
 
 
 	@Test(dataProvider = "allTypes")
-	public void testWriteObject(Array aAllTypes) throws IOException
+	public void testAllTypesInStream(Array aAllTypes) throws IOException
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 

@@ -17,8 +17,9 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	private Lookup mArrStructs;
 	private LookupMap<String> mStringLookup;
 
+	private boolean mReady;
 	private boolean mEnded;
-	private Object[] mNext;
+	private Object mNext;
 
 
 	public BinaryDecoder(InputStream aInputStream)
@@ -41,27 +42,29 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	@Override
 	public boolean hasNext()
 	{
-		if (mNext == null && !mEnded)
+		if (!mReady)
 		{
 			try
 			{
-				mNext = new Object[]
-				{
-					readObjectImpl()
-				};
+				mNext = readObjectImpl();
+				mReady = !mEnded;
 			}
 			catch (IOException e)
 			{
 				mEnded = true;
 			}
 		}
-		return !mEnded;
+		return mReady;
 	}
 
 
 	@Override
 	public Object next()
 	{
+		if (mEnded)
+		{
+			throw new StreamException("Reading beyond end of stream.");
+		}
 		try
 		{
 			return readObject();
@@ -75,26 +78,19 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 	public <T> T readObject() throws IOException
 	{
-		if (mNext == null)
+		if (!mReady && !mEnded)
 		{
-			try
-			{
-				mNext = new Object[]
-				{
-					readObjectImpl()
-				};
-			}
-			catch (IOException e)
-			{
-				mEnded = true;
-				return null;
-			}
+			mNext = readObjectImpl();
+			mReady = !mEnded;
+		}
+		if (mEnded)
+		{
+			throw new IOException("Reading beyond end of stream.");
 		}
 
-		Object value = mNext[0];
-
+		Object value = mNext;
 		mNext = null;
-
+		mReady = false;
 		return (T)value;
 	}
 
