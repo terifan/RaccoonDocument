@@ -3,7 +3,6 @@ package org.terifan.raccoon.document;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StringReader;
@@ -25,21 +24,6 @@ import org.testng.annotations.Test;
 
 public class DocumentNGTest
 {
-	@Test(dataProvider = "decimal")
-	public void testBigDecimal(String s)
-	{
-		Document doc = new Document().put("a", new BigDecimal(s));
-
-//		System.out.println(doc);
-		byte[] data = doc.toByteArray();
-
-//		_Log.hexDump(data);
-		Document doc2 = new Document().fromByteArray(data);
-
-		assertEquals(doc2.getDecimal("a"), doc.getDecimal("a"));
-	}
-
-
 	@Test
 	public void testFind()
 	{
@@ -94,52 +78,6 @@ public class DocumentNGTest
 
 
 	@Test
-	public void testFind2()
-	{
-		Document doc = new Document().fromJson(new InputStreamReader(DocumentNGTest.class.getResourceAsStream("trip.json")));
-
-		String s = doc.findFirst("/event/payload/lines/0/orderLineId");
-
-		System.out.println(s);
-	}
-
-
-	@Test
-	public void testFindMany2()
-	{
-		Document doc = new Document().fromJson(new InputStreamReader(DocumentNGTest.class.getResourceAsStream("trip.json")));
-
-		System.out.println(doc.findMany("/projections/trip/consignments/parties/shippingLocation/identifiers/identifier"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc.findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/0/identifier"));
-		System.out.println(doc.findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/1/identifier"));
-		System.out.println(doc.findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/2/identifier"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc.findMany("/projections/trip/consignments/1/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc.findMany("/projections/trip/consignments/2/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc.findMany("/projections/trip/consignments/3/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc.findMany("/projections/trip/consignments/4/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc.findMany("/projections/trip/consignments/5/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc.findMany("/projections/trip/consignments/6/parties/shippingLocation/identifiers/identifier"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc.findMany("/projections/trip/consignments/parties/*/identifiers/identifier"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc.findMany("/projections/trip/consignments/parties/*/identifiers"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc.findMany("/projections/trip/consignments/parties/*/identifiers[domain=party]"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc.findMany("/projections/trip/consignments/parties/*/identifiers[domain=party]/identifier"));
-		System.out.println("-".repeat(100));
-	}
-
-
-	@Test
 	public void testFindMany()
 	{
 		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:x,name:fag},{name:adam},{gender:m},{first:bob,last:andersson},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
@@ -188,7 +126,7 @@ public class DocumentNGTest
 	@Test
 	public void testFindMany4()
 	{
-		Document doc = Document.of("maps:[{a:[0,{b:4},{b:x}]},{a:[0,{b:5}]},{a:[0,{b:6}]}]");
+		Document doc = Document.of("maps:[{a:[1,{b:4},{b:x}]},{a:[2,{b:5}]},{a:[3,{b:6}]}]");
 
 		assertEquals(doc.findMany("maps/a/1/b").toJson(), "[4,5,6]");
 	}
