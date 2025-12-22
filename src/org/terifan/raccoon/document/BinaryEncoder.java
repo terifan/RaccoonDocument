@@ -8,22 +8,22 @@ import java.util.Map.Entry;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
 import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryType.STRING;
-import test_document._Log;
 
 
 public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
-	public static boolean REFS;
-
-	private Lookup mDocStructs = new Lookup(true);
-	private Lookup mArrStructs = new Lookup(true);
-	private LookupMap<String> mNameLookup = new LookupMap<String>(true);
-	private LookupMap<String> mStringLookup = new LookupMap<String>(true);
+	private Lookup mDocStructs;
+	private Lookup mArrStructs;
+	private LookupMap<String> mStringLookup;
 
 
 	public BinaryEncoder(OutputStream aOutputStream)
 	{
 		super(aOutputStream);
+
+		mStringLookup = new LookupMap<>(true);
+		mArrStructs = new Lookup(true);
+		mDocStructs = new Lookup(true);
 	}
 
 

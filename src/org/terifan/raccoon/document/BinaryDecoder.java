@@ -13,10 +13,9 @@ import static org.terifan.raccoon.document.BinaryType.NULL;
 
 public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, Iterator<Object>, Iterable<Object>
 {
-	private Lookup mDocStructs = new Lookup(false);
-	private Lookup mArrStructs = new Lookup(false);
-	private LookupMap<String> mNameLookup = new LookupMap<String>(false);
-	private LookupMap<String> mStringLookup = new LookupMap<String>(false);
+	private Lookup mDocStructs;
+	private Lookup mArrStructs;
+	private LookupMap<String> mStringLookup;
 
 	private boolean mEnded;
 	private Object[] mNext;
@@ -25,6 +24,10 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	public BinaryDecoder(InputStream aInputStream)
 	{
 		super(aInputStream);
+
+		mStringLookup = new LookupMap<>(false);
+		mArrStructs = new Lookup(false);
+		mDocStructs = new Lookup(false);
 	}
 
 
