@@ -171,11 +171,11 @@ public class SupportedTypes
 		{
 			return Long.valueOf(aText.substring(2), 16);
 		}
-		if (aText.endsWith("f") || aText.endsWith("F"))
+		if (aText.matches("[+-]?(\\d*\\.)?\\d+[f|F]"))
 		{
 			return Float.valueOf(aText.substring(0, aText.length() - 1));
 		}
-		if (aText.matches("[0-9]*\\.?[0-9]*[l|L]"))
+		if (aText.matches("[+-]?[0-9]{1,}[L|l]"))
 		{
 			return Long.valueOf(aText.substring(0, aText.length() - 1));
 		}

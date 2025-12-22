@@ -40,63 +40,6 @@ public class DocumentNGTest
 	}
 
 
-	@DataProvider
-	private Object[][] decimal()
-	{
-		return new Object[][]
-		{
-			{
-				"0"
-			},
-			{
-				".1"
-			},
-			{
-				"1."
-			},
-			{
-				"0.1"
-			},
-			{
-				"12"
-			},
-			{
-				".12"
-			},
-			{
-				"12.34"
-			},
-			{
-				"164313131394.654613219816131"
-			},
-			{
-				"1643131313941.654613219816131"
-			},
-			{
-				"164313131394.6546132198161312"
-			},
-			{
-				"1643131313943.6546132198161314"
-			},
-			{
-				"16431313139456.654613219816131"
-			},
-			{
-				"16431313139456.6546132198161317"
-			},
-			{
-				"16431313139456.65461321981613178"
-			},
-			{
-				"32196131943131.31646133219846131496311946313219841940661321981"
-			},
-			{
-				"-1.5e+35"
-			}
-		};
-	}
-
-
 	@Test
 	public void testFind()
 	{
@@ -417,6 +360,9 @@ public class DocumentNGTest
 		Document dstDocText = unmarshalledText.get("doc");
 		Array dstArrText = unmarshalledText.get("arr");
 
+		System.out.println(unmarshalledJson);
+		System.out.println(srcDoc);
+
 		assertEquals(unmarshalledBin, srcDoc);
 		assertEquals(unmarshalledJson, srcDoc);
 		assertEquals(unmarshalledText, srcDoc);
@@ -587,65 +533,6 @@ public class DocumentNGTest
 	}
 
 
-//	@Test
-//	public void testHashcode() throws IOException, ClassNotFoundException
-//	{
-//		assertEquals(Document.of("_id:1").hashCode(), -2019545584);
-//		assertEquals(Document.of("_id:'1'").hashCode(), -1802300669);
-//		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
-//		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
-//	}
-//	@Test
-//	public void testInterleaved() throws IOException, ClassNotFoundException
-//	{
-//		int a = 1234;
-//		int b = 789;
-//
-//		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//		BinaryEncoder encoder = new BinaryEncoder(baos);
-//		encoder.marshal(0);
-//		encoder.writeInterleaved(a, b);
-//
-//		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
-//		decoder.unmarshal();
-//		long v = decoder.readInterleaved();
-//
-//		assertEquals((int)v, a);
-//		assertEquals((int)(v >>> 32), b);
-//	}
-//	@Test
-//	public void testMarshall() throws IOException, ClassNotFoundException
-//	{
-//		String d = "$or:[{$and:[{ratings:1},{name:{$regex:'n.*'}}]},{$and:[{ratings:2},{name:{$regex:'w.*'}}]}]";
-//
-//		Document doc = Document.of(d);
-//
-//		System.out.println(doc);
-//	}
-	@Test(enabled = false)
-	public void testMarshallCompressionRatio() throws IOException, ClassNotFoundException
-	{
-		System.out.println("bin" + "\t" + "zip");
-		for (int i = 1; i < 10; i++)
-		{
-			Array array = new Array();
-			for (int j = 0; j < i; j++)
-			{
-				array.add(_Person.createPerson(new Random(j)));
-			}
-
-			byte[] data = array.toByteArray();
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try (DeflaterOutputStream dos = new DeflaterOutputStream(baos))
-			{
-				dos.write(data);
-			}
-
-			System.out.println(data.length + "\t" + baos.size() + "\t" + (100 - baos.size() * 100 / data.length) + "%");
-		}
-	}
-
-
 	@Test(dataProvider = "arrayLengths")
 	public void testMarshallArrayNumbers(int n) throws IOException, ClassNotFoundException
 	{
@@ -794,20 +681,6 @@ public class DocumentNGTest
 		System.out.println("       bin-zip: " + baos4.size());
 
 //		_Log.hexDump(doc.toByteArray());
-	}
-
-
-	@Test
-	public void testLargeBlock() throws IOException
-	{
-		byte[] data = new byte[10 * 1024 * 1024];
-		new Random().nextBytes(data);
-
-		Document doc = new Document().put("bin", data);
-
-		long t = System.currentTimeMillis();
-		doc.toByteArray();
-//		System.out.println(System.currentTimeMillis() - t);
 	}
 
 

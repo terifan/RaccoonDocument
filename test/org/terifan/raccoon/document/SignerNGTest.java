@@ -51,7 +51,7 @@ public class SignerNGTest
 		Random rnd = new Random(1);
 		String secret = "1234";
 
-		Document encodingMessage = _Person.createPerson(rnd);
+		Document encodingMessage = Document.parseJson(_Person.createPerson(rnd).toJson()); // remove complex types
 
 		String data = new Signer(secret).toSignedString(encodingMessage);
 
@@ -76,7 +76,7 @@ public class SignerNGTest
 			throw new IllegalStateException();
 		};
 
-		Document encodingMessage = _Person.createPerson(rnd);
+		Document encodingMessage = Document.parseJson(_Person.createPerson(rnd).toJson()); // remove complex types
 		Document encodingHeader = Document.of("typ:JWT,alg:HS512,by:bobby");
 
 		String data = new Signer(secret).toSignedString(encodingMessage, encodingHeader);

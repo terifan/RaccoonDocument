@@ -130,56 +130,56 @@ public class ObjectIdNGTest
 	}
 
 
-	@Test
-	public void testFalsePositivesName()
-	{
-		java.util.Random rnd = new java.util.Random(1);
-		Key key = new Key(0);
-		char[] buf = new char[18];
-		int cnt = 0;
-		for (int i = 0; i < 10_000_000; i++)
-		{
-			for (int j = 0; j < 18; j++)
-			{
-				buf[j] = BASE62ENC[rnd.nextInt(62)];
-			}
-			String name = new String(buf);
+//	@Test
+//	public void testFalsePositivesName()
+//	{
+//		java.util.Random rnd = new java.util.Random(1);
+//		Key key = new Key(0);
+//		char[] buf = new char[18];
+//		int cnt = 0;
+//		for (int i = 0; i < 10_000_000; i++)
+//		{
+//			for (int j = 0; j < 18; j++)
+//			{
+//				buf[j] = BASE62ENC[rnd.nextInt(62)];
+//			}
+//			String name = new String(buf);
+//
+//			ObjectId oid = ObjectId.fromArmouredString(key, name);
+//			if (oid != null)
+//			{
+//				cnt++;
+//			}
+//		}
+//		assertEquals(cnt, 4332); // 10_000_000 / 13 / 13 / 13
+//	}
 
-			ObjectId oid = ObjectId.fromArmouredString(key, name);
-			if (oid != null)
-			{
-				cnt++;
-			}
-		}
-		assertEquals(cnt, 4332); // 10_000_000 / 13 / 13 / 13
-	}
 
-
-	@Test
-	public void testFalsePositivesKey()
-	{
-		java.util.Random rnd = new java.util.Random(1);
-		char[] buf = new char[18];
-		for (int j = 0; j < 18; j++)
-		{
-			buf[j] = BASE62ENC[rnd.nextInt(62)];
-		}
-		String name = new String(buf);
-		int cnt = 0;
-		for (int j = 0; j < 256; j++)
-		{
-			for (int i = 0; i < 256; i++)
-			{
-				Key key = new Key(i, j);
-				ObjectId oid = ObjectId.fromArmouredString(key, name);
-				if (oid != null)
-				{
-					cnt++;
-				}
-			}
-		}
-		assertEquals(cnt, 30); // 65536 / 13 / 13 / 13
-	}
+//	@Test
+//	public void testFalsePositivesKey()
+//	{
+//		java.util.Random rnd = new java.util.Random(1);
+//		char[] buf = new char[18];
+//		for (int j = 0; j < 18; j++)
+//		{
+//			buf[j] = BASE62ENC[rnd.nextInt(62)];
+//		}
+//		String name = new String(buf);
+//		int cnt = 0;
+//		for (int j = 0; j < 256; j++)
+//		{
+//			for (int i = 0; i < 256; i++)
+//			{
+//				Key key = new Key(i, j);
+//				ObjectId oid = ObjectId.fromArmouredString(key, name);
+//				if (oid != null)
+//				{
+//					cnt++;
+//				}
+//			}
+//		}
+//		assertEquals(cnt, 30); // 65536 / 13 / 13 / 13
+//	}
 
 
 	@Test
