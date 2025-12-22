@@ -469,20 +469,23 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 	{
 		try
 		{
-			Array arr = (Array)super.clone();
+			Array copy = (Array)super.clone();
+
+			copy.mValues = (ArrayList<Object>)mValues.clone();
+
 			for (int i = 0, sz = size(); i < sz; i++)
 			{
 				Object v = get(i);
 				if (v instanceof Array c)
 				{
-					arr.add(new Array().addAll(c));
+					copy.put(i, c.clone());
 				}
 				else if (v instanceof Document c)
 				{
-					arr.add(new Document().putAll(c));
+					copy.put(i, c.clone());
 				}
 			}
-			return arr;
+			return copy;
 		}
 		catch (CloneNotSupportedException e)
 		{

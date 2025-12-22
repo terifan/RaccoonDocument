@@ -15,6 +15,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 {
 	private Lookup mDocStructs = new Lookup(false);
 	private Lookup mArrStructs = new Lookup(false);
+	private LookupMap<String> mNameLookup = new LookupMap<String>(false);
 	private LookupMap<String> mStringLookup = new LookupMap<String>(false);
 
 	private boolean mEnded;
@@ -204,19 +205,8 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 				value = aType.decoder.decode(this);
 				break;
 			case STRING:
-			{
-				int i = (int)readVarint();
-				if (i < 0)
-				{
-					value = mStringLookup.valueAt(-i - 1);
-				}
-				else
-				{
-					value = readUTF(i);
-					mStringLookup.add((String)value);
-				}
+				value = readString(mStringLookup);
 				break;
-			}
 			default:
 				value = aType.decoder.decode(this);
 				break;

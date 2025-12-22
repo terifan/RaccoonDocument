@@ -10,10 +10,10 @@ class BinaryOutputStream implements AutoCloseable
 {
 	private final byte[] mWriteBuffer = new byte[8];
 
-	protected OutputStream mOutputStream;
+	private OutputStream mOutputStream;
 
 
-	public BinaryOutputStream(OutputStream aOutputStream)
+	BinaryOutputStream(OutputStream aOutputStream)
 	{
 		mOutputStream = aOutputStream;
 	}
@@ -116,29 +116,9 @@ class BinaryOutputStream implements AutoCloseable
 	}
 
 
-	void writeInterleaved(BinaryType aX, int aY) throws IOException
-	{
-		writeUnsignedVarint((shift(aY) << 1) | shift(aX.ordinal()));
-	}
-
-
 	void writeType(BinaryType aType) throws IOException
 	{
 		write(aType.ordinal());
-	}
-
-
-	private static long shift(long aWord)
-	{
-		aWord &= 0xffffffffL;
-
-		aWord = (aWord | (aWord << 16)) & 0x0000ffff0000ffffL;
-		aWord = (aWord | (aWord << 8)) & 0x00ff00ff00ff00ffL;
-		aWord = (aWord | (aWord << 4)) & 0x0f0f0f0f0f0f0f0fL;
-		aWord = (aWord | (aWord << 2)) & 0x3333333333333333L;
-		aWord = (aWord | (aWord << 1)) & 0x5555555555555555L;
-
-		return aWord;
 	}
 
 
@@ -202,6 +182,22 @@ class BinaryOutputStream implements AutoCloseable
 	}
 
 
+	void writeString(LookupMap<String> aLookup, String aValue) throws IOException
+	{
+		int ref = aLookup.indexOf(aValue);
+		if (ref == -1)
+		{
+			writeVarint(aValue.length());
+			writeUTF(aValue);
+			aLookup.add(aValue);
+		}
+		else
+		{
+			writeVarint(-ref - 1);
+		}
+	}
+
+
 	@Override
 	public void close() throws IOException
 	{
@@ -211,4 +207,23 @@ class BinaryOutputStream implements AutoCloseable
 			mOutputStream = null;
 		}
 	}
+
+//	void writeInterleaved(BinaryType aX, int aY) throws IOException
+//	{
+//		writeUnsignedVarint((shift(aY) << 1) | shift(aX.ordinal()));
+//	}
+//
+//
+//	private static long shift(long aWord)
+//	{
+//		aWord &= 0xffffffffL;
+//
+//		aWord = (aWord | (aWord << 16)) & 0x0000ffff0000ffffL;
+//		aWord = (aWord | (aWord << 8)) & 0x00ff00ff00ff00ffL;
+//		aWord = (aWord | (aWord << 4)) & 0x0f0f0f0f0f0f0f0fL;
+//		aWord = (aWord | (aWord << 2)) & 0x3333333333333333L;
+//		aWord = (aWord | (aWord << 1)) & 0x5555555555555555L;
+//
+//		return aWord;
+//	}
 }

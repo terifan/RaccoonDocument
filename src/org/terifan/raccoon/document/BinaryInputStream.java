@@ -10,10 +10,10 @@ class BinaryInputStream implements AutoCloseable
 {
 	private final byte[] mReadBuffer = new byte[8];
 
-	protected InputStream mInputStream;
+	private InputStream mInputStream;
 
 
-	public BinaryInputStream(InputStream aInputStream)
+	BinaryInputStream(InputStream aInputStream)
 	{
 		mInputStream = aInputStream;
 	}
@@ -73,14 +73,6 @@ class BinaryInputStream implements AutoCloseable
 			+ ((mReadBuffer[5] & 0xff) << 16)
 			+ ((mReadBuffer[6] & 0xff) << 8)
 			+ ((mReadBuffer[7] & 0xff) << 0));
-	}
-
-
-	<T> T skipBytes(int aLength) throws IOException
-	{
-		byte[] t = new byte[aLength];
-		int len = mInputStream.read(t);
-		return null;
 	}
 
 
@@ -157,13 +149,6 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
-	long readInterleaved() throws IOException
-	{
-		long p = readUnsignedVarint();
-		return (reverseShift(p >>> 1) << 32) | reverseShift(p);
-	}
-
-
 	BinaryType readType() throws IOException
 	{
 		int i = mInputStream.read();
@@ -172,20 +157,6 @@ class BinaryInputStream implements AutoCloseable
 			return BinaryType.TERMINATOR;
 		}
 		return BinaryType.values()[i];
-	}
-
-
-	private static long reverseShift(long aWord)
-	{
-		aWord &= 0x5555555555555555L;
-
-		aWord = (aWord | (aWord >> 1)) & 0x3333333333333333L;
-		aWord = (aWord | (aWord >> 2)) & 0x0f0f0f0f0f0f0f0fL;
-		aWord = (aWord | (aWord >> 4)) & 0x00ff00ff00ff00ffL;
-		aWord = (aWord | (aWord >> 8)) & 0x0000ffff0000ffffL;
-		aWord = (aWord | (aWord >> 16)) & 0x00000000ffffffffL;
-
-		return aWord;
 	}
 
 
@@ -241,6 +212,19 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
+	String readString(LookupMap<String> aLookup) throws IOException
+	{
+		int i = (int)readVarint();
+		if (i < 0)
+		{
+			return aLookup.valueAt(-i - 1);
+		}
+		String value = readUTF(i);
+		aLookup.add(value);
+		return value;
+	}
+
+
 	@Override
 	public void close() throws IOException
 	{
@@ -250,4 +234,24 @@ class BinaryInputStream implements AutoCloseable
 			mInputStream = null;
 		}
 	}
+
+//	long readInterleaved() throws IOException
+//	{
+//		long p = readUnsignedVarint();
+//		return (reverseShift(p >>> 1) << 32) | reverseShift(p);
+//	}
+//
+//
+//	private static long reverseShift(long aWord)
+//	{
+//		aWord &= 0x5555555555555555L;
+//
+//		aWord = (aWord | (aWord >> 1)) & 0x3333333333333333L;
+//		aWord = (aWord | (aWord >> 2)) & 0x0f0f0f0f0f0f0f0fL;
+//		aWord = (aWord | (aWord >> 4)) & 0x00ff00ff00ff00ffL;
+//		aWord = (aWord | (aWord >> 8)) & 0x0000ffff0000ffffL;
+//		aWord = (aWord | (aWord >> 16)) & 0x00000000ffffffffL;
+//
+//		return aWord;
+//	}
 }

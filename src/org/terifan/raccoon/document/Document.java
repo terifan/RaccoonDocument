@@ -337,20 +337,23 @@ public class Document extends Collection<String, Document> implements Externaliz
 	{
 		try
 		{
-			Document doc = (Document)super.clone();
+			Document copy = (Document)super.clone();
+
+			copy.mValues = (LinkedHashMap<String, Object>)mValues.clone();
+
 			for (String s : keys().iterable(String.class))
 			{
 				Object v = get(s);
 				if (v instanceof Array c)
 				{
-					doc.put(s, new Array().addAll(c));
+					copy.put(s, c.clone());
 				}
 				else if (v instanceof Document c)
 				{
-					doc.put(s, new Document().putAll(c));
+					copy.put(s, c.clone());
 				}
 			}
-			return doc;
+			return copy;
 		}
 		catch (CloneNotSupportedException e)
 		{

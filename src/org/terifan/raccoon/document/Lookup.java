@@ -6,28 +6,28 @@ import java.util.Arrays;
 
 class Lookup
 {
-	private LookupMap<ByteKey> mLRU;
+	private LookupMap<ByteKey> mMap;
 
 
 	public Lookup(boolean aEncode)
 	{
-		mLRU = new LookupMap<>(aEncode);
+		mMap = new LookupMap<>(aEncode);
 	}
 
 
-	public void write(BinaryOutputStream out, byte[] header) throws IOException
+	public void write(BinaryOutputStream aOut, byte[] aHeader) throws IOException
 	{
-		ByteKey key = new ByteKey(header);
-		int ref = mLRU.indexOf(key);
+		ByteKey key = new ByteKey(aHeader);
+		int ref = mMap.indexOf(key);
 		if (ref == -1)
 		{
-			out.writeVarint(header.length);
-			out.write(header);
-			mLRU.add(key);
+			aOut.writeVarint(aHeader.length);
+			aOut.write(aHeader);
+			mMap.add(key);
 		}
 		else
 		{
-			out.writeVarint(-ref - 1);
+			aOut.writeVarint(-ref - 1);
 		}
 	}
 
@@ -39,13 +39,13 @@ class Lookup
 		byte[] header;
 		if (ref < 0)
 		{
-			header = mLRU.valueAt(-ref-1).mBuffer;
+			header = mMap.valueAt(-ref - 1).mBuffer;
 		}
 		else
 		{
 			header = new byte[ref];
 			aIn.read(header);
-			mLRU.add(new ByteKey(header));
+			mMap.add(new ByteKey(header));
 		}
 
 		return header;

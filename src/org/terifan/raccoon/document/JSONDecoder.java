@@ -49,7 +49,6 @@ public class JSONDecoder
 				{
 					throw new IllegalArgumentException("First character in JSON must be a bracket or a curly bracket.");
 				}
-				mReader.unread(c);
 			}
 			else
 			{

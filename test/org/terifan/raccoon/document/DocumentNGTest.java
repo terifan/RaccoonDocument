@@ -901,12 +901,18 @@ public class DocumentNGTest
 	@Test
 	public void testClone() throws IOException
 	{
-		Document doc = Document.of("a:1,b:{c:2},d:[3,4]").put("arr", Array.of(1, 2, 3));
+		Array arr = Array.of(Document.of("a:1"), Document.of("a:2"), Document.of("a:3"));
+		Document doc = Document.of("a:1,b:{c:2},d:[3,4]").put("arr1", arr).put("arr2", arr);
 
-		Document other = doc.clone();
+		Document copy = doc.clone();
 
-		assertEquals(doc, other);
-		assertNotSame(doc.getArray("arr"), other.getArray("arr"));
+		System.out.println(doc);
+		System.out.println(copy);
+
+		assertEquals(doc, copy);
+		assertNotSame(doc.getArray("arr1"), copy.getArray("arr1"));
+		assertSame(doc.getArray("arr1"), doc.getArray("arr2"));
+//		assertSame(copy.getArray("arr1"), copy.getArray("arr2"));
 	}
 
 

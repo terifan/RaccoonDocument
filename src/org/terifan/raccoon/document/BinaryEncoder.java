@@ -1,12 +1,14 @@
 package org.terifan.raccoon.document;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map.Entry;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
 import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryType.STRING;
+import test_document._Log;
 
 
 public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
@@ -15,6 +17,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 	private Lookup mDocStructs = new Lookup(true);
 	private Lookup mArrStructs = new Lookup(true);
+	private LookupMap<String> mNameLookup = new LookupMap<String>(true);
 	private LookupMap<String> mStringLookup = new LookupMap<String>(true);
 
 
@@ -48,7 +51,8 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 	void writeDocument(Document aDocument) throws IOException
 	{
-		BufferedBinaryOutputStream bos = new BufferedBinaryOutputStream();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		BinaryOutputStream bos = new BinaryOutputStream(baos);
 		for (Entry<String, Object> entry : aDocument.entrySet())
 		{
 			Object value = entry.getValue();
@@ -57,7 +61,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			bos.writeString(entry.getKey());
 		}
 
-		byte[] header = bos.finish();
+		byte[] header = baos.toByteArray();
 
 		mDocStructs.write(this, header);
 
@@ -75,7 +79,8 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 	void writeArray(Array aArray) throws IOException
 	{
-		BufferedBinaryOutputStream bos = new BufferedBinaryOutputStream();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		BinaryOutputStream bos = new BinaryOutputStream(baos);
 		for (int offset = 0; offset < aArray.size();)
 		{
 			int runLen = 0;
@@ -100,7 +105,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			offset += runLen;
 		}
 
-		byte[] header = bos.finish();
+		byte[] header = baos.toByteArray();
 
 		mArrStructs.write(this, header);
 
@@ -135,21 +140,8 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 				type.encoder.encode(this, value);
 				break;
 			case STRING:
-			{
-				String s = (String)value;
-				int ref = mStringLookup.indexOf(s);
-				if (ref == -1)
-				{
-					writeVarint(s.length());
-					writeUTF(s);
-					mStringLookup.add(s);
-				}
-				else
-				{
-					writeVarint(-ref-1);
-				}
+				writeString(mStringLookup, (String)value);
 				break;
-			}
 			default:
 				type.encoder.encode(this, value);
 				break;

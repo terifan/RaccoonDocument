@@ -175,7 +175,7 @@ public class SupportedTypes
 		{
 			return Float.valueOf(aText.substring(0, aText.length() - 1));
 		}
-		if (aText.endsWith("L") || aText.endsWith("l"))
+		if (aText.matches("[0-9]*\\.?[0-9]*[l|L]"))
 		{
 			return Long.valueOf(aText.substring(0, aText.length() - 1));
 		}
