@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
-public class Console
+public class _Console
 {
 	public enum Color
 	{

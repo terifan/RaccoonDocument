@@ -1,8 +1,8 @@
 package org.terifan.raccoon.document;
 
 import java.util.ArrayList;
-import test_document.Console;
-import test_document.Console.Color;
+import test_document._Console;
+import test_document._Console.Color;
 
 
 public class PathExpression
@@ -215,18 +215,18 @@ public class PathExpression
 		@Override
 		public void print(int aLevel)
 		{
-			Console.println(Color.BLACK, aLevel, "(");
+			_Console.println(Color.BLACK, aLevel, "(");
 			boolean f = true;
 			for (Node n : nodes)
 			{
 				if (!f)
 				{
-					Console.println(Color.BLACK, aLevel, "&&");
+					_Console.println(Color.BLACK, aLevel, "&&");
 				}
 				f = false;
 				n.print(aLevel + 1);
 			}
-			Console.println(Color.BLACK, aLevel, ")");
+			_Console.println(Color.BLACK, aLevel, ")");
 		}
 
 
@@ -263,11 +263,11 @@ public class PathExpression
 		@Override
 		public void print(int aLevel)
 		{
-			Console.println(Color.BLACK, aLevel, "(");
+			_Console.println(Color.BLACK, aLevel, "(");
 			nodes.get(0).print(aLevel + 1);
-			Console.println(Color.BLACK, aLevel, "||");
+			_Console.println(Color.BLACK, aLevel, "||");
 			nodes.get(1).print(aLevel + 1);
-			Console.println(Color.BLACK, aLevel, ")");
+			_Console.println(Color.BLACK, aLevel, ")");
 		}
 
 
@@ -294,18 +294,18 @@ public class PathExpression
 		@Override
 		public void print(int aLevel)
 		{
-			Console.println(Color.BLACK, aLevel, "%s", this);
+			_Console.println(Color.BLACK, aLevel, "%s", this);
 		}
 
 
 		@Override
 		public boolean eval(Collection aCollection)
 		{
-			Console.println(Color.YELLOW, "eval " + aCollection.getClass().getSimpleName() + " " + key + " " + op + " " + value);
+			_Console.println(Color.YELLOW, "eval " + aCollection.getClass().getSimpleName() + " " + key + " " + op + " " + value);
 
 			if (aCollection instanceof Array arr)
 			{
-				Console.println(Color.YELLOW, "find in " + arr);
+				_Console.println(Color.YELLOW, "find in " + arr);
 
 				boolean all = true;
 				boolean any = false;
@@ -317,7 +317,7 @@ public class PathExpression
 						throw new IllegalStateException();
 					}
 
-					Console.println(Color.YELLOW, "-- " + key + " " + op + " " + value + " // " + o);
+					_Console.println(Color.YELLOW, "-- " + key + " " + op + " " + value + " // " + o);
 
 //					if (key.startsWith("lookup("))
 //					{
@@ -360,7 +360,7 @@ public class PathExpression
 			{
 				Array findMany = doc.findMany(key);
 
-				Console.println(Color.YELLOW, "findMany " + key + " " + findMany);
+				_Console.println(Color.YELLOW, "findMany " + key + " " + findMany);
 
 				if ((op.equals("=") || op.equals("==")) && (value == null && findMany.isEmpty()))
 				{
@@ -379,7 +379,7 @@ public class PathExpression
 					if (op.equals("=") || op.equals("==") || op.equals("!=") || op.equals("!=="))
 					{
 						b = equalValues(o, value);
-						Console.println(Color.YELLOW, o + "=" + b);
+						_Console.println(Color.YELLOW, o + "=" + b);
 						all &= b;
 						any |= b;
 						if (b & op.equals("=") || !b && op.equals("!="))

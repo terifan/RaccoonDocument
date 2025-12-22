@@ -11,7 +11,7 @@ import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Document;
 
 
-public class Test
+public class TestFindPath
 {
 	public static void main(String... args)
 	{
@@ -65,7 +65,7 @@ public class Test
 
 	private static void d() throws IOException
 	{
-		Document doc = Document.of(new String(Test.class.getResourceAsStream("invoice.json").readAllBytes()));
+		Document doc = Document.of(new String(TestFindPath.class.getResourceAsStream("invoice.json").readAllBytes()));
 
 		System.out.println("" + doc.findFirst("taxTotal/taxSubtotals/taxAmount/amount"));
 		System.out.println("" + doc.findMany("taxTotal/taxSubtotals/taxAmount/amount"));
@@ -76,7 +76,7 @@ public class Test
 
 	private static void ee() throws IOException
 	{
-		Document doc = Document.of(new String(Test.class.getResourceAsStream("invoice.json").readAllBytes()));
+		Document doc = Document.of(new String(TestFindPath.class.getResourceAsStream("invoice.json").readAllBytes()));
 
 		for (Document person : doc.getDocuments("distributionList"))
 		{
@@ -125,9 +125,9 @@ public class Test
 
 	private static void e() throws IOException
 	{
-		Collection doc = Document.parseJson(new FileReader("C:\\Develop\\surikat\\mds\\MDSServer\\src\\com\\surikat\\dips\\message_queue_consumer\\_sample_pof_manifest_sm.json"));
+		Collection doc = Document.parseJson(new FileReader("d:\\data\\json_testdata\\_sample_pof_manifest_sm.json"));
 
-		Console.enabled = true;
+		_Console.enabled = true;
 
 //		System.out.println("==> " + doc.findMany("manifest/manifestItems/loadingEquipments/[equipmentType/identifier='" + "bicycle" + "']").size());
 //		Array tourists = doc.findMany("manifest/manifestItems[subType/identifier=travel]/guests/*");
@@ -238,7 +238,7 @@ public class Test
 
 	private static void f() throws IOException
 	{
-		Document doc = Document.of(new String(Test.class.getResourceAsStream("test06.json").readAllBytes()));
+		Document doc = Document.of(new String(TestFindPath.class.getResourceAsStream("test06.json").readAllBytes()));
 
 //		System.out.println(doc.findMany("manifest/manifestItems[subType/identifier='travel']/guests[classification='adult']/weight/amount").size());
 //		System.out.println(doc.findMany("manifest/manifestItems[subType/identifier='travel']/driver[classification='adult']/weight/amount").size());

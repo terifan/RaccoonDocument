@@ -37,8 +37,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.terifan.raccoon.document.PathExpression.Expression;
 import org.terifan.raccoon.document.PathExpression.ExpressionAnd;
-import test_document.Console;
-import test_document.Console.Color;
+import test_document._Console;
+import test_document._Console.Color;
 
 
 public abstract class Collection<K, R> implements Externalizable, Serializable
@@ -822,7 +822,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
 	{
-		Console.println(Color.GREEN, "--- " + aPath + " ----------------------");
+		_Console.println(Color.GREEN, "--- " + aPath + " ----------------------");
 
 		int i = aPath.indexOf('/');
 		int j = aPath.indexOf("[");
@@ -912,7 +912,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 				int number = Integer.parseInt(remain.substring(1, k));
 				remain = remain.substring(k + 1).trim();
 
-				Console.println(Color.BLUE, "<< " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
+				_Console.println(Color.BLUE, "<< " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
 
 				aConsumedPath += "/" + path + "[" + number + "]";
 
@@ -940,7 +940,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 //			}
 		}
 
-		Console.println(Color.BLUE, "<< " + aConsumedPath + " >> " + path + " ==> " + remain);
+		_Console.println(Color.BLUE, "<< " + aConsumedPath + " >> " + path + " ==> " + remain);
 
 		aConsumedPath += "/" + path;
 
