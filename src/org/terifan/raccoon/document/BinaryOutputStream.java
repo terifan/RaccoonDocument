@@ -61,13 +61,37 @@ class BinaryOutputStream implements AutoCloseable
 	}
 
 
-	void writeVarint(long aValue) throws IOException
+	void writeVarint(int aValue) throws IOException
 	{
-		writeUnsignedVarint((aValue << 1) ^ (aValue >> 63));
+		writeUnsignedVarint((aValue << 1) ^ (aValue >> 31));
 	}
 
 
-	void writeUnsignedVarint(long aValue) throws IOException
+	void writeUnsignedVarint(int aValue) throws IOException
+	{
+		for (;;)
+		{
+			int b = aValue & 127;
+			aValue >>>= 7;
+
+			if (aValue == 0)
+			{
+				write(b);
+				return;
+			}
+
+			write(128 + b);
+		}
+	}
+
+
+	void writeVarlong(long aValue) throws IOException
+	{
+		writeUnsignedVarlong((aValue << 1) ^ (aValue >> 63));
+	}
+
+
+	void writeUnsignedVarlong(long aValue) throws IOException
 	{
 		for (;;)
 		{

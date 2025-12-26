@@ -3,6 +3,7 @@ package org.terifan.raccoon.document;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
 import static org.terifan.raccoon.document.BinaryType.BOOLEAN;
@@ -13,11 +14,11 @@ import static org.terifan.raccoon.document.BinaryType.NULL;
 
 public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, Iterator<Object>, Iterable<Object>
 {
-	private Lookup mDocStructs;
-	private Lookup mArrStructs;
-	private LookupMap<Document> mDocLookup;
-	private LookupMap<Array> mArrLookup;
-	private LookupMap<String> mStringLookup;
+	private LookupMap<String> mStrings;
+	private ArrayList<byte[]> mArrHeaders;
+	private ArrayList<byte[]> mDocHeaders;
+	private LookupMap<Array> mArrInstances;
+	private LookupMap<Document> mDocInstances;
 
 	private boolean mReady;
 	private boolean mEnded;
@@ -28,11 +29,11 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	{
 		super(aInputStream);
 
-		mStringLookup = new LookupMap<>(false);
-		mArrStructs = new Lookup(false);
-		mDocStructs = new Lookup(false);
-		mArrLookup = new LookupMap<>(false);
-		mDocLookup = new LookupMap<>(false);
+		mStrings = new LookupMap<>(false);
+		mArrHeaders = new ArrayList<>();
+		mDocHeaders = new ArrayList<>();
+		mArrInstances = new LookupMap<>(false);
+		mDocInstances = new LookupMap<>(false);
 	}
 
 
@@ -152,17 +153,24 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 	Document readDocument() throws IOException
 	{
-		int n = (int)readVarint();
-		if (n > 0 && (n & 1) == 1)
+		byte[] header;
+		int code = (int)readUnsignedVarint();
+		switch (code & 0b11)
 		{
-			return mDocLookup.valueAt(n / 2);
+			case 0:
+				return mDocInstances.valueAt(code >> 2);
+			case 1:
+				header = mDocHeaders.get(code >> 2);
+				break;
+			case 2:
+				mDocHeaders.add(header = read(new byte[code >> 2]));
+				break;
+			default:
+				throw new IllegalStateException();
 		}
 
 		Document document = new Document();
-
-		mDocLookup.add(document);
-
-		byte[] header = mDocStructs.read(this, n);
+		mDocInstances.add(document);
 
 		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
 
@@ -179,23 +187,30 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 	Array readArray() throws IOException
 	{
-		int n = (int)readVarint();
-		if (n > 0 && (n & 1) == 1)
+		byte[] header;
+		int code = (int)readUnsignedVarint();
+		switch (code & 0b11)
 		{
-			return mArrLookup.valueAt(n / 2);
+			case 0:
+				return mArrInstances.valueAt(code >> 2);
+			case 1:
+				header = mArrHeaders.get(code >> 2);
+				break;
+			case 2:
+				mArrHeaders.add(header = read(new byte[code >> 2]));
+				break;
+			default:
+				throw new IllegalStateException();
 		}
 
 		Array array = new Array();
-
-		mArrLookup.add(array);
-
-		byte[] header = mArrStructs.read(this, n);
+		mArrInstances.add(array);
 
 		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
 
 		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
 		{
-			long runLen = fields.readUnsignedVarint();
+			int runLen = fields.readUnsignedVarint();
 
 			while (--runLen >= 0)
 			{
@@ -224,7 +239,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 				value = aType.decoder.decode(this);
 				break;
 			case STRING:
-				value = readString(mStringLookup);
+				value = readString(mStrings);
 				break;
 			default:
 				value = aType.decoder.decode(this);

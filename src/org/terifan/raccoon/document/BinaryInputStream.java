@@ -30,14 +30,14 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
-	int read(byte[] aBuffer) throws IOException
+	byte[] read(byte[] aBuffer) throws IOException
 	{
 		int len = mInputStream.read(aBuffer);
 		if (len != aBuffer.length)
 		{
 			throw new IllegalStateException();
 		}
-		return len;
+		return aBuffer;
 	}
 
 
@@ -76,7 +76,39 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
-	long readVarint() throws IOException
+	int readVarint() throws IOException
+	{
+		for (int n = 0, result = 0; n < 32; n += 7)
+		{
+			int b = BinaryInputStream.this.read();
+			result += (b & 127) << n;
+			if (b < 128)
+			{
+				return (result >>> 1) ^ -(result & 1);
+			}
+		}
+
+		throw new StreamException("Variable int64 exceeds maximum length");
+	}
+
+
+	int readUnsignedVarint() throws IOException
+	{
+		for (int n = 0, result = 0; n < 32; n += 7)
+		{
+			int b = BinaryInputStream.this.read();
+			result += (b & 127) << n;
+			if (b < 128)
+			{
+				return result;
+			}
+		}
+
+		throw new StreamException("Variable int64 exceeds maximum length");
+	}
+
+
+	long readVarlong() throws IOException
 	{
 		for (long n = 0, result = 0; n < 64; n += 7)
 		{
@@ -92,7 +124,7 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
-	long readUnsignedVarint() throws IOException
+	long readUnsignedVarlong() throws IOException
 	{
 		for (long n = 0, result = 0; n < 64; n += 7)
 		{

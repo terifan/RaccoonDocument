@@ -46,8 +46,8 @@ enum BinaryType
 		aDecoder -> (int)aDecoder.readVarint()
 	),
 	LONG(
-		(aEncoder, aValue) -> aEncoder.writeVarint((Long)aValue),
-		aDecoder -> aDecoder.readVarint()
+		(aEncoder, aValue) -> aEncoder.writeVarlong((Long)aValue),
+		aDecoder -> aDecoder.readVarlong()
 	),
 	FLOAT(
 		(aEncoder, aValue) -> aEncoder.writeInt(Float.floatToIntBits((Float)aValue)),
@@ -111,8 +111,8 @@ enum BinaryType
 		aDecoder -> ZonedDateTime.ofLocal(LocalDateTime.of(numberToLocalDate((int)aDecoder.readInt()), numberToLocalTime(aDecoder.readLong())), ZoneId.of(aDecoder.readString()), ZoneOffset.ofTotalSeconds((int)aDecoder.readVarint()))
 	),
 	DURATION(
-		(aEncoder, aValue) -> {aEncoder.writeVarint(((Duration)aValue).getSeconds()); aEncoder.writeUnsignedVarint(((Duration)aValue).getNano());},
-		aDecoder -> Duration.ofSeconds(aDecoder.readVarint(), aDecoder.readUnsignedVarint())
+		(aEncoder, aValue) -> {aEncoder.writeVarlong(((Duration)aValue).getSeconds()); aEncoder.writeUnsignedVarint(((Duration)aValue).getNano());},
+		aDecoder -> Duration.ofSeconds(aDecoder.readVarint(), aDecoder.readUnsignedVarlong())
 	)
 	;
 

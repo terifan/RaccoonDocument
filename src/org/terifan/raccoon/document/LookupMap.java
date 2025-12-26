@@ -22,7 +22,6 @@ class LookupMap<T>
 		}
 	}
 
-
 	public void add(T aValue)
 	{
 		if (mEncoder != null)
@@ -48,9 +47,9 @@ class LookupMap<T>
 	}
 
 
-	void remove(T aValue)
-	{
-		if(mEncoder!=null)mEncoder.remove(aValue);
-		if(mDecoder!=null)mDecoder.removeLast();
-	}
+//	void remove(T aValue)
+//	{
+//		if(mEncoder!=null)mEncoder.remove(aValue);
+//		if(mDecoder!=null)mDecoder.removeLast();
+//	}
 }
