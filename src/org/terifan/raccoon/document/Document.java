@@ -4,7 +4,9 @@ import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -236,9 +238,9 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	MurmurHash3 hashCode(MurmurHash3 aChecksum)
+	MurmurHash3 hashCode(LinkedList<Collection> aHistory, MurmurHash3 aChecksum)
 	{
-		mValues.entrySet().forEach(entry -> hashCodeUpdate(aChecksum.updateUTF8(entry.getKey()), entry.getValue()));
+		mValues.entrySet().forEach(entry -> hashCodeUpdate(aHistory, aChecksum.updateUTF8(entry.getKey()), entry.getValue()));
 
 		return aChecksum;
 	}

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.util.LinkedList;
 
 
 public class JSONDecoder
@@ -59,12 +60,15 @@ public class JSONDecoder
 				}
 			}
 
+			LinkedList<Collection> history = new LinkedList<>();
+			history.add(aContainer);
+
 			switch (aContainer)
 			{
 				case Document v:
-					return (T)readDocument(v);
+					return (T)readDocument(history, v);
 				case Array v:
-					return (T)readArray(v);
+					return (T)readArray(history, v);
 				default:
 					throw new IllegalArgumentException();
 			}
@@ -76,7 +80,7 @@ public class JSONDecoder
 	}
 
 
-	private Document readDocument(Document aDocument) throws IOException
+	private Document readDocument(LinkedList<Collection> aHistory, Document aDocument) throws IOException
 	{
 		for (int i = 0;; i++)
 		{
@@ -112,14 +116,14 @@ public class JSONDecoder
 				throw new IOException("Expected colon sign after key: " + key);
 			}
 
-			aDocument.putImpl(key, readValue(readChar()));
+			aDocument.putImpl(key, readValue(aHistory, readChar()));
 		}
 
 		return aDocument;
 	}
 
 
-	private Array readArray(Array aArray) throws IOException
+	private Array readArray(LinkedList<Collection> aHistory, Array aArray) throws IOException
 	{
 		for (int i = 0;; i++)
 		{
@@ -146,7 +150,7 @@ public class JSONDecoder
 
 			try
 			{
-				aArray.add(readValue(c));
+				aArray.add(readValue(aHistory, c));
 			}
 			catch (UnsupportedEncodingException e)
 			{
@@ -158,17 +162,30 @@ public class JSONDecoder
 	}
 
 
-	private Object readValue(char aChar) throws IOException
+	private Object readValue(LinkedList<Collection> aHistory, char aChar) throws IOException
 	{
 		switch (aChar)
 		{
 			case '[':
-				return readArray(new Array());
+				Array arr = new Array();
+				aHistory.add(arr);
+				readArray(aHistory, arr);
+				aHistory.removeLast();
+				return arr;
 			case '{':
-				return readDocument(new Document());
+				Document doc = new Document();
+				aHistory.add(doc);
+				readDocument(aHistory, doc);
+				aHistory.removeLast();
+				return doc;
 			case '\"':
 			case '\'':
-				return readString(aChar);
+				String s = readString(aChar);
+				if (s.startsWith("{{{CyclicReferece:") && s.endsWith("}}}"))
+				{
+					return aHistory.get(Integer.parseInt(s.substring(18, s.length() - 3)));
+				}
+				return s;
 			default:
 				mReader.unread(aChar);
 				return readLiteral();

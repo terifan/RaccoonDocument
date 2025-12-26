@@ -14,6 +14,8 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
 	private Lookup mDocStructs;
 	private Lookup mArrStructs;
+	private LookupMap<Document> mDocLookup;
+	private LookupMap<Array> mArrLookup;
 	private LookupMap<String> mStringLookup;
 
 
@@ -24,6 +26,8 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 		mStringLookup = new LookupMap<>(true);
 		mArrStructs = new Lookup(true);
 		mDocStructs = new Lookup(true);
+		mArrLookup = new LookupMap<>(true);
+		mDocLookup = new LookupMap<>(true);
 	}
 
 
@@ -51,6 +55,14 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 	void writeDocument(Document aDocument) throws IOException
 	{
+		int n = mDocLookup.indexOf(aDocument);
+		if (n >= 0)
+		{
+			writeVarint(n * 2 + 1);
+			return;
+		}
+		mDocLookup.add(aDocument);
+
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		BinaryOutputStream bos = new BinaryOutputStream(baos);
 		for (Entry<String, Object> entry : aDocument.entrySet())
@@ -79,6 +91,14 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 	void writeArray(Array aArray) throws IOException
 	{
+		int n = mArrLookup.indexOf(aArray);
+		if (n >= 0)
+		{
+			writeVarint(n * 2 + 1);
+			return;
+		}
+		mArrLookup.add(aArray);
+
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		BinaryOutputStream bos = new BinaryOutputStream(baos);
 		for (int offset = 0; offset < aArray.size();)

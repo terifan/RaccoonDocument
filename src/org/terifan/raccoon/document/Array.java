@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -301,9 +303,9 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 
 
 	@Override
-	MurmurHash3 hashCode(MurmurHash3 aChecksum)
+	MurmurHash3 hashCode(LinkedList<Collection> aHistory, MurmurHash3 aChecksum)
 	{
-		mValues.forEach(value -> hashCodeUpdate(aChecksum, value));
+		mValues.forEach(value -> hashCodeUpdate(aHistory, aChecksum, value));
 
 		return aChecksum;
 	}

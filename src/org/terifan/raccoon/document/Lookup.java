@@ -21,31 +21,29 @@ class Lookup
 		int ref = mMap.indexOf(key);
 		if (ref == -1)
 		{
-			aOut.writeVarint(aHeader.length);
+			aOut.writeVarint(-aHeader.length - 1);
 			aOut.write(aHeader);
 			mMap.add(key);
 		}
 		else
 		{
-			aOut.writeVarint(-ref - 1);
+			aOut.writeVarint(ref * 2);
 		}
 	}
 
 
-	byte[] read(BinaryDecoder aIn) throws IOException
+	byte[] read(BinaryDecoder aIn, int aIndex) throws IOException
 	{
-		int ref = (int)aIn.readVarint();
-
 		byte[] header;
-		if (ref < 0)
+		if (aIndex < 0)
 		{
-			header = mMap.valueAt(-ref - 1).mBuffer;
+			header = new byte[-aIndex - 1];
+			aIn.read(header);
+			mMap.add(new ByteKey(header));
 		}
 		else
 		{
-			header = new byte[ref];
-			aIn.read(header);
-			mMap.add(new ByteKey(header));
+			header = mMap.valueAt(aIndex / 2).mBuffer;
 		}
 
 		return header;

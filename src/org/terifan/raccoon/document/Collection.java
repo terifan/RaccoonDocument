@@ -25,7 +25,7 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
@@ -212,9 +212,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 * @return the old value
 	 */
 	abstract Object remove(K aKey);
-
-
-	abstract MurmurHash3 hashCode(MurmurHash3 aChecksum);
 
 
 	@SuppressWarnings("unchecked")
@@ -1063,15 +1060,23 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	@Override
 	public int hashCode()
 	{
-		return hashCode(new MurmurHash3(0)).getValue();
+		return hashCode(new LinkedList<>(), new MurmurHash3(0)).getValue();
 	}
 
 
-	void hashCodeUpdate(MurmurHash3 aChecksum, Object aValue)
+	abstract MurmurHash3 hashCode(LinkedList<Collection> aHistory, MurmurHash3 aChecksum);
+
+
+	void hashCodeUpdate(LinkedList<Collection> aHistory, MurmurHash3 aChecksum, Object aValue)
 	{
 		if (aValue instanceof Collection v)
 		{
-			v.hashCode(aChecksum);
+			if (!aHistory.contains(v))
+			{
+				aHistory.add(v);
+				v.hashCode(aHistory, aChecksum);
+				aHistory.remove(v);
+			}
 		}
 		else if (aValue instanceof CharSequence v)
 		{

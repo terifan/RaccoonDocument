@@ -1,6 +1,7 @@
 package org.terifan.raccoon.document;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.Map.Entry;
 import static org.terifan.raccoon.document.SupportedTypes.escapeChar;
 import static org.terifan.raccoon.document.SupportedTypes.escapeString;
@@ -36,15 +37,7 @@ public class JSONEncoder
 
 		try
 		{
-			switch (aContainer)
-			{
-				case Document v ->
-					marshalDocument(v, true);
-				case Array v ->
-					marshalArray(v);
-				default ->
-					throw new IllegalArgumentException();
-			}
+			marshal(new LinkedList<>(), aContainer, true);
 		}
 		catch (IOException e)
 		{
@@ -55,13 +48,7 @@ public class JSONEncoder
 	}
 
 
-	private void marshalDocument(Document aDocument) throws IOException
-	{
-		marshalDocument(aDocument, true);
-	}
-
-
-	private void marshalDocument(Document aDocument, boolean aNewLineOnClose) throws IOException
+	private void marshalDocument(LinkedList<Collection> aHistory, Document aDocument, boolean aNewLineOnClose) throws IOException
 	{
 		int size = aDocument.size();
 
@@ -94,7 +81,7 @@ public class JSONEncoder
 		{
 			print(mQuote + escapeString(entry.getKey()) + mQuote + ": ");
 
-			marshal(entry.getValue());
+			marshal(aHistory, entry.getValue(), true);
 
 			if (--size > 0)
 			{
@@ -117,7 +104,7 @@ public class JSONEncoder
 	}
 
 
-	private void marshalArray(Array aArray) throws IOException
+	private void marshalArray(LinkedList<Collection> aHistory, Array aArray) throws IOException
 	{
 		int size = aArray.size();
 
@@ -156,7 +143,7 @@ public class JSONEncoder
 			Object value = aArray.get(i);
 			if (first)
 			{
-				marshalDocument((Document)value, false);
+				marshal(aHistory, (Document)value, false);
 
 				if (--size > 0)
 				{
@@ -165,7 +152,7 @@ public class JSONEncoder
 			}
 			else
 			{
-				marshal(value);
+				marshal(aHistory, value, true);
 
 				if (--size > 0)
 				{
@@ -194,15 +181,27 @@ public class JSONEncoder
 	}
 
 
-	private void marshal(Object aValue) throws IOException
+	private void marshal(LinkedList<Collection> aHistory, Object aValue, boolean aNewLineOnClose) throws IOException
 	{
-		if (aValue instanceof Document v)
+		if (aValue instanceof Collection v)
 		{
-			marshalDocument(v);
-		}
-		else if (aValue instanceof Array v)
-		{
-			marshalArray(v);
+			if (aHistory.contains(v))
+			{
+				mAppendable.append("\"{{{CyclicReferece:" + aHistory.indexOf(v) + "}}}\"");
+			}
+			else
+			{
+				aHistory.add(v);
+				if (aValue instanceof Document w)
+				{
+					marshalDocument(aHistory, w, aNewLineOnClose);
+				}
+				else
+				{
+					marshalArray(aHistory, (Array)aValue);
+				}
+				aHistory.remove(v);
+			}
 		}
 		else
 		{

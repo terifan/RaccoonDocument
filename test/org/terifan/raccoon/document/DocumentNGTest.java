@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -20,6 +21,7 @@ import java.util.zip.DeflaterOutputStream;
 import static org.testng.Assert.*;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import test_document._Log;
 
 
 public class DocumentNGTest
@@ -436,8 +438,6 @@ public class DocumentNGTest
 //
 //		new Document().readFrom(new ByteArrayInputStream(data));
 //	}
-
-
 	@Test
 	public void testChecksum() throws IOException, ClassNotFoundException
 	{
@@ -689,7 +689,6 @@ public class DocumentNGTest
 
 //		System.out.println(doc);
 //		System.out.println(exp);
-
 		assertEquals(doc.toString(), exp);
 	}
 
@@ -789,5 +788,48 @@ public class DocumentNGTest
 
 		System.out.println(in.hashCode() == out.hashCode());
 		System.out.println(in.equals(out));
+	}
+
+
+	@Test
+	public void testCyclicRefHashCode() throws IOException
+	{
+		Document out1 = Document.of("a:1");
+		Document out2 = Document.of("a:2").put("doc1", out1);
+		out1.put("doc2", out2);
+
+		int hashCode = out1.hashCode();
+	}
+
+
+	@Test
+	public void testCyclicRefJSON() throws IOException
+	{
+		Document out1 = Document.of("a:1");
+		Document out2 = Document.of("a:2").put("doc1", out1);
+		out1.put("doc2", out2);
+
+		String json = out1.toJson();
+
+		assertTrue(json.contains("{{{CyclicReferece:0}}}"));
+
+		Document in = Document.of(json);
+
+		assertSame(in.getDocument("doc2").getDocument("doc1"), in);
+	}
+
+
+	@Test
+	public void testCyclicRefBinary() throws IOException
+	{
+		Document out1 = Document.of("a:1");
+		Document out2 = Document.of("a:2").put("doc1", out1);
+		out1.put("doc2", out2);
+
+		byte[] data = out1.toByteArray();
+
+		Document in = Document.parseByteArray(data);
+
+		assertSame(in.getDocument("doc2").getDocument("doc1"), in);
 	}
 }

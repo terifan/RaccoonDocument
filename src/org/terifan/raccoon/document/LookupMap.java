@@ -46,4 +46,11 @@ class LookupMap<T>
 	{
 		return mDecoder.get(aIndex);
 	}
+
+
+	void remove(T aValue)
+	{
+		if(mEncoder!=null)mEncoder.remove(aValue);
+		if(mDecoder!=null)mDecoder.removeLast();
+	}
 }

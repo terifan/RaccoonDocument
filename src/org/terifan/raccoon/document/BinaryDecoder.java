@@ -15,6 +15,8 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 {
 	private Lookup mDocStructs;
 	private Lookup mArrStructs;
+	private LookupMap<Document> mDocLookup;
+	private LookupMap<Array> mArrLookup;
 	private LookupMap<String> mStringLookup;
 
 	private boolean mReady;
@@ -29,6 +31,8 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 		mStringLookup = new LookupMap<>(false);
 		mArrStructs = new Lookup(false);
 		mDocStructs = new Lookup(false);
+		mArrLookup = new LookupMap<>(false);
+		mDocLookup = new LookupMap<>(false);
 	}
 
 
@@ -148,9 +152,17 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 	Document readDocument() throws IOException
 	{
+		int n = (int)readVarint();
+		if (n > 0 && (n & 1) == 1)
+		{
+			return mDocLookup.valueAt(n / 2);
+		}
+
 		Document document = new Document();
 
-		byte[] header = mDocStructs.read(this);
+		mDocLookup.add(document);
+
+		byte[] header = mDocStructs.read(this, n);
 
 		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
 
@@ -167,9 +179,17 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 	Array readArray() throws IOException
 	{
+		int n = (int)readVarint();
+		if (n > 0 && (n & 1) == 1)
+		{
+			return mArrLookup.valueAt(n / 2);
+		}
+
 		Array array = new Array();
 
-		byte[] header = mArrStructs.read(this);
+		mArrLookup.add(array);
+
+		byte[] header = mArrStructs.read(this, n);
 
 		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
 

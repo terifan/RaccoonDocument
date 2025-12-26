@@ -16,9 +16,9 @@ public class TestSerialization
 		try
 		{
 //			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_3.json")));
-//			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_2.json")));
+			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/manifest_2.json")));
 //			Document a = Document.parseJson(new InputStreamReader(new FileInputStream("d:/data/json_testdata/invoice.json")));
-			Document a = _Person.createPerson(new Random(1));
+//			Document a = _Person.createPerson(new Random(1));
 //			Document a = Document.of("id:641,name:something,properties:[{id:1,value:red},{id:7,value:long},{id:4,value:heavy,properties:[{id:8794,value:stone}]},{id:48,value:shreak}]");
 //			Document a = Document.of("id:641,category:something,type:something,name:something");
 //			Document a = Document.of("id:641,values:[1,2,3]");
