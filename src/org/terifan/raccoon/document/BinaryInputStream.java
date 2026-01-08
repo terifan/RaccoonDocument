@@ -19,6 +19,12 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
+	void skip(int aLength) throws IOException
+	{
+		mInputStream.skip(aLength);
+	}
+
+
 	int read() throws IOException
 	{
 		int c = mInputStream.read();
@@ -80,7 +86,7 @@ class BinaryInputStream implements AutoCloseable
 	{
 		for (int n = 0, result = 0; n < 32; n += 7)
 		{
-			int b = BinaryInputStream.this.read();
+			int b = read();
 			result += (b & 127) << n;
 			if (b < 128)
 			{
@@ -96,7 +102,7 @@ class BinaryInputStream implements AutoCloseable
 	{
 		for (int n = 0, result = 0; n < 32; n += 7)
 		{
-			int b = BinaryInputStream.this.read();
+			int b = read();
 			result += (b & 127) << n;
 			if (b < 128)
 			{
@@ -112,7 +118,7 @@ class BinaryInputStream implements AutoCloseable
 	{
 		for (long n = 0, result = 0; n < 64; n += 7)
 		{
-			int b = BinaryInputStream.this.read();
+			int b = read();
 			result += (long)(b & 127) << n;
 			if (b < 128)
 			{
@@ -128,7 +134,7 @@ class BinaryInputStream implements AutoCloseable
 	{
 		for (long n = 0, result = 0; n < 64; n += 7)
 		{
-			int b = BinaryInputStream.this.read();
+			int b = read();
 			result += (long)(b & 127) << n;
 			if (b < 128)
 			{
@@ -142,7 +148,7 @@ class BinaryInputStream implements AutoCloseable
 
 	String readString() throws IOException
 	{
-		return readUTF((int)readUnsignedVarint());
+		return readUTF(readUnsignedVarint());
 	}
 
 
@@ -157,7 +163,7 @@ class BinaryInputStream implements AutoCloseable
 
 		for (int i = 0; i < output.length; i++)
 		{
-			int c = BinaryInputStream.this.read();
+			int c = read();
 
 			if (c < 128) // 0xxxxxxx
 			{
@@ -165,11 +171,11 @@ class BinaryInputStream implements AutoCloseable
 			}
 			else if ((c & 0xE0) == 0xC0) // 110xxxxx
 			{
-				output[i] = (char)(((c & 0x1F) << 6) | (BinaryInputStream.this.read() & 0x3F));
+				output[i] = (char)(((c & 0x1F) << 6) | (read() & 0x3F));
 			}
 			else if ((c & 0xF0) == 0xE0) // 1110xxxx
 			{
-				output[i] = (char)(((c & 0x0F) << 12) | ((BinaryInputStream.this.read() & 0x3F) << 6) | (BinaryInputStream.this.read() & 0x3F));
+				output[i] = (char)(((c & 0x0F) << 12) | ((read() & 0x3F) << 6) | (read() & 0x3F));
 			}
 			else
 			{
@@ -194,10 +200,10 @@ class BinaryInputStream implements AutoCloseable
 
 	BigDecimal readBigDecimal() throws IOException
 	{
-		char[] s = new char[(int)readUnsignedVarint()];
+		char[] s = new char[readUnsignedVarint()];
 		for (int i = 0; i < s.length;)
 		{
-			int v = BinaryInputStream.this.read();
+			int v = read();
 			int a = '+' + (v >>> 4);
 			if (a == ':')
 			{
@@ -220,10 +226,10 @@ class BinaryInputStream implements AutoCloseable
 
 	BigInteger readBigInteger() throws IOException
 	{
-		char[] s = new char[(int)readUnsignedVarint()];
+		char[] s = new char[readUnsignedVarint()];
 		for (int i = 0; i < s.length;)
 		{
-			int v = BinaryInputStream.this.read();
+			int v = read();
 			int a = '+' + (v >>> 4);
 			if (a == ':')
 			{

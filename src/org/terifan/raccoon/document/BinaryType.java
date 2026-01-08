@@ -14,6 +14,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.UUID;
+import org.terifan.raccoon.document.BinaryDecoder.Field;
 
 
 enum BinaryType
@@ -75,7 +76,7 @@ enum BinaryType
 	),
 	BINARY(
 		(aEncoder, aValue) -> {aEncoder.writeUnsignedVarint(((byte[])aValue).length); aEncoder.write((byte[])aValue);},
-		aDecoder -> {byte[] buf = new byte[(int)aDecoder.readUnsignedVarint()]; aDecoder.read(buf); return buf;}
+		aDecoder -> {byte[] buf = new byte[aDecoder.readUnsignedVarint()]; aDecoder.read(buf); return buf;}
 	),
 	UUID(
 		(aEncoder, aValue) -> {aEncoder.writeLong(((UUID)aValue).getMostSignificantBits());aEncoder.writeLong(((UUID)aValue).getLeastSignificantBits());},
@@ -113,6 +114,10 @@ enum BinaryType
 	DURATION(
 		(aEncoder, aValue) -> {aEncoder.writeVarlong(((Duration)aValue).getSeconds()); aEncoder.writeUnsignedVarint(((Duration)aValue).getNano());},
 		aDecoder -> Duration.ofSeconds(aDecoder.readVarint(), aDecoder.readUnsignedVarlong())
+	),
+	FIELD(
+		(aEncoder, aValue) -> {aEncoder.writeString(((Field)aValue).mName); aEncoder.writeType(((Field)aValue).mType); ((Field)aValue).mType.encoder.encode(aEncoder, ((Field)aValue).mValue);},
+		aDecoder -> {BinaryType type; return new Field(aDecoder.readString(), type=aDecoder.readType(), type.decoder.decode(aDecoder));}
 	)
 	;
 
@@ -165,6 +170,7 @@ enum BinaryType
 		if (LocalDate.class == cls) return LOCALDATE;
 		if (LocalTime.class == cls) return LOCALTIME;
 		if (Character.class == cls || Character.TYPE == cls) return CHAR;
+		if (Field.class == cls) return FIELD;
 
 		return null;
 	}

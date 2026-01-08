@@ -4,7 +4,6 @@ import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -273,8 +272,6 @@ public class Document extends Collection<String, Document> implements Externaliz
 				}
 				else if (!Objects.equals(t, o))
 				{
-//				System.out.println("#"+t.getClass()+" "+t);
-//				System.out.println("#"+o.getClass()+" "+o);
 					return false;
 				}
 			}

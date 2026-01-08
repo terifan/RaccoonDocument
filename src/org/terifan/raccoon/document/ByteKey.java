@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 class ByteKey
 {
-	public final byte[] mBuffer;
+	private final byte[] mBuffer;
 
 
 	public ByteKey(byte[] aBuffer)

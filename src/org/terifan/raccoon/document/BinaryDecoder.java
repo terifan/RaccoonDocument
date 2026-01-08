@@ -37,6 +37,34 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	}
 
 
+	public Iterable<Field> fields()
+	{
+		return new Iterable<Field>()
+		{
+			@Override
+			public Iterator<Field> iterator()
+			{
+				Iterator<Object> iterator = BinaryDecoder.this.iterator();
+				return new Iterator<Field>()
+				{
+					@Override
+					public boolean hasNext()
+					{
+						return iterator.hasNext();
+					}
+
+
+					@Override
+					public Field next()
+					{
+						return (Field)iterator.next();
+					}
+				};
+			}
+		};
+	}
+
+
 	@Override
 	public Iterator<Object> iterator()
 	{
@@ -154,7 +182,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	Document readDocument() throws IOException
 	{
 		byte[] header;
-		int code = (int)readUnsignedVarint();
+		int code = readUnsignedVarint();
 		switch (code & 0b11)
 		{
 			case 0:
@@ -188,7 +216,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	Array readArray() throws IOException
 	{
 		byte[] header;
-		int code = (int)readUnsignedVarint();
+		int code = readUnsignedVarint();
 		switch (code & 0b11)
 		{
 			case 0:
@@ -247,5 +275,40 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 		}
 
 		return value;
+	}
+
+
+	public static class Field
+	{
+		String mName;
+		BinaryType mType;
+		Object mValue;
+
+
+		Field(String aName, BinaryType aType, Object aValue)
+		{
+			mName = aName;
+			mType = aType;
+			mValue = aValue;
+		}
+
+
+		public String getName()
+		{
+			return mName;
+		}
+
+
+		public Object getValue()
+		{
+			return mValue;
+		}
+
+
+		@Override
+		public String toString()
+		{
+			return mType + " \"" + mName + "\" " + mValue;
+		}
 	}
 }

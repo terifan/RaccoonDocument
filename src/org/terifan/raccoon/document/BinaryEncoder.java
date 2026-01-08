@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map.Entry;
+import org.terifan.raccoon.document.BinaryDecoder.Field;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
 import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryType.STRING;
@@ -28,6 +29,14 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 		mDocHeaders = new LookupMap<>(true);
 		mArrInstances = new LookupMap<>(true);
 		mDocInstances = new LookupMap<>(true);
+	}
+
+
+	public BinaryEncoder writeField(String aName, Object aObject) throws IOException
+	{
+		writeType(BinaryType.FIELD);
+		writeValue(BinaryType.FIELD, new Field(aName, BinaryType.identify(aObject), aObject));
+		return this;
 	}
 
 
@@ -61,8 +70,8 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			writeUnsignedVarint(n << 2);
 			return;
 		}
-		mDocInstances.add(aDocument);
 
+		mDocInstances.add(aDocument);
 		byte[] header = createHeader(aDocument);
 		ByteKey key = new ByteKey(header);
 		int ref = mDocHeaders.indexOf(key);
@@ -98,8 +107,8 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			writeUnsignedVarint(n << 2);
 			return;
 		}
-		mArrInstances.add(aArray);
 
+		mArrInstances.add(aArray);
 		byte[] header = createHeader(aArray);
 		ByteKey key = new ByteKey(header);
 		int ref = mArrHeaders.indexOf(key);

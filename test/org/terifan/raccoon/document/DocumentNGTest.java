@@ -803,6 +803,17 @@ public class DocumentNGTest
 
 
 	@Test
+	public void testCyclicRefEquals() throws IOException
+	{
+		Document out1 = Document.of("a:1");
+		Document out2 = Document.of("a:2").put("doc1", out1);
+		out1.put("doc2", out2);
+
+		System.out.println(out1.equals(out1));
+	}
+
+
+	@Test
 	public void testCyclicRefJSON() throws IOException
 	{
 		Document out1 = Document.of("a:1");

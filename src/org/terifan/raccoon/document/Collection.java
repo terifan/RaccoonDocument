@@ -1067,6 +1067,9 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	abstract MurmurHash3 hashCode(LinkedList<Collection> aHistory, MurmurHash3 aChecksum);
 
 
+	/*
+	 * todo: cyclic refs should effect the hash
+	 */
 	void hashCodeUpdate(LinkedList<Collection> aHistory, MurmurHash3 aChecksum, Object aValue)
 	{
 		if (aValue instanceof Collection v)
