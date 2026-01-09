@@ -154,62 +154,40 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	 */
 	public static class Key
 	{
-		private final int[] tweak = new int[9];
-		private final int[] cmap = new int[2048];
+		// random 32-bit values
+		private final int[] value =
+		{
+			0x0A9F75ED, 0xB0399D91, 0x848542E3, 0x3B5E35EB, 0xC32B695A, 0xE0F51840, 0xBBAA11B9, 0xDBE7792E, 0x7A61E325
+		};
+
+		private final static int[] SHIFTS =
+		{
+			12, 52, 30, 3, 22, 43
+		};
 
 
 		/**
-		 * Initialize the Key with a 64-bit secret value (expanded to 128-bits).
+		 * Create a Key used for encrypting an ObjectId.
 		 *
-		 * @param aKey the secret value
+		 * @param aKey secret numbers used to initialize the key.
 		 */
-		public Key(long aKey)
+		public Key(long... aKey)
 		{
-			this(aKey, ~Long.reverse(aKey));
-		}
+			long sum = 0;
 
-
-		/**
-		 * Initialize the Key with a 128-bit secret value.
-		 *
-		 * @param aKey1 first part of the key
-		 * @param aKey2 second part of the key
-		 */
-		public Key(long aKey1, long aKey2)
-		{
-			long a = mix(0x97628BAF, aKey1, aKey2, 12, 10);
-			long b = mix(0xFC12B326, aKey1, aKey2, 60, 36);
-			long c = mix(0x3D700587, aKey1, aKey2, 17, 26);
-			long d = mix(0x6D38F06E, aKey1, aKey2, 43, 44);
-			long e = mix(0x002BC6CB, aKey1, aKey2, 47, 16);
-			long f = mix(0xFE88B6C3, aKey1, aKey2, 22, 37);
-
-			long seed = mix(0x3D16A546, a, b, 7, 14);
-
-			for (int i = 0; i < cmap.length; i++)
+			for (long k : aKey)
 			{
-				cmap[i] = mod13(i);
-			}
-			for (int i = 0; i < cmap.length; i++)
-			{
-				seed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL;
+				for (int s : SHIFTS)
+				{
+					sum ^= rotateRight(k, s);
 
-				int j = (int)(seed >>> 16) & 2047;
-				int t = cmap[i];
-				cmap[i] = cmap[j];
-				cmap[j] = t;
+					for (int i = 0; i < value.length; i++)
+					{
+						sum = (sum * 0x5DEECE66DL + 0xBL) & 0x0000FFFFFFFFFFFFL;
+						value[i] ^= (int)(sum >>> 16);
+					}
+				}
 			}
-			for (int i = 0; i < tweak.length; i++)
-			{
-				seed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL;
-				tweak[i] = (int)(seed >>> 16);
-			}
-		}
-
-
-		protected static long mix(int aConst, long aKey1, long aKey2, int aRot1, int aRot2)
-		{
-			return rotateRight(aKey1 ^ aConst, aRot1) ^ rotateRight(aKey2 ^ aConst, aRot2);
 		}
 	}
 
@@ -227,22 +205,22 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		int b = mSession;
 		int c = mSequence;
 
-		a ^= aKey.tweak[0];
-		b ^= aKey.tweak[1];
-		c ^= aKey.tweak[2];
+		a ^= aKey.value[0];
+		b ^= aKey.value[1];
+		c ^= aKey.value[2];
 		for (int i = 0; i < 3; i++)
 		{
 			a -= b ^ rotateLeft(c, L1);
 			b -= c ^ rotateLeft(a, L2);
 			c -= a ^ rotateLeft(b, L3);
-			a ^= aKey.tweak[3 + i];
+			a ^= aKey.value[3 + i];
 			a += b ^ rotateLeft(c, R1);
 			b += c ^ rotateLeft(a, R2);
 			c += a ^ rotateLeft(b, R3);
 		}
-		a ^= aKey.tweak[6];
-		b ^= aKey.tweak[7];
-		c ^= aKey.tweak[8];
+		a ^= aKey.value[6];
+		b ^= aKey.value[7];
+		c ^= aKey.value[8];
 
 		int chk = ((31 + a) * 31 + b) * 31 + c;
 		long A = (a & 0xFFFFFFFFL) * 13L + mod13(chk);
@@ -282,22 +260,22 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 			return null;
 		}
 
-		a ^= aKey.tweak[6];
-		b ^= aKey.tweak[7];
-		c ^= aKey.tweak[8];
+		a ^= aKey.value[6];
+		b ^= aKey.value[7];
+		c ^= aKey.value[8];
 		for (int i = 0; i < 3; i++)
 		{
 			c -= a ^ rotateLeft(b, R3);
 			b -= c ^ rotateLeft(a, R2);
 			a -= b ^ rotateLeft(c, R1);
-			a ^= aKey.tweak[5 - i];
+			a ^= aKey.value[5 - i];
 			c += a ^ rotateLeft(b, L3);
 			b += c ^ rotateLeft(a, L2);
 			a += b ^ rotateLeft(c, L1);
 		}
-		a ^= aKey.tweak[0];
-		b ^= aKey.tweak[1];
-		c ^= aKey.tweak[2];
+		a ^= aKey.value[0];
+		b ^= aKey.value[1];
+		c ^= aKey.value[2];
 
 		return new ObjectId(a, b, c);
 	}

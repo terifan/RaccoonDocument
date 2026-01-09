@@ -3,7 +3,6 @@ package org.terifan.raccoon.document;
 import java.util.Arrays;
 import java.util.HashMap;
 import org.terifan.raccoon.document.ObjectId.Key;
-import static org.terifan.raccoon.document.ObjectId.Key.mix;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 
@@ -237,41 +236,6 @@ public class ObjectIdNGTest
 			}
 			System.out.println();
 		}
-	}
-
-
-	@Test
-	public void testKey()
-	{
-		long aKey1 = 0;
-		long aKey2 = 0;
-
-		long a = Key.mix(0x97628BAF, aKey1, aKey2, 12, 10);
-		long b = Key.mix(0xFC12B326, aKey1, aKey2, 60, 36);
-		long c = Key.mix(0x3D700587, aKey1, aKey2, 17, 26);
-		long d = Key.mix(0x6D38F06E, aKey1, aKey2, 43, 44);
-		long e = Key.mix(0x002BC6CB, aKey1, aKey2, 47, 16);
-		long f = Key.mix(0xFE88B6C3, aKey1, aKey2, 22, 37);
-
-		long seed = ((long)(((31 + a) * 31 + b) * 31 + c) << 32) + (((31 + d) * 31 + e) * 31 + f);
-
-		System.out.println(a);
-		System.out.println(b);
-		System.out.println(c);
-		System.out.println(d);
-		System.out.println(e);
-		System.out.println(f);
-		System.out.println(seed);
-
-//		for (int y = 0, i = 0; y < 10; y++)
-//		{
-//			for (int x = 0; x < 18; x++)
-//			{
-//				Key key = new Key(i++);
-//				System.out.printf("%08x  ", key.next());
-//			}
-//			System.out.println();
-//		}
 	}
 
 
