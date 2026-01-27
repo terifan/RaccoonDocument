@@ -14,6 +14,7 @@ import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import static org.terifan.raccoon.document.SupportedTypes.assertSupported;
 
 
@@ -617,5 +618,20 @@ public class Document extends Collection<String, Document> implements Externaliz
 		}
 
 		return this;
+	}
+
+
+	/**
+	 * Convenience method to stream an array of a name. If the name doesn't exists an empty Stream is returned.
+	 * @return Stream of the entries in an Array.
+	 */
+	public Stream stream(String aName)
+	{
+		Object o = get(aName);
+		if (o instanceof Array v)
+		{
+			return v.stream();
+		}
+		return Stream.of();
 	}
 }
