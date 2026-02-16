@@ -1303,7 +1303,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		try
 		{
 			BinaryDecoder decoder = new BinaryDecoder(new ByteBufferInputStream(aBinaryData));
-			return (T)decoder.readObject();
+			return (T)decoder.read();
 		}
 		catch (IOException e)
 		{
@@ -1330,7 +1330,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		try
 		{
 			BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(aBinaryData, aOffset, aLength));
-			return (T)decoder.readObject();
+			return (T)decoder.read();
 		}
 		catch (IOException e)
 		{
@@ -1347,7 +1347,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try
 		{
-			new BinaryEncoder(baos).writeObject(this);
+			new BinaryEncoder(baos).write(this);
 		}
 		catch (IOException e)
 		{
@@ -1366,7 +1366,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		try
 		{
 			BinaryDecoder decoder = new BinaryDecoder(aInputStream);
-			return (T)decoder.readObject();
+			return (T)decoder.read();
 		}
 		catch (IOException e)
 		{
@@ -1380,7 +1380,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public void writeTo(OutputStream aOutputStream) throws IOException
 	{
-		new BinaryEncoder(aOutputStream).writeObject(this);
+		new BinaryEncoder(aOutputStream).write(this);
 	}
 
 
@@ -1433,7 +1433,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 		};
 
-		new BinaryEncoder(tmp).writeObject(this);
+		new BinaryEncoder(tmp).write(this);
 	}
 
 

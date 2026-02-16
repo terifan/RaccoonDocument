@@ -30,35 +30,35 @@ public class TestBinaryEncoder
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 			new BinaryEncoder(baos)
-				.writeObject(null)
-				.writeObject(true)
-				.writeObject((byte)17)
-				.writeObject((short)1547)
-				.writeObject((int)17016454)
-				.writeObject((long)2651415726794265464L)
-				.writeObject((float)Math.PI)
-				.writeObject((double)Math.PI)
-				.writeObject("hello")
-				.writeObject('a')
-				.writeObject('\udddd')
-				.writeObject(new Date())
-				.writeObject(LocalDate.now())
-				.writeObject(LocalDateTime.now())
-				.writeObject(LocalTime.now())
-				.writeObject(OffsetDateTime.now())
-				.writeObject(OffsetTime.now())
-				.writeObject(ZonedDateTime.now())
-				.writeObject(Duration.ofSeconds(4, 656431984))
-				.writeObject(UUID.randomUUID())
-				.writeObject(new BigInteger("34169131061654613198432165462984651619"))
-				.writeObject(new BigDecimal("3416913106165461319.432165462984651619"))
-				.writeObject(new byte[]
+				.write(null)
+				.write(true)
+				.write((byte)17)
+				.write((short)1547)
+				.write((int)17016454)
+				.write((long)2651415726794265464L)
+				.write((float)Math.PI)
+				.write((double)Math.PI)
+				.write("hello")
+				.write('a')
+				.write('\udddd')
+				.write(new Date())
+				.write(LocalDate.now())
+				.write(LocalDateTime.now())
+				.write(LocalTime.now())
+				.write(OffsetDateTime.now())
+				.write(OffsetTime.now())
+				.write(ZonedDateTime.now())
+				.write(Duration.ofSeconds(4, 656431984))
+				.write(UUID.randomUUID())
+				.write(new BigInteger("34169131061654613198432165462984651619"))
+				.write(new BigDecimal("3416913106165461319.432165462984651619"))
+				.write(new byte[]
 				{
 					1, 2, 3
 			})
-				.writeObject(ObjectId.randomId())
-				.writeObject(Document.of("id:[7,8,9],text:hello"))
-				.writeObject(Array.of(7, 8, 9));
+				.write(ObjectId.randomId())
+				.write(Document.of("id:[7,8,9],text:hello"))
+				.write(Array.of(7, 8, 9));
 
 			System.out.println("length: " + baos.size());
 			_Log.hexDump(baos.toByteArray());

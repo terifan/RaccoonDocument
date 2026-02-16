@@ -33,7 +33,7 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 	}
 
 
-	public BinaryEncoder writeObject(Object aObject) throws IOException
+	public BinaryEncoder write(Object aObject) throws IOException
 	{
 		if (aObject instanceof Document v)
 		{

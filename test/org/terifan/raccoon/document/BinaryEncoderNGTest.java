@@ -2,6 +2,7 @@ package org.terifan.raccoon.document;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,6 +15,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
+import java.util.Iterator;
 import java.util.UUID;
 import static org.testng.Assert.*;
 import org.testng.annotations.DataProvider;
@@ -28,11 +30,11 @@ public class BinaryEncoderNGTest
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		new BinaryEncoder(baos)
-			.writeObject("test1")
-			.writeObject("test2")
-			.writeObject("test3");
+			.write("test1")
+			.write("test2")
+			.write("test3");
 
-		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
+		Iterator<Object> decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray())).iterator();
 		assertEquals(decoder.hasNext(), true);
 		assertEquals(decoder.next(), "test1");
 		assertEquals(decoder.hasNext(), true);
@@ -44,24 +46,24 @@ public class BinaryEncoderNGTest
 	}
 
 
-	@Test(expectedExceptions = IOException.class)
+	@Test(expectedExceptions = StreamException.class)
 	public void testForEach2() throws Exception
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		new BinaryEncoder(baos)
-			.writeObject("test1")
-			.writeObject("test2")
-			.writeObject("test3");
+			.write("test1")
+			.write("test2")
+			.write("test3");
 
-		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray()));
+		Iterator<Object> decoder = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray())).iterator();
 		assertEquals(decoder.hasNext(), true);
-		assertEquals(decoder.readObject(), "test1");
+		assertEquals(decoder.next(), "test1");
 		assertEquals(decoder.hasNext(), true);
-		assertEquals(decoder.readObject(), "test2");
+		assertEquals(decoder.next(), "test2");
 		assertEquals(decoder.hasNext(), true);
-		assertEquals(decoder.readObject(), "test3");
+		assertEquals(decoder.next(), "test3");
 		assertEquals(decoder.hasNext(), false);
-		assertEquals(decoder.readObject(), "xxx");
+		assertEquals(decoder.next(), "xxx");
 	}
 
 
@@ -70,9 +72,9 @@ public class BinaryEncoderNGTest
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		new BinaryEncoder(baos)
-			.writeObject("test1")
-			.writeObject("test2")
-			.writeObject("test3");
+			.write("test1")
+			.write("test2")
+			.write("test3");
 
 		Array list = Array.of("test1", "test2", "test3");
 
@@ -156,7 +158,7 @@ public class BinaryEncoderNGTest
 		BinaryEncoder encoder = new BinaryEncoder(baos);
 		for (Object v : aAllTypes)
 		{
-			encoder.writeObject(v);
+			encoder.write(v);
 		}
 
 //		System.out.println("length: " + baos.size());

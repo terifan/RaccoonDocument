@@ -26,7 +26,7 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
-	int read() throws IOException
+	int readByte() throws IOException
 	{
 		int c = mInputStream.read();
 		if (c == -1)
@@ -87,7 +87,7 @@ class BinaryInputStream implements AutoCloseable
 	{
 		for (int n = 0, result = 0; n < 32; n += 7)
 		{
-			int b = read();
+			int b = readByte();
 			result += (b & 127) << n;
 			if (b < 128)
 			{
@@ -103,7 +103,7 @@ class BinaryInputStream implements AutoCloseable
 	{
 		for (int n = 0, result = 0; n < 32; n += 7)
 		{
-			int b = read();
+			int b = readByte();
 			result += (b & 127) << n;
 			if (b < 128)
 			{
@@ -119,7 +119,7 @@ class BinaryInputStream implements AutoCloseable
 	{
 		for (long n = 0, result = 0; n < 64; n += 7)
 		{
-			int b = read();
+			int b = readByte();
 			result += (long)(b & 127) << n;
 			if (b < 128)
 			{
@@ -135,7 +135,7 @@ class BinaryInputStream implements AutoCloseable
 	{
 		for (long n = 0, result = 0; n < 64; n += 7)
 		{
-			int b = read();
+			int b = readByte();
 			result += (long)(b & 127) << n;
 			if (b < 128)
 			{
@@ -164,7 +164,7 @@ class BinaryInputStream implements AutoCloseable
 
 		for (int i = 0; i < output.length; i++)
 		{
-			int c = read();
+			int c = readByte();
 
 			if (c < 128) // 0xxxxxxx
 			{
@@ -172,11 +172,11 @@ class BinaryInputStream implements AutoCloseable
 			}
 			else if ((c & 0xE0) == 0xC0) // 110xxxxx
 			{
-				output[i] = (char)(((c & 0x1F) << 6) | (read() & 0x3F));
+				output[i] = (char)(((c & 0x1F) << 6) | (readByte() & 0x3F));
 			}
 			else if ((c & 0xF0) == 0xE0) // 1110xxxx
 			{
-				output[i] = (char)(((c & 0x0F) << 12) | ((read() & 0x3F) << 6) | (read() & 0x3F));
+				output[i] = (char)(((c & 0x0F) << 12) | ((readByte() & 0x3F) << 6) | (readByte() & 0x3F));
 			}
 			else
 			{
@@ -204,7 +204,7 @@ class BinaryInputStream implements AutoCloseable
 		char[] s = new char[readUnsignedVarint()];
 		for (int i = 0; i < s.length;)
 		{
-			int v = read();
+			int v = readByte();
 			int a = '+' + (v >>> 4);
 			if (a == ':')
 			{
@@ -230,7 +230,7 @@ class BinaryInputStream implements AutoCloseable
 		char[] s = new char[readUnsignedVarint()];
 		for (int i = 0; i < s.length;)
 		{
-			int v = read();
+			int v = readByte();
 			int a = '+' + (v >>> 4);
 			if (a == ':')
 			{

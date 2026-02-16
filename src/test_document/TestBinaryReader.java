@@ -16,35 +16,38 @@ public class TestBinaryReader
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 			new BinaryEncoder(baos)
-				.writeObject("reference").writeObject(346131916191L)
-				.writeObject("reftype").writeObject("waybill")
-				.writeObject("doctype").writeObject("dwb")
-				.writeObject("created").writeObject("2025-02-20")
-				.writeObject("account").writeObject(164);
+				.write(0).write(346131916191L)
+				.write(1).write("waybill")
+				.write(2).write("dwb")
+				.write(3).write("2025-02-20")
+				.write(4).write(164);
 
 			System.out.println("length: " + baos.size());
 			_Log.hexDump(baos.toByteArray(), 24);
 			System.out.println();
 
-			for (Iterator it = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray())); it.hasNext();)
+			try (BinaryDecoder in = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray())))
 			{
-				switch (it.next().toString())
+				for (Iterator it = in.iterator(); it.hasNext();)
 				{
-					case "reference":
-						System.out.println(it.next());
-						break;
-					case "reftype":
-						System.out.println(it.next());
-						break;
-					case "doctype":
-						System.out.println(it.next());
-						break;
-					case "created":
-						System.out.println(it.next());
-						break;
-					case "account":
-						System.out.println(it.next());
-						break;
+					switch ((Integer)it.next())
+					{
+						case 0:
+							System.out.println("reference: " + it.next());
+							break;
+						case 1:
+							System.out.println("reftype: " + it.next());
+							break;
+						case 2:
+							System.out.println("doctype: " + it.next());
+							break;
+						case 3:
+							System.out.println("created: " + it.next());
+							break;
+						case 4:
+							System.out.println("account: " + it.next());
+							break;
+					}
 				}
 			}
 		}

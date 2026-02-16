@@ -27,11 +27,11 @@ enum BinaryType
 	),
 	BOOLEAN(
 		(aEncoder, aValue) -> aEncoder.write((Boolean)aValue?1:0),
-		aDecoder -> aDecoder.read()!=0
+		aDecoder -> aDecoder.readByte()!=0
 	),
 	BYTE(
 		(aEncoder, aValue) -> aEncoder.write(0xff & (Byte)aValue),
-		aDecoder -> (byte)aDecoder.read()
+		aDecoder -> (byte)aDecoder.readByte()
 	),
 	SHORT(
 		(aEncoder, aValue) -> aEncoder.writeVarint((Short)aValue),

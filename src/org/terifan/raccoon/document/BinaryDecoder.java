@@ -1,5 +1,6 @@
 package org.terifan.raccoon.document;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,17 +10,13 @@ import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryType.STRING;
 
 
-public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, Iterator<Object>, Iterable<Object>
+public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, Iterable<Object>
 {
 	private ValueLookup<String> mStrings;
 	private ArrayList<ArrHeader> mArrHeaders;
 	private ArrayList<DocHeader> mDocHeaders;
 	private ValueLookup<Array> mArrInstances;
 	private ValueLookup<Document> mDocInstances;
-
-	private boolean mReady;
-	private boolean mEnded;
-	private Object mNext;
 
 
 	public BinaryDecoder(InputStream aInputStream)
@@ -37,63 +34,98 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	@Override
 	public Iterator<Object> iterator()
 	{
-		return this;
-	}
-
-
-	@Override
-	public boolean hasNext()
-	{
-		if (!mReady)
+		return new Iterator<Object>()
 		{
-			try
+			private boolean mReady;
+			private boolean mEnded;
+			private Object mNext;
+
+			@Override
+			public boolean hasNext()
 			{
-				mNext = readObjectImpl();
-				mReady = !mEnded;
+				if (!mReady)
+				{
+					try
+					{
+						mNext = _readObjectImpl();
+						mReady = !mEnded;
+					}
+					catch (IOException e)
+					{
+						mEnded = true;
+					}
+				}
+				return !mEnded && mReady;
 			}
-			catch (IOException e)
+
+
+			@Override
+			public Object next()
 			{
-				mEnded = true;
+				if (mEnded)
+				{
+					throw new StreamException("Reading beyond end of stream.");
+				}
+				try
+				{
+					if (!mReady && !mEnded)
+					{
+						mNext = _readObject();
+						mReady = !mEnded;
+					}
+					if (mEnded)
+					{
+						throw new IOException("Reading beyond end of stream.");
+					}
+
+					Object value = mNext;
+					mNext = null;
+					mReady = false;
+					return value;
+				}
+				catch (IOException e)
+				{
+					throw new StreamException("Stream corrupted.");
+				}
 			}
-		}
-		return mReady;
+
+
+			private Object _readObject() throws IOException
+			{
+				if (!mReady && !mEnded)
+				{
+					mNext = _readObjectImpl();
+					mReady = !mEnded;
+				}
+				if (mEnded)
+				{
+					throw new IOException("Reading beyond end of stream.");
+				}
+
+				Object value = mNext;
+				mNext = null;
+				mReady = false;
+				return value;
+			}
+
+
+			private Object _readObjectImpl() throws IOException
+			{
+				BinaryType type = readType();
+				if (type == null)
+				{
+					mEnded = true;
+					return null;
+				}
+				return readValue(type);
+			}
+		};
 	}
 
 
-	@Override
-	public Object next()
+	public <T> T read() throws IOException
 	{
-		if (mEnded)
-		{
-			throw new StreamException("Reading beyond end of stream.");
-		}
-		try
-		{
-			return readObject();
-		}
-		catch (IOException e)
-		{
-			throw new StreamException("Stream corrupted.");
-		}
-	}
-
-
-	public <T> T readObject() throws IOException
-	{
-		if (!mReady && !mEnded)
-		{
-			mNext = readObjectImpl();
-			mReady = !mEnded;
-		}
-		if (mEnded)
-		{
-			throw new IOException("Reading beyond end of stream.");
-		}
-
-		Object value = mNext;
-		mNext = null;
-		mReady = false;
-		return (T)value;
+		return readObjectImpl();
 	}
 
 
@@ -102,8 +134,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 		BinaryType type = readType();
 		if (type == null)
 		{
-			mEnded = true;
-			return null;
+			throw new EOFException();
 		}
 		return (T)readValue(type);
 	}
