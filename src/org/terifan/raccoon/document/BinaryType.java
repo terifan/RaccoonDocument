@@ -13,13 +13,12 @@ import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.UUID;
-import org.terifan.raccoon.document.BinaryDecoder.Field;
 
 
 enum BinaryType
 {
-	TERMINATOR(),
 	DOCUMENT(),
 	ARRAY(),
 	NULL(
@@ -115,9 +114,9 @@ enum BinaryType
 		(aEncoder, aValue) -> {aEncoder.writeVarlong(((Duration)aValue).getSeconds()); aEncoder.writeUnsignedVarint(((Duration)aValue).getNano());},
 		aDecoder -> Duration.ofSeconds(aDecoder.readVarint(), aDecoder.readUnsignedVarlong())
 	),
-	FIELD(
-		(aEncoder, aValue) -> {aEncoder.writeString(((Field)aValue).mName); aEncoder.writeType(((Field)aValue).mType); ((Field)aValue).mType.encoder.encode(aEncoder, ((Field)aValue).mValue);},
-		aDecoder -> {BinaryType type; return new Field(aDecoder.readString(), type=aDecoder.readType(), type.decoder.decode(aDecoder));}
+	DATE(
+		(aEncoder, aValue) -> aEncoder.writeLong(((Date)aValue).getTime()),
+		aDecoder -> new Date(aDecoder.readLong())
 	)
 	;
 
@@ -162,6 +161,7 @@ enum BinaryType
 		if (UUID.class == cls) return UUID;
 		if (BigInteger.class == cls) return BIGINTEGER;
 		if (BigDecimal.class == cls) return BIGDECIMAL;
+		if (Date.class == cls) return DATE;
 		if (OffsetDateTime.class == cls) return OFFSETDATETIME;
 		if (OffsetTime.class == cls) return OFFSETTIME;
 		if (LocalDateTime.class == cls) return LOCALDATETIME;
@@ -170,7 +170,6 @@ enum BinaryType
 		if (LocalDate.class == cls) return LOCALDATE;
 		if (LocalTime.class == cls) return LOCALTIME;
 		if (Character.class == cls || Character.TYPE == cls) return CHAR;
-		if (Field.class == cls) return FIELD;
 
 		return null;
 	}

@@ -45,7 +45,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 {
 	private final static long serialVersionUID = 1L;
 
-
 	public final Serializer serialize()
 	{
 		return new Serializer();

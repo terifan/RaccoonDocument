@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.terifan.raccoon.document.BinaryDecoder.ValueLookup;
 
 
 class BinaryInputStream implements AutoCloseable
@@ -192,7 +193,7 @@ class BinaryInputStream implements AutoCloseable
 		int i = mInputStream.read();
 		if (i == -1)
 		{
-			return BinaryType.TERMINATOR;
+			return null;
 		}
 		return BinaryType.values()[i];
 	}
@@ -250,12 +251,12 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
-	String readString(LookupMap<String> aLookup) throws IOException
+	String readString(ValueLookup<String> aLookup) throws IOException
 	{
 		int i = (int)readVarint();
 		if (i < 0)
 		{
-			return aLookup.valueAt(-i - 1);
+			return aLookup.get(-i - 1);
 		}
 		String value = readUTF(i);
 		aLookup.add(value);

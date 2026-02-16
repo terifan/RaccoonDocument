@@ -1,11 +1,12 @@
 package org.terifan.raccoon.document;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map.Entry;
-import org.terifan.raccoon.document.BinaryDecoder.Field;
+import java.util.Objects;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
 import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
 import static org.terifan.raccoon.document.BinaryType.STRING;
@@ -13,30 +14,22 @@ import static org.terifan.raccoon.document.BinaryType.STRING;
 
 public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 {
-	private LookupMap<String> mStrings;
-	private LookupMap<ByteKey> mArrHeaders;
-	private LookupMap<ByteKey> mDocHeaders;
-	private LookupMap<Array> mArrInstances;
-	private LookupMap<Document> mDocInstances;
+	private IndexLookup<String> mStrings;
+	private IndexLookup<ArrHeader> mArrHeaders;
+	private IndexLookup<DocHeader> mDocHeaders;
+	private IndexLookup<Array> mArrInstances;
+	private IndexLookup<Document> mDocInstances;
 
 
 	public BinaryEncoder(OutputStream aOutputStream)
 	{
 		super(aOutputStream);
 
-		mStrings = new LookupMap<>(true);
-		mArrHeaders = new LookupMap<>(true);
-		mDocHeaders = new LookupMap<>(true);
-		mArrInstances = new LookupMap<>(true);
-		mDocInstances = new LookupMap<>(true);
-	}
-
-
-	public BinaryEncoder writeField(String aName, Object aObject) throws IOException
-	{
-		writeType(BinaryType.FIELD);
-		writeValue(BinaryType.FIELD, new Field(aName, BinaryType.identify(aObject), aObject));
-		return this;
+		mStrings = new IndexLookup<>();
+		mArrHeaders = new IndexLookup<>();
+		mDocHeaders = new IndexLookup<>();
+		mArrInstances = new IndexLookup<>();
+		mDocInstances = new IndexLookup<>();
 	}
 
 
@@ -64,44 +57,48 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 
 	void writeDocument(Document aDocument) throws IOException
 	{
-		int n = mDocInstances.indexOf(aDocument);
-		if (n >= 0)
+		int ref = mDocInstances.lookup(aDocument);
+		if (ref >= 0)
 		{
-			writeUnsignedVarint(n << 2);
-			return;
-		}
-
-		mDocInstances.add(aDocument);
-		byte[] header = createHeader(aDocument);
-		ByteKey key = new ByteKey(header);
-		int ref = mDocHeaders.indexOf(key);
-
-		if (ref != -1)
-		{
-			writeUnsignedVarint((ref << 2) + 1);
+			writeUnsignedVarint(ref << 2);
 		}
 		else
 		{
-			writeUnsignedVarint((header.length << 2) + 2);
-			write(header);
-			mDocHeaders.add(key);
-		}
+			mDocInstances.add(aDocument);
 
-		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
+			DocHeader header = new DocHeader(aDocument);
+			ref = mDocHeaders.lookup(header);
+			BinaryType[] types = header.types;
+			String[] names = header.names;
 
-		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
-		{
-			String name = fields.readString();
-			Object value = aDocument.get(name);
+			if (ref >= 0)
+			{
+				writeUnsignedVarint((ref << 2) + 1);
+			}
+			else
+			{
+				writeUnsignedVarint((types.length << 2) + 2);
 
-			writeValue(type, value);
+				for (int i = 0; i < types.length; i++)
+				{
+					writeType(types[i]);
+					writeString(names[i]);
+				}
+
+				mDocHeaders.add(header);
+			}
+
+			for (int i = 0; i < types.length; i++)
+			{
+				writeValue(types[i], aDocument.get(names[i]));
+			}
 		}
 	}
 
 
 	void writeArray(Array aArray) throws IOException
 	{
-		int n = mArrInstances.indexOf(aArray);
+		int n = mArrInstances.lookup(aArray);
 		if (n >= 0)
 		{
 			writeUnsignedVarint(n << 2);
@@ -109,9 +106,10 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 		}
 
 		mArrInstances.add(aArray);
-		byte[] header = createHeader(aArray);
-		ByteKey key = new ByteKey(header);
-		int ref = mArrHeaders.indexOf(key);
+		ArrHeader header = new ArrHeader(aArray);
+		int ref = mArrHeaders.lookup(header);
+		ArrayList<BinaryType> types = header.types;
+		ArrayList<Integer> lengths = header.lengths;
 
 		if (ref != -1)
 		{
@@ -119,21 +117,23 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 		}
 		else
 		{
-			writeUnsignedVarint((header.length << 2) + 2);
-			write(header);
-			mArrHeaders.add(key);
+			writeUnsignedVarint((types.size() << 2) + 2);
+
+			for (int i = 0; i < types.size(); i++)
+			{
+				writeType(types.get(i));
+				writeUnsignedVarint(lengths.get(i));
+			}
+
+			mArrHeaders.add(header);
 		}
 
-		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
-
 		int offset = 0;
-		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
+		for (int i = 0; i < types.size(); i++)
 		{
-			int runLen = fields.readUnsignedVarint();
-
-			while (--runLen >= 0)
+			for (int runLen = lengths.get(i); --runLen >= 0; )
 			{
-				writeValue(type, aArray.get(offset++));
+				writeValue(types.get(i), aArray.get(offset++));
 			}
 		}
 	}
@@ -149,11 +149,6 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 			case ARRAY:
 				writeArray((Array)value);
 				break;
-			case NULL:
-			case BYTE:
-			case BOOLEAN:
-				type.encoder.encode(this, value);
-				break;
 			case STRING:
 				writeString(mStrings, (String)value);
 				break;
@@ -164,50 +159,126 @@ public class BinaryEncoder extends BinaryOutputStream implements AutoCloseable
 	}
 
 
-	private byte[] createHeader(Document aDocument) throws IOException
+	private class ArrHeader
 	{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BinaryOutputStream bos = new BinaryOutputStream(baos);
-		for (Entry<String, Object> entry : aDocument.entrySet())
+		ArrayList<BinaryType> types = new ArrayList<>();
+		ArrayList<Integer> lengths = new ArrayList<>();
+
+
+		ArrHeader(Array aArray) throws IOException
 		{
-			Object value = entry.getValue();
-			BinaryType type = BinaryType.identify(value);
-			bos.writeType(type);
-			bos.writeString(entry.getKey());
+			for (int offset = 0; offset < aArray.size();)
+			{
+				int runLen = 0;
+				BinaryType type = null;
+
+				for (int i = offset; i < aArray.size(); i++)
+				{
+					Object value = aArray.get(i);
+					BinaryType tmp = BinaryType.identify(value);
+
+					if (type != tmp && type != null)
+					{
+						break;
+					}
+
+					runLen++;
+					type = tmp;
+				}
+
+				types.add(type);
+				lengths.add(runLen);
+				offset += runLen;
+			}
 		}
 
-		return baos.toByteArray();
+
+		@Override
+		public int hashCode()
+		{
+			int hash = 3;
+			hash = 53 * hash + Objects.hashCode(this.types);
+			hash = 53 * hash + Objects.hashCode(this.lengths);
+			return hash;
+		}
+
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+			{
+				return true;
+			}
+			final ArrHeader other = (ArrHeader)obj;
+			if (!Objects.equals(this.types, other.types))
+			{
+				return false;
+			}
+			return Objects.equals(this.lengths, other.lengths);
+		}
 	}
 
 
-	private byte[] createHeader(Array aArray) throws IOException
+	private class DocHeader
 	{
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BinaryOutputStream bos = new BinaryOutputStream(baos);
-		for (int offset = 0; offset < aArray.size();)
+		BinaryType[] types;
+		String[] names;
+
+
+		public DocHeader(Document aDocument)
 		{
-			int runLen = 0;
-			BinaryType type = null;
+			types = new BinaryType[aDocument.size()];
+			names = new String[aDocument.size()];
 
-			for (int i = offset; i < aArray.size(); i++)
+			int i = 0;
+			for (Entry<String, Object> entry : aDocument.entrySet())
 			{
-				Object value = aArray.get(i);
-				BinaryType tmp = BinaryType.identify(value);
-
-				if (type != tmp && type != null)
-				{
-					break;
-				}
-
-				runLen++;
-				type = tmp;
+				types[i] = BinaryType.identify(entry.getValue());
+				names[i++] = entry.getKey();
 			}
-
-			bos.writeType(type);
-			bos.writeUnsignedVarint(runLen);
-			offset += runLen;
 		}
 
-		return baos.toByteArray();
+
+		@Override
+		public int hashCode()
+		{
+			int hash = 7;
+			hash = 53 * hash + Arrays.deepHashCode(this.types);
+			hash = 53 * hash + Arrays.deepHashCode(this.names);
+			return hash;
+		}
+
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+			{
+				return true;
+			}
+			final DocHeader other = (DocHeader)obj;
+			if (!Arrays.deepEquals(this.types, other.types))
+			{
+				return false;
+			}
+			return Arrays.deepEquals(this.names, other.names);
+		}
+	}
+
+
+	@SuppressWarnings("serial")
+	static class IndexLookup<T> extends HashMap<T, Integer>
+	{
+		public void add(T aValue)
+		{
+			put(aValue, size());
+		}
+
+
+		public int lookup(T aValue)
+		{
+			return getOrDefault(aValue, -1);
+		}
 	}
 }

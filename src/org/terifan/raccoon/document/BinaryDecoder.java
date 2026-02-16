@@ -1,24 +1,21 @@
 package org.terifan.raccoon.document;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import static org.terifan.raccoon.document.BinaryType.ARRAY;
-import static org.terifan.raccoon.document.BinaryType.BOOLEAN;
-import static org.terifan.raccoon.document.BinaryType.BYTE;
 import static org.terifan.raccoon.document.BinaryType.DOCUMENT;
-import static org.terifan.raccoon.document.BinaryType.NULL;
+import static org.terifan.raccoon.document.BinaryType.STRING;
 
 
 public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, Iterator<Object>, Iterable<Object>
 {
-	private LookupMap<String> mStrings;
-	private ArrayList<byte[]> mArrHeaders;
-	private ArrayList<byte[]> mDocHeaders;
-	private LookupMap<Array> mArrInstances;
-	private LookupMap<Document> mDocInstances;
+	private ValueLookup<String> mStrings;
+	private ArrayList<ArrHeader> mArrHeaders;
+	private ArrayList<DocHeader> mDocHeaders;
+	private ValueLookup<Array> mArrInstances;
+	private ValueLookup<Document> mDocInstances;
 
 	private boolean mReady;
 	private boolean mEnded;
@@ -29,39 +26,11 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	{
 		super(aInputStream);
 
-		mStrings = new LookupMap<>(false);
+		mStrings = new ValueLookup<>();
 		mArrHeaders = new ArrayList<>();
 		mDocHeaders = new ArrayList<>();
-		mArrInstances = new LookupMap<>(false);
-		mDocInstances = new LookupMap<>(false);
-	}
-
-
-	public Iterable<Field> fields()
-	{
-		return new Iterable<Field>()
-		{
-			@Override
-			public Iterator<Field> iterator()
-			{
-				Iterator<Object> iterator = BinaryDecoder.this.iterator();
-				return new Iterator<Field>()
-				{
-					@Override
-					public boolean hasNext()
-					{
-						return iterator.hasNext();
-					}
-
-
-					@Override
-					public Field next()
-					{
-						return (Field)iterator.next();
-					}
-				};
-			}
-		};
+		mArrInstances = new ValueLookup<>();
+		mDocInstances = new ValueLookup<>();
 	}
 
 
@@ -104,7 +73,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 		}
 		catch (IOException e)
 		{
-			throw new IllegalStateException(e);
+			throw new StreamException("Stream corrupted.");
 		}
 	}
 
@@ -131,7 +100,7 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	private <T> T readObjectImpl() throws IOException
 	{
 		BinaryType type = readType();
-		if (type == BinaryType.TERMINATOR)
+		if (type == null)
 		{
 			mEnded = true;
 			return null;
@@ -181,32 +150,30 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 	Document readDocument() throws IOException
 	{
-		byte[] header;
+		DocHeader header;
 		int code = readUnsignedVarint();
 		switch (code & 0b11)
 		{
 			case 0:
-				return mDocInstances.valueAt(code >> 2);
+				return mDocInstances.get(code >> 2);
 			case 1:
 				header = mDocHeaders.get(code >> 2);
 				break;
 			case 2:
-				mDocHeaders.add(header = read(new byte[code >> 2]));
+				mDocHeaders.add(header = new DocHeader(code >> 2));
 				break;
 			default:
-				throw new IllegalStateException();
+				throw new StreamException("Stream corrupted.");
 		}
 
 		Document document = new Document();
 		mDocInstances.add(document);
+		BinaryType[] types = header.types;
+		String[] names = header.names;
 
-		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
-
-		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
+		for (int i = 0; i < types.length; i++)
 		{
-			String name = fields.readString();
-			Object value = readValue(type);
-			document.put(name, value);
+			document.put(names[i], readValue(types[i]));
 		}
 
 		return document;
@@ -215,32 +182,31 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 	Array readArray() throws IOException
 	{
-		byte[] header;
+		ArrHeader header;
 		int code = readUnsignedVarint();
 		switch (code & 0b11)
 		{
 			case 0:
-				return mArrInstances.valueAt(code >> 2);
+				return mArrInstances.get(code >> 2);
 			case 1:
 				header = mArrHeaders.get(code >> 2);
 				break;
 			case 2:
-				mArrHeaders.add(header = read(new byte[code >> 2]));
+				mArrHeaders.add(header = new ArrHeader(code >> 2));
 				break;
 			default:
-				throw new IllegalStateException();
+				throw new StreamException("Stream corrupted.");
 		}
 
 		Array array = new Array();
 		mArrInstances.add(array);
+		BinaryType[] types = header.types;
+		int[] lengths = header.lengths;
 
-		BinaryInputStream fields = new BinaryInputStream(new ByteArrayInputStream(header));
-
-		for (BinaryType type; (type = fields.readType()) != BinaryType.TERMINATOR;)
+		for (int i = 0; i < types.length ; i++)
 		{
-			int runLen = fields.readUnsignedVarint();
-
-			while (--runLen >= 0)
+			BinaryType type = types[i];
+			for (int runLen = lengths[i]; --runLen >= 0; )
 			{
 				array.add(readValue(type));
 			}
@@ -261,11 +227,6 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 			case ARRAY:
 				value = readArray();
 				break;
-			case NULL:
-			case BYTE:
-			case BOOLEAN:
-				value = aType.decoder.decode(this);
-				break;
 			case STRING:
 				value = readString(mStrings);
 				break;
@@ -278,37 +239,47 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 	}
 
 
-	public static class Field
+	private class DocHeader
 	{
-		String mName;
-		BinaryType mType;
-		Object mValue;
+		BinaryType[] types;
+		String[] names;
 
 
-		Field(String aName, BinaryType aType, Object aValue)
+		public DocHeader(int aCount) throws IOException
 		{
-			mName = aName;
-			mType = aType;
-			mValue = aValue;
+			types = new BinaryType[aCount];
+			names = new String[aCount];
+			for (int i = 0; i < aCount; i++)
+			{
+				BinaryType type = BinaryType.values()[readUnsignedVarint()];
+				types[i] = type;
+				names[i] = readString();
+			}
 		}
+	}
 
 
-		public String getName()
+	private class ArrHeader
+	{
+		BinaryType[] types;
+		int[] lengths;
+
+
+		public ArrHeader(int aCount) throws IOException
 		{
-			return mName;
+			types = new BinaryType[aCount];
+			lengths = new int[aCount];
+			for (int i = 0; i < aCount; i++)
+			{
+				types[i] = BinaryType.values()[readUnsignedVarint()];
+				lengths[i] = readUnsignedVarint();
+			}
 		}
+	}
 
 
-		public Object getValue()
-		{
-			return mValue;
-		}
-
-
-		@Override
-		public String toString()
-		{
-			return mType + " \"" + mName + "\" " + mValue;
-		}
+	@SuppressWarnings("serial")
+	static class ValueLookup<T> extends ArrayList<T>
+	{
 	}
 }

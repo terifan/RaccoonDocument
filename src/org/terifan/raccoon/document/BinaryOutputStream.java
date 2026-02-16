@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import org.terifan.raccoon.document.BinaryEncoder.IndexLookup;
 
 
 class BinaryOutputStream implements AutoCloseable
@@ -206,9 +207,9 @@ class BinaryOutputStream implements AutoCloseable
 	}
 
 
-	void writeString(LookupMap<String> aLookup, String aValue) throws IOException
+	void writeString(IndexLookup<String> aLookup, String aValue) throws IOException
 	{
-		int ref = aLookup.indexOf(aValue);
+		int ref = aLookup.lookup(aValue);
 		if (ref == -1)
 		{
 			writeVarint(aValue.length());

@@ -24,7 +24,7 @@ public class YMLEncoderNGTest
 			"  lng: 12.31474\n" +
 			"  time: '2010-05-01T16:21:19+04:00' #OffsetDateTime\n" +
 			"personal:\n" +
-			"  account_balance: 5433.112382065 #BigDecimal\n" +
+			"  accountBalance: 5433.112382065 #BigDecimal\n" +
 			"  birthday: '1976-06-17' #LocalDate\n" +
 			"  contacts:\n" +
 			"  - text: lanwatan_bregol2@yahoo.com\n" +

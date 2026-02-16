@@ -344,7 +344,7 @@ public class _Person
 					.put("number", rnd.nextInt(100))
 					.put("food", createFoodName(rnd))
 				)
-				.put("account_balance", new BigDecimal((rnd.nextInt() % 10000) + "." + Math.abs(rnd.nextInt())))
+				.put("accountBalance", new BigDecimal((rnd.nextInt() % 10000) + "." + Math.abs(rnd.nextInt())))
 			)
 			.put("work", new Document()
 				.put("company", company)

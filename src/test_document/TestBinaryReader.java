@@ -2,10 +2,8 @@ package test_document;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.time.LocalDateTime;
-import java.util.Random;
+import java.util.Iterator;
 import org.terifan.raccoon.document.BinaryDecoder;
-import org.terifan.raccoon.document.BinaryDecoder.Field;
 import org.terifan.raccoon.document.BinaryEncoder;
 
 
@@ -15,35 +13,38 @@ public class TestBinaryReader
 	{
 		try
 		{
-			byte[] image = new byte[4 * 1024 * 1024];
-			new Random(1).nextBytes(image);
-			byte[] thumb = new byte[12 * 1024];
-			new Random(1).nextBytes(thumb);
-
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 			new BinaryEncoder(baos)
-				.writeField("id", 346131916191L)
-				.writeField("name", "hello")
-				.writeField("created", LocalDateTime.now())
-				.writeField("image", image)
-				.writeField("thumb", thumb)
-				.writeField("rating", 5);
+				.writeObject("reference").writeObject(346131916191L)
+				.writeObject("reftype").writeObject("waybill")
+				.writeObject("doctype").writeObject("dwb")
+				.writeObject("created").writeObject("2025-02-20")
+				.writeObject("account").writeObject(164);
 
-//			System.out.println("length: " + baos.size());
-//			_Log.hexDump(baos.toByteArray());
-//			System.out.println();
+			System.out.println("length: " + baos.size());
+			_Log.hexDump(baos.toByteArray(), 24);
+			System.out.println();
 
-			for (Field v : new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray())).fields())
+			for (Iterator it = new BinaryDecoder(new ByteArrayInputStream(baos.toByteArray())); it.hasNext();)
 			{
-				switch (v.getName())
+				switch (it.next().toString())
 				{
-					case "id": System.out.println(v.getValue()); break;
-					case "name": System.out.println(v.getValue()); break;
-					case "created": System.out.println(v.getValue()); break;
-					case "image": System.out.println(v.getValue()); break;
-					case "thumb": System.out.println(v.getValue()); break;
-					case "rating": System.out.println(v.getValue()); break;
+					case "reference":
+						System.out.println(it.next());
+						break;
+					case "reftype":
+						System.out.println(it.next());
+						break;
+					case "doctype":
+						System.out.println(it.next());
+						break;
+					case "created":
+						System.out.println(it.next());
+						break;
+					case "account":
+						System.out.println(it.next());
+						break;
 				}
 			}
 		}

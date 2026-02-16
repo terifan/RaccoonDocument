@@ -12,6 +12,7 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.UUID;
 import org.terifan.raccoon.document.Array;
 import org.terifan.raccoon.document.BinaryDecoder;
@@ -29,11 +30,18 @@ public class TestBinaryEncoder
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 			new BinaryEncoder(baos)
-				.writeObject(346131916191L)
-				.writeObject(346131916191L)
+				.writeObject(null)
+				.writeObject(true)
+				.writeObject((byte)17)
+				.writeObject((short)1547)
+				.writeObject((int)17016454)
+				.writeObject((long)2651415726794265464L)
+				.writeObject((float)Math.PI)
+				.writeObject((double)Math.PI)
 				.writeObject("hello")
-				.writeObject("hello")
-				.writeObject("hello")
+				.writeObject('a')
+				.writeObject('\udddd')
+				.writeObject(new Date())
 				.writeObject(LocalDate.now())
 				.writeObject(LocalDateTime.now())
 				.writeObject(LocalTime.now())
@@ -44,24 +52,6 @@ public class TestBinaryEncoder
 				.writeObject(UUID.randomUUID())
 				.writeObject(new BigInteger("34169131061654613198432165462984651619"))
 				.writeObject(new BigDecimal("3416913106165461319.432165462984651619"))
-				.writeObject(null)
-				.writeObject("")
-				.writeObject(false)
-				.writeObject(true)
-				.writeObject((byte)0)
-				.writeObject((byte)17)
-				.writeObject((short)0)
-				.writeObject((short)1547)
-				.writeObject((int)0)
-				.writeObject((int)17016454)
-				.writeObject((long)0)
-				.writeObject((long)2651415726794265464L)
-				.writeObject((float)0)
-				.writeObject((float)Math.PI)
-				.writeObject((double)0)
-				.writeObject((double)Math.PI)
-				.writeObject('a')
-				.writeObject('\udddd')
 				.writeObject(new byte[]
 				{
 					1, 2, 3
