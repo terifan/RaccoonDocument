@@ -6,7 +6,6 @@ import java.util.Random;
 import org.terifan.raccoon.document.Array;
 import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Document;
-import org.terifan.raccoon.document.Support;
 
 
 public class TestSerialization
@@ -40,8 +39,8 @@ public class TestSerialization
 
 			_Log.hexDump(data);
 
-			System.out.println(a.toJson().length() + "\t" + Support.zip(a.toJson().getBytes()).length);
-			System.out.println(data.length + "\t" + Support.zip(data).length);
+			System.out.println(a.toJson().length() + "\t" + _Support.zip(a.toJson().getBytes()).length);
+			System.out.println(data.length + "\t" + _Support.zip(data).length);
 
 			Collection doc = Document.parseByteArray(data);
 

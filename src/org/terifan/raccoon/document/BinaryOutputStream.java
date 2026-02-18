@@ -232,23 +232,4 @@ class BinaryOutputStream implements AutoCloseable
 			mOutputStream = null;
 		}
 	}
-
-//	void writeInterleaved(BinaryType aX, int aY) throws IOException
-//	{
-//		writeUnsignedVarint((shift(aY) << 1) | shift(aX.ordinal()));
-//	}
-//
-//
-//	private static long shift(long aWord)
-//	{
-//		aWord &= 0xffffffffL;
-//
-//		aWord = (aWord | (aWord << 16)) & 0x0000ffff0000ffffL;
-//		aWord = (aWord | (aWord << 8)) & 0x00ff00ff00ff00ffL;
-//		aWord = (aWord | (aWord << 4)) & 0x0f0f0f0f0f0f0f0fL;
-//		aWord = (aWord | (aWord << 2)) & 0x3333333333333333L;
-//		aWord = (aWord | (aWord << 1)) & 0x5555555555555555L;
-//
-//		return aWord;
-//	}
 }

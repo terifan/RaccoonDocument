@@ -8,7 +8,6 @@ import java.util.Random;
 import org.terifan.raccoon.document.Array;
 import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Document;
-import org.terifan.raccoon.document.Support;
 
 
 public class CompareSerialization
@@ -61,8 +60,8 @@ public class CompareSerialization
 		String json = aCollection.toJson();
 		byte[] bin = aCollection.toByteArray();
 
-		byte[] binzip = Support.zip(bin);
-		byte[] zipjson = Support.zip(json.getBytes(StandardCharsets.UTF_8));
+		byte[] binzip = _Support.zip(bin);
+		byte[] zipjson = _Support.zip(json.getBytes(StandardCharsets.UTF_8));
 
 		try
 		{

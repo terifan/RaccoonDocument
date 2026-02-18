@@ -45,6 +45,12 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 {
 	private final static long serialVersionUID = 1L;
 
+
+	public Collection()
+	{
+	}
+
+
 	public final Serializer serialize()
 	{
 		return new Serializer();
@@ -176,11 +182,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		public void from(Reader aReader)
 		{
 		}
-	}
-
-
-	Collection()
-	{
 	}
 
 
@@ -1406,8 +1407,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 		};
 
-		BinaryDecoder decoder = new BinaryDecoder(in);
-		decoder.unmarshal(this);
+		new BinaryDecoder(in).unmarshal(this);
 	}
 
 

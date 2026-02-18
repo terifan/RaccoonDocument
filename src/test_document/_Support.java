@@ -1,35 +1,15 @@
-package org.terifan.raccoon.document;
+package test_document;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.UUID;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 
-public class Support
+public class _Support
 {
-	public static byte[] uuidToBytes(UUID aUUID)
-	{
-		long mst = aUUID.getMostSignificantBits();
-		long lst = aUUID.getLeastSignificantBits();
-		ByteBuffer bb = ByteBuffer.allocate(16);
-		bb.putLong(mst);
-		bb.putLong(lst);
-		return bb.array();
-	}
-
-
-	public static UUID bytesToUUID(byte[] aBytes)
-	{
-		ByteBuffer bb = ByteBuffer.wrap(aBytes);
-		return new UUID(bb.getLong(), bb.getLong());
-	}
-
-
 	public static byte[] zip(byte[] aData)
 	{
 		try

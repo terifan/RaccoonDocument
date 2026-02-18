@@ -20,12 +20,6 @@ class BinaryInputStream implements AutoCloseable
 	}
 
 
-	void skip(int aLength) throws IOException
-	{
-		mInputStream.skip(aLength);
-	}
-
-
 	int readByte() throws IOException
 	{
 		int c = mInputStream.read();
@@ -65,7 +59,7 @@ class BinaryInputStream implements AutoCloseable
 		return ((mReadBuffer[0] & 0xff) << 24)
 			+ ((mReadBuffer[1] & 0xff) << 16)
 			+ ((mReadBuffer[2] & 0xff) << 8)
-			+ ((mReadBuffer[3] & 0xff) << 0);
+			+ (mReadBuffer[3] & 0xff);
 	}
 
 
@@ -79,7 +73,7 @@ class BinaryInputStream implements AutoCloseable
 			+ ((long)(mReadBuffer[4] & 0xff) << 24)
 			+ ((mReadBuffer[5] & 0xff) << 16)
 			+ ((mReadBuffer[6] & 0xff) << 8)
-			+ ((mReadBuffer[7] & 0xff) << 0));
+			+ (mReadBuffer[7] & 0xff));
 	}
 
 
@@ -273,24 +267,4 @@ class BinaryInputStream implements AutoCloseable
 			mInputStream = null;
 		}
 	}
-
-//	long readInterleaved() throws IOException
-//	{
-//		long p = readUnsignedVarint();
-//		return (reverseShift(p >>> 1) << 32) | reverseShift(p);
-//	}
-//
-//
-//	private static long reverseShift(long aWord)
-//	{
-//		aWord &= 0x5555555555555555L;
-//
-//		aWord = (aWord | (aWord >> 1)) & 0x3333333333333333L;
-//		aWord = (aWord | (aWord >> 2)) & 0x0f0f0f0f0f0f0f0fL;
-//		aWord = (aWord | (aWord >> 4)) & 0x00ff00ff00ff00ffL;
-//		aWord = (aWord | (aWord >> 8)) & 0x0000ffff0000ffffL;
-//		aWord = (aWord | (aWord >> 16)) & 0x00000000ffffffffL;
-//
-//		return aWord;
-//	}
 }

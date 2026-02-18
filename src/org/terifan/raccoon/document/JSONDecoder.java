@@ -4,7 +4,18 @@ import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.util.Base64;
 import java.util.LinkedList;
+import java.util.UUID;
 
 
 public class JSONDecoder
@@ -271,7 +282,7 @@ public class JSONDecoder
 			return null;
 		}
 
-		Object o = SupportedTypes.decode(in);
+		Object o = decode(in);
 		if (o != null)
 		{
 			return o;
@@ -369,5 +380,86 @@ public class JSONDecoder
 			throw new IOException("Unexpected end of stream.");
 		}
 		return (char)c;
+	}
+
+
+	/**
+	 * Decodes an encoded value e.g. "ObjectId(65dc9ad1b09c81b0e278e2c2)" return an instance of ObjectId. Unsupported types return null.
+	 */
+	private static Object decode(String aText)
+	{
+		if ("true".equalsIgnoreCase(aText))
+		{
+			return true;
+		}
+		if ("false".equalsIgnoreCase(aText))
+		{
+			return false;
+		}
+		if (aText.startsWith("ObjectId("))
+		{
+			return ObjectId.fromString(aText.substring(9, aText.length() - 1));
+		}
+		if (aText.startsWith("Base64("))
+		{
+			return Base64.getDecoder().decode(aText.substring(7, aText.length() - 1));
+		}
+		if (aText.startsWith("UUID("))
+		{
+			return UUID.fromString(aText.substring(5, aText.length() - 1));
+		}
+		if (aText.startsWith("BigInteger("))
+		{
+			return new BigInteger(aText.substring(11, aText.length() - 1));
+		}
+		if (aText.startsWith("BigDecimal("))
+		{
+			return new BigDecimal(aText.substring(11, aText.length() - 1));
+		}
+		if (aText.startsWith("LocalDateTime("))
+		{
+			return LocalDateTime.parse(aText.substring(14, aText.length() - 1));
+		}
+		if (aText.startsWith("LocalDate("))
+		{
+			return LocalDate.parse(aText.substring(10, aText.length() - 1));
+		}
+		if (aText.startsWith("LocalTime("))
+		{
+			return LocalTime.parse(aText.substring(10, aText.length() - 1));
+		}
+		if (aText.startsWith("OffsetDateTime("))
+		{
+			return OffsetDateTime.parse(aText.substring(15, aText.length() - 1));
+		}
+		if (aText.startsWith("OffsetTime("))
+		{
+			return OffsetTime.parse(aText.substring(11, aText.length() - 1));
+		}
+		if (aText.startsWith("ZonedDateTime("))
+		{
+			return ZonedDateTime.parse(aText.substring(14, aText.length() - 1));
+		}
+		if (aText.startsWith("Duration("))
+		{
+			return Duration.parse(aText.substring(9, aText.length() - 1));
+		}
+		if (aText.startsWith("0x"))
+		{
+			return Long.valueOf(aText.substring(2), 16);
+		}
+		if (aText.matches("[+-]?(\\d*\\.)?\\d+[f|F]"))
+		{
+			return Float.valueOf(aText.substring(0, aText.length() - 1));
+		}
+		if (aText.matches("[+-]?[0-9]{1,}[L|l]"))
+		{
+			return Long.valueOf(aText.substring(0, aText.length() - 1));
+		}
+		if (aText.contains("."))
+		{
+			return Double.valueOf(aText);
+		}
+		return null;
 	}
 }

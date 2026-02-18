@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 import static org.terifan.raccoon.document.SupportedTypes.assertSupported;
 
 
-public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, CollectionEntity
+public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>
 {
 	private final static long serialVersionUID = 1L;
 

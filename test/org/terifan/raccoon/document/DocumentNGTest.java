@@ -12,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.Random;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -842,5 +841,24 @@ public class DocumentNGTest
 		Document in = Document.parseByteArray(data);
 
 		assertSame(in.getDocument("doc2").getDocument("doc1"), in);
+	}
+
+
+	@Test
+	public void testExternalizable() throws IOException, ClassNotFoundException
+	{
+		Document person = _Person.createPerson(new Random(1));
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try (ObjectOutputStream oo = new ObjectOutputStream(baos))
+		{
+			person.writeExternal(oo);
+		}
+
+		byte[] data = baos.toByteArray();
+//		_Log.hexDump(data, 32);
+
+		Object obj = new ObjectInputStream(new ByteArrayInputStream(data)).readObject();
+
+		System.out.println(obj);
 	}
 }

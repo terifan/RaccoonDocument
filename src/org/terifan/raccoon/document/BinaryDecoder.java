@@ -142,32 +142,32 @@ public class BinaryDecoder extends BinaryInputStream implements AutoCloseable, I
 
 	void unmarshal(Collection aContainer) throws IOException
 	{
-		BinaryType type = readType();
+//		BinaryType type = readType();
 
 		if (aContainer instanceof Document v)
 		{
-			if (type == BinaryType.ARRAY)
-			{
-				throw new StreamException("Attempt to unmarshal a Document when binary stream contains an Array.");
-			}
-			if (type != BinaryType.DOCUMENT)
-			{
-				throw new StreamException("Stream corrupted.");
-			}
+//			if (type == BinaryType.ARRAY)
+//			{
+//				throw new StreamException("Attempt to unmarshal a Document when binary stream contains an Array.");
+//			}
+//			if (type != BinaryType.DOCUMENT)
+//			{
+//				throw new StreamException("Stream corrupted.");
+//			}
 
 			Document d = readDocument();
 			v.putAll(d);
 		}
 		else if (aContainer instanceof Array v)
 		{
-			if (type == BinaryType.DOCUMENT)
-			{
-				throw new StreamException("Attempt to unmarshal an Array when binary stream contains a Document.");
-			}
-			if (type != BinaryType.ARRAY)
-			{
-				throw new StreamException("Stream corrupted.");
-			}
+//			if (type == BinaryType.DOCUMENT)
+//			{
+//				throw new StreamException("Attempt to unmarshal an Array when binary stream contains a Document.");
+//			}
+//			if (type != BinaryType.ARRAY)
+//			{
+//				throw new StreamException("Stream corrupted.");
+//			}
 
 			Array a = readArray();
 			v.clear().addAll(a);

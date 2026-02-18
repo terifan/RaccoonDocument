@@ -67,11 +67,11 @@ class MurmurHash3
 	}
 
 
-	public MurmurHash3 updateUTF8(CharSequence aData)
+	public MurmurHash3 updateUTF8(CharSequence aText)
 	{
-		for (int i = 0, len = aData.length(); i < len;)
+		for (int i = 0, len = aText.length(); i < len;)
 		{
-			int code = aData.charAt(i++);
+			int code = aText.charAt(i++);
 			if (code < 0x80)
 			{
 				updateByte(code);
@@ -91,7 +91,7 @@ class MurmurHash3
 			}
 			else
 			{
-				int utf32 = aData.charAt(i++);
+				int utf32 = aText.charAt(i++);
 				utf32 = ((code - 0xD7C0) << 10) + (utf32 & 0x3FF);
 				int k = (0xff & (0xF0 | (utf32 >> 18))) | ((0x80 | ((utf32 >> 12) & 0x3F))) << 8 | ((0x80 | ((utf32 >> 6) & 0x3F))) << 16 | (0x80 | (utf32 & 0x3F)) << 24;
 				updateInt(k);
@@ -137,15 +137,5 @@ class MurmurHash3
 		o ^= o >>> 16;
 
 		return o;
-	}
-
-
-	int getValue4bits()
-	{
-		int value = getValue();
-		value ^= value >>> 4;
-		value ^= value >>> 8;
-		value ^= value >>> 16;
-		return value & 15;
 	}
 }
