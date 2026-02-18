@@ -10,11 +10,11 @@ public class CollectionNGTest
 	@Test
 	public void testSomeMethod()
 	{
-		Collection col1 = Collection.parseJson("[1,2,3]");
-		Collection col2 = Collection.parseJson("{a:1,b:true,c:3.14,d:hello}");
+		Array col1 = Collection.parseJson("[1,2,3]");
+		Document col2 = Collection.parseJson("{a:1,b:true,c:3.14,d:hello}");
 
-		Array col3 = Collection.parseByteArray(col1.toByteArray());
-		Document col4 = Collection.parseByteArray(ByteBuffer.wrap(col2.toByteArray()));
+		Array col3 = Array.parseByteArray(col1.toByteArray());
+		Document col4 = Document.parseByteArray(ByteBuffer.wrap(col2.toByteArray()));
 
 		assertEquals(col1.toJson(), "[1,2,3]");
 		assertEquals(col2.toJson(), "{\"a\":1,\"b\":true,\"c\":3.14,\"d\":\"hello\"}");

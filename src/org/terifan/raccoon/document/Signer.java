@@ -181,7 +181,7 @@ public class Signer
 
 	/**
 	 * Return a signed compressed binary representation of this Document. Signing algorithm is HS256.
-	 */
+	 */ 
 	public byte[] toSignedByteArray(Document aMessage)
 	{
 		return toSignedByteArray(aMessage, null);
