@@ -321,7 +321,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 	}
 
 
-	/** 
+	/**
 	 * Key/Value iterator
 	 */
 	@Override
@@ -565,4 +565,131 @@ public class Document extends Collection<String, Document> implements Externaliz
 		}
 		return aMap;
 	}
+
+
+	@Override
+	protected VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
+	{
+		if (aPath.equals("."))
+		{
+			return aVisitor.visit(aConsumedPath + "/" + aPath, "", this);
+		}
+
+		if (aPath.isEmpty())
+		{
+			if (aVisitor.visit(aConsumedPath, "", this) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+			return VisitorResult.CONTINUE;
+		}
+
+		if (aPath.equals("values()"))
+		{
+			for (Entry<String, Object> entry : entrySet())
+			{
+				String consumedPath = aConsumedPath + "/" + entry.getKey();
+				if (aVisitor.visit(consumedPath, "", entry.getValue()) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+			}
+			return VisitorResult.CONTINUE;
+		}
+
+		if (aPath.equals("names()"))
+		{
+			for (Entry<String, Object> entry : entrySet())
+			{
+				if (aVisitor.visit(aConsumedPath, "", entry.getKey()) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+			}
+			return VisitorResult.CONTINUE;
+		}
+
+		if (aPath.startsWith("//"))
+		{
+			final String consumed = aConsumedPath;
+			String remain = aPath.substring(2);
+
+			if (visit(consumed, remain, aVisitor) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+
+			return visitAllRecursive(consumed, remain, (cp, p, o) ->
+			{
+				if (o instanceof Document col)
+				{
+					return col.visit(cp, remain, aVisitor);
+				}
+				return VisitorResult.CONTINUE;
+			});
+		}
+
+		if (!aPath.contains("/") && !aPath.contains("["))
+		{
+			return aVisitor.visit(aConsumedPath + "/" + aPath, "", get(aPath));
+		}
+
+		return super.visit(aConsumedPath, aPath, aVisitor);
+	}
+
+
+	@Override
+	protected VisitorResult visitAllRecursive(String aConsumedPath, String aPath, Visitor aVisitor)
+	{
+		for (Entry<String, Object> entry : entrySet())
+		{
+			String consumedPath = aConsumedPath + "/" + entry.getKey();
+			if (aVisitor.visit(consumedPath, aPath, entry.getValue()) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+			if (entry.getValue() instanceof Collection col)
+			{
+				if (col.visitAllRecursive(consumedPath, aPath, aVisitor) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+			}
+		}
+		return VisitorResult.CONTINUE;
+	}
+
+
+//	public VisitorResult _x_visit(String aConsumedPath, String aPath, Visitor aVisitor)
+//	{
+//		if (aPath.equals("*"))
+//		{
+//			for (Entry<String, Object> entry : mValues.entrySet())
+//			{
+//				String consumedPath = aConsumedPath + "/" + entry.getKey();
+//				if (entry.getValue() instanceof Collection col)
+//				{
+//					if (col.visit(consumedPath, aPath, aVisitor) == VisitorResult.ABORT)
+//					{
+//						return VisitorResult.ABORT;
+//					}
+//				}
+//				else
+//				{
+//					if (_visit(consumedPath, entry.getValue(), aPath, aVisitor) == VisitorResult.ABORT)
+//					{
+//						return VisitorResult.ABORT;
+//					}
+//				}
+//			}
+//		}
+//		else
+//		{
+//			if (visit(aConsumedPath, aPath, aVisitor) == VisitorResult.ABORT)
+//			{
+//				return VisitorResult.ABORT;
+//			}
+//		}
+//		return VisitorResult.CONTINUE;
+//	}
 }

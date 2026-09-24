@@ -25,7 +25,6 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
@@ -35,8 +34,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.terifan.raccoon.document.PathExpression.Expression;
-import org.terifan.raccoon.document.PathExpression.ExpressionAnd;
 import test_document.Console;
 import test_document.Console.Color;
 
@@ -707,7 +704,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public double sum(String aPath)
 	{
 		AtomicReference<Number> sum = new AtomicReference<>(0.0);
-		Visitor visitor = v ->
+		Visitor visitor = (cp, p, v) ->
 		{
 			if (v != null)
 			{
@@ -727,7 +724,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public int count(String aPath)
 	{
 		AtomicInteger count = new AtomicInteger();
-		Visitor visitor = v ->
+		Visitor visitor = (cp, p, v) ->
 		{
 			if (v != null)
 			{
@@ -743,7 +740,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public Array findMany(String aPath)
 	{
 		Array result = new Array();
-		Visitor visitor = v ->
+		Visitor visitor = (cp, p, v) ->
 		{
 			if (v != null)
 			{
@@ -759,7 +756,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public Document distinct(String aPath)
 	{
 		Document result = new Document();
-		Visitor visitor = v ->
+		Visitor visitor = (cp, p, v) ->
 		{
 			String key = v == null ? "" : v.toString();
 			result.increment(key, 1L);
@@ -771,10 +768,10 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 
 	@SuppressWarnings("unchecked")
-	public <T> T findFirst(String aPath)
+	public <T> T findFirst(String aPath, T aDefault)
 	{
 		AtomicReference<T> result = new AtomicReference<>();
-		Visitor visitor = v ->
+		Visitor visitor = (cp, p, v) ->
 		{
 			if (!result.compareAndSet(null, (T)v))
 			{
@@ -782,14 +779,25 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 			return VisitorResult.ABORT;
 		};
-		visit("", aPath, visitor);
-		return result.get();
+		if (visit("", aPath, visitor) == VisitorResult.ABORT)
+		{
+			return result.get();
+		}
+		return aDefault;
 	}
 
 
+	@SuppressWarnings("unchecked")
+	public <T> T findFirst(String aPath)
+	{
+		return findFirst(aPath, null);
+	}
+
+
+	@FunctionalInterface
 	public interface Visitor
 	{
-		VisitorResult visit(Object o);
+		VisitorResult visit(String aConsumedPath, String aPath, Object aObject);
 	}
 
 
@@ -799,33 +807,42 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	}
 
 
-	public VisitorResult evaluatePathExpression(String aConsumedPath, String aPath, Visitor aResult)
+	public VisitorResult visit(String aPathExpression, Visitor aVisitor)
 	{
-		Expression tree = new ExpressionAnd();
-		String remain = new PathExpression().parse(aConsumedPath, aPath, tree);
-
-		//tree.print(0);
-		boolean b = tree.eval(this);
-
-		if (b)
-		{
-			return visit(aConsumedPath, remain, aResult);
-		}
-		return VisitorResult.CONTINUE;
+		return visit("", aPathExpression, aVisitor);
 	}
 
 
 	/**
-	 * Find many values in the Collection using a path by recursively visiting child Arrays and Documents.
-	 * <ul>
-	 * <li>findMany("people/7/name") - find a single name at index 7 (index starts at zero)</li>
-	 * <li>findMany("people/sales/name") - find the name of all sales people</li>
-	 * <li>findMany("people/ * /name") - find the name of all people</li>
-	 * </ul>
+	 * Visit all child nodes without consuming the path.
 	 */
-	public VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
+	protected abstract VisitorResult visitAllRecursive(String aConsumedPath, String aPath, Visitor aVisitor);
+
+
+	protected VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
 	{
+		if (aVisitor == null)
+		{
+			throw new IllegalArgumentException();
+		}
+
 		Console.println(Color.GREEN, "--- " + aPath + " ----------------------");
+
+		if (aPath.startsWith("//"))
+		{
+			final String consumed = aConsumedPath;
+			String remain = aPath.substring(2);
+
+//			_visit(aConsumedPath, this, remain, aVisitor);
+			return visitAllRecursive(consumed, remain, (cp, p, o) ->
+			{
+				if (o instanceof Document col)
+				{
+					return col.visit(cp, remain, aVisitor);
+				}
+				return VisitorResult.CONTINUE;
+			});
+		}
 
 		int i = aPath.indexOf('/');
 		int j = aPath.indexOf("[");
@@ -836,7 +853,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		}
 		if (j == 0)
 		{
-//			throw new IllegalStateException();
 			String number = aPath.substring(1, aPath.indexOf(']'));
 			if (number.matches("[0-9]+"))
 			{
@@ -846,43 +862,51 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 					aConsumedPath += "[" + number + "]";
 					return ((Collection)arr.get(Integer.valueOf(number))).visit(aConsumedPath, remain, aVisitor);
 				}
-				else
-				{
-					throw new IllegalStateException();
-				}
+				throw new IllegalStateException();
 			}
-			return evaluatePathExpression(aConsumedPath, aPath.substring(1), aVisitor);
+
+			PathParser.Expression expression = new PathParser.ExpressionAnd();
+			String remain = new PathParser().parse(aConsumedPath, aPath.substring(1), expression);
+
+			if (expression.eval(this))
+			{
+				return visit(aConsumedPath, remain, aVisitor);
+			}
+			return VisitorResult.CONTINUE;
 		}
 
 		if (i == -1 && j == -1)
 		{
+			String consumedPath = aConsumedPath + "/" + aPath;
 			if (aPath.equals(".") || aPath.isEmpty())
 			{
-				return aVisitor.visit(this);
+				return aVisitor.visit(consumedPath, "", this);
 			}
-			else if (aPath.equals("*"))
+			if (aPath.equals("*"))
 			{
-				if (_visit_all(aVisitor) == VisitorResult.ABORT)
+				return visit(consumedPath, "", aVisitor);
+			}
+			else if (this instanceof Array arr)
+			{
+				int index = 0;
+				for (Object item : arr)
 				{
-					return VisitorResult.ABORT;
+					if (item instanceof Document doc)
+					{
+						if (aVisitor.visit(consumedPath + "[" + index + "]", "", doc.get(aPath)) == VisitorResult.ABORT)
+						{
+							return VisitorResult.ABORT;
+						}
+					}
+					index++;
 				}
+				return VisitorResult.CONTINUE;
 			}
-			else if (this instanceof Array v)
+			else if (this instanceof Document doc)
 			{
-				if (v.__visit(aVisitor, aPath) == VisitorResult.ABORT)
-				{
-					return VisitorResult.ABORT;
-				}
+				return doc.visit(consumedPath, "", aVisitor);
 			}
-			else if (this instanceof Document v)
-			{
-				return aVisitor.visit(v.get(aPath));
-			}
-			else
-			{
-				throw new IllegalStateException();
-			}
-			return VisitorResult.CONTINUE;
+			throw new IllegalStateException();
 		}
 
 		String path, remain;
@@ -896,6 +920,10 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		{
 			path = aPath.substring(0, i);
 			remain = aPath.substring(i + 1);
+			if (remain.startsWith("/"))
+			{
+				remain = "/" + remain;
+			}
 		}
 		else if (j != -1)
 		{
@@ -907,43 +935,32 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			throw new IllegalStateException(aPath);
 		}
 
-		if (remain.startsWith("["))
+		if (remain.startsWith("[") && remain.matches("\\[[0-9]+\\].*"))
 		{
-			if (remain.matches("\\[[0-9]+\\].*"))
+			int k = remain.indexOf(']');
+			int number = Integer.parseInt(remain.substring(1, k));
+			remain = remain.substring(k + 1).trim();
+
+			Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
+
+			aConsumedPath += "/" + path + "[" + number + "]";
+
+			Document doc = (Document)this;
+			Array arr = doc.get(path);
+			Collection col = arr.get(number);
+
+			if (col == null)
 			{
-				int k = remain.indexOf(']');
-				int number = Integer.parseInt(remain.substring(1, k));
-				remain = remain.substring(k + 1).trim();
-
-				Console.println(Color.BLUE, "<< " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
-
-				aConsumedPath += "/" + path + "[" + number + "]";
-
-				Document doc = (Document)this;
-				Array arr = doc.get(path);
-				Collection col = arr.get(number);
-
-				if (col == null)
-				{
-					return VisitorResult.CONTINUE;
-				}
-				if (col.visit(aConsumedPath, remain, aVisitor) == VisitorResult.ABORT)
-				{
-					return VisitorResult.ABORT;
-				}
 				return VisitorResult.CONTINUE;
 			}
-//			else
-//			{
-//				aConsumedPath += "/" + path;
-//
-//				Object obj = get((K)path);
-//
-//				return ((Collection)obj).evaluatePathExpression(aConsumedPath, remain.substring(1), aVisitor);
-//			}
+			if (col.visit(aConsumedPath, remain, aVisitor) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+			return VisitorResult.CONTINUE;
 		}
 
-		Console.println(Color.BLUE, "<< " + aConsumedPath + " >> " + path + " ==> " + remain);
+		Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + " ==> " + remain);
 
 		aConsumedPath += "/" + path;
 
@@ -974,89 +991,29 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 		Object obj = get((K)path);
 
-		if (obj instanceof Array arr)
+		if (obj instanceof Collection v)
 		{
-			if (remain.equals("*"))
-			{
-				for (Object item : arr)
-				{
-					if (_visit(aConsumedPath, item, remain, aVisitor) == VisitorResult.ABORT)
-					{
-						return VisitorResult.ABORT;
-					}
-				}
-			}
-			else
-			{
-				for (Object item : arr)
-				{
-					if (_visit(aConsumedPath, item, remain, aVisitor) == VisitorResult.ABORT)
-					{
-						return VisitorResult.ABORT;
-					}
-				}
-			}
-		}
-		else if (obj instanceof Document v)
-		{
-			if (remain.equals("*"))
-			{
-				for (Object item : v.values())
-				{
-					if (_visit(aConsumedPath, item, remain, aVisitor) == VisitorResult.ABORT)
-					{
-						return VisitorResult.ABORT;
-					}
-				}
-			}
-			else
-			{
-				if (_visit(aConsumedPath, v, remain, aVisitor) == VisitorResult.ABORT)
-				{
-					return VisitorResult.ABORT;
-				}
-			}
+			return v.visit(aConsumedPath, remain, aVisitor);
 		}
 
-		return VisitorResult.CONTINUE;
-	}
-
-
-	private VisitorResult _visit_all(Visitor aVisitor)
-	{
-		if (this instanceof Document v)
-		{
-			return aVisitor.visit(v);
-		}
-		Iterable it = (Iterable)this;
-		for (Object v : it)
-		{
-			if (aVisitor.visit(v) == VisitorResult.ABORT)
-			{
-				return VisitorResult.ABORT;
-			}
-		}
 		return VisitorResult.CONTINUE;
 	}
 
 
 	VisitorResult _visit(String aConsumedPath, Object aItem, String aRemain, Visitor aVisitor)
 	{
-		if (aItem != null)
+		if (!aRemain.isEmpty() && aItem instanceof Collection c)
 		{
-			if (aItem instanceof Collection c)
+			if (c.visit(aConsumedPath, aRemain, aVisitor) == VisitorResult.ABORT)
 			{
-				if (c.visit(aConsumedPath, aRemain, aVisitor) == VisitorResult.ABORT)
-				{
-					return VisitorResult.ABORT;
-				}
+				return VisitorResult.ABORT;
 			}
-			else
+		}
+		else
+		{
+			if (aVisitor.visit(aConsumedPath, aRemain, aItem) == VisitorResult.ABORT)
 			{
-				if (aVisitor.visit(aItem) == VisitorResult.ABORT)
-				{
-					return VisitorResult.ABORT;
-				}
+				return VisitorResult.ABORT;
 			}
 		}
 		return VisitorResult.CONTINUE;
@@ -1106,6 +1063,12 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	 */
 	public R fromJson(String aJson)
 	{
+		aJson = aJson.trim();
+		if (!aJson.startsWith("{") && !aJson.startsWith("}") && !aJson.startsWith("[") && !aJson.startsWith("]"))
+		{
+			aJson = "{" + aJson + "}";
+		}
+
 		return (R)new JSONDecoder(false, false).unmarshal(new StringReader(aJson), this);
 	}
 

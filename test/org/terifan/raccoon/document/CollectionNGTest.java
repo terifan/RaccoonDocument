@@ -26,5 +26,10 @@ public class CollectionNGTest
 	@Test
 	public void testSomeMethod2()
 	{
+		Document col = Document.of("order:[{orderLine:[{name:A},{name:B,hazard:true}]},{orderLine:[{name:C,hazard:true},{name:D,orderLine:[{name:E,hazard:true}]}]}]");
+
+		System.out.println(col.toJson(false));
+
+		System.out.println(col.findMany("*/orderLine[hazard=true]/name"));
 	}
 }

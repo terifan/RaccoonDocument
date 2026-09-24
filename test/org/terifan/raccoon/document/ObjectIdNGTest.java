@@ -38,7 +38,6 @@ public class ObjectIdNGTest
 
 //		ObjectId id7 = ObjectId.fromBase62String(id1.toArmouredString(key));
 //		System.out.println(id7);
-
 		assertEquals(id1, id2);
 		assertEquals(id1, id3);
 		assertEquals(id1, id4);
@@ -130,55 +129,32 @@ public class ObjectIdNGTest
 	}
 
 
-	@Test
-	public void testFalsePositivesName()
+	@Test //(invocationCount = 1000,singleThreaded = false,threadPoolSize = 10)
+	public void testFalsePositivesChecksum()
 	{
-		java.util.Random rnd = new java.util.Random(1);
-		Key key = new Key(0);
-		char[] buf = new char[18];
+		Key key = new Key(0, 0);
+		String name = ObjectId.randomId().toArmouredString(key);
+		name = name.substring(0, name.length() - 3);
+
 		int cnt = 0;
-		for (int i = 0; i < 10_000_000; i++)
+		for (int k = 0; k < 62; k++)
 		{
-			for (int j = 0; j < 18; j++)
+			for (int j = 0; j < 62; j++)
 			{
-				buf[j] = BASE62ENC[rnd.nextInt(62)];
-			}
-			String name = new String(buf);
-
-			ObjectId oid = ObjectId.fromArmouredString(key, name);
-			if (oid != null)
-			{
-				cnt++;
-			}
-		}
-		assertEquals(cnt, 4332); // 10_000_000 / 13 / 13 / 13
-	}
-
-
-	@Test
-	public void testFalsePositivesKey()
-	{
-		java.util.Random rnd = new java.util.Random(1);
-		char[] buf = new char[18];
-		for (int j = 0; j < 18; j++)
-		{
-			buf[j] = BASE62ENC[rnd.nextInt(62)];
-		}
-		String name = new String(buf);
-		int cnt = 0;
-		for (int j = 0; j < 256; j++)
-		{
-			for (int i = 0; i < 256; i++)
-			{
-				Key key = new Key(i, j);
-				ObjectId oid = ObjectId.fromArmouredString(key, name);
-				if (oid != null)
+				for (int i = 0; i < 62; i++)
 				{
-					cnt++;
+					String tmp = name + BASE62ENC[i] + BASE62ENC[j] + BASE62ENC[k];
+					ObjectId oid = ObjectId.fromArmouredString(key, tmp);
+					if (oid != null)
+					{
+//						System.out.printf("%03d %03d %03d %s%n", i, j, k, oid);
+						cnt++;
+					}
 				}
 			}
 		}
-		assertEquals(cnt, 30); // 65536 / 13 / 13 / 13
+
+		assertTrue(cnt > 80 && cnt < 120);
 	}
 
 

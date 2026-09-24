@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.function.Function;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
+import test_document._Log;
 
 
 public class SignerNGTest

@@ -5,7 +5,7 @@ import test_document.Console;
 import test_document.Console.Color;
 
 
-public class PathExpression
+public class PathParser
 {
 	private String[] OPS =
 	{
@@ -81,10 +81,34 @@ public class PathExpression
 				}
 				else
 				{
-					int i = find(aPath, "]", ")", " ");
+					int i = find(aPath, "(", "]", ")", " ");
 					String tmp = aPath.substring(0, i);
 					aPath = aPath.substring(i).trim();
-					statement.value = convertValue(tmp);
+
+					if (aPath.startsWith("("))
+					{
+						StringBuilder sb = new StringBuilder();
+						for (i = 1; i < aPath.length();)
+						{
+							char c = aPath.charAt(i++);
+							if (c == ')')
+							{
+								break;
+							}
+							if (c == '\\')
+							{
+								c = aPath.charAt(i++);
+							}
+							sb.append(c);
+						}
+						String params = sb.toString();
+						aPath = aPath.substring(i);
+						statement.value = new Command(tmp, params);
+					}
+					else
+					{
+						statement.value = convertValue(tmp);
+					}
 				}
 
 				node.nodes.add(statement);
@@ -93,7 +117,64 @@ public class PathExpression
 
 		aParent.nodes.add(node);
 
+		if (aPath.startsWith("/") && !aPath.startsWith("//"))
+		{
+			aPath = aPath.substring(1);
+		}
+
 		return aPath;
+	}
+
+
+	private static class Command
+	{
+		String method;
+		String params;
+
+
+		public Command(String aEthod, String aParams)
+		{
+			this.method = aEthod;
+			this.params = aParams;
+		}
+
+
+		@Override
+		public boolean equals(Object aObj)
+		{
+			if ("regex".equals(method))
+			{
+				return aObj.toString().matches(params);
+			}
+			if ("typeof".equals(method))
+			{
+				switch (params)
+				{
+					case "document":
+						return aObj instanceof Document;
+					case "array":
+						return aObj instanceof Array;
+					case "collection":
+						return aObj instanceof Collection;
+					case "string":
+						return aObj instanceof String;
+					case "number":
+						return aObj instanceof Number;
+					case "boolean":
+						return aObj instanceof Boolean;
+					case "value":
+						return !(aObj instanceof Collection);
+				}
+			}
+			throw new IllegalStateException();
+		}
+
+
+		@Override
+		public String toString()
+		{
+			return method + "(" + params + ")";
+		}
 	}
 
 
@@ -110,7 +191,7 @@ public class PathExpression
 		}
 		else if (aToken.equals("false"))
 		{
-			value = true;
+			value = false;
 		}
 		else if (aToken.matches("[0-9]+"))
 		{
@@ -187,7 +268,6 @@ public class PathExpression
 //			{
 //				aStatement.key = "lookup(" + aStatement.key + ")";
 //			}
-
 			aPath = aPath.substring(i);
 			aStatement.op = startsWith(aPath, OPS);
 			aPath = aPath.substring(aStatement.op.length());
@@ -301,7 +381,7 @@ public class PathExpression
 		@Override
 		public boolean eval(Collection aCollection)
 		{
-			Console.println(Color.YELLOW, "eval " + aCollection.getClass().getSimpleName() + " " + key + " " + op + " " + value);
+			Console.println(Color.YELLOW, "eval " + aCollection.getClass().getSimpleName() + " \"" + key + "\" " + op + " \"" + value + "\"");
 
 			if (aCollection instanceof Array arr)
 			{
@@ -318,15 +398,6 @@ public class PathExpression
 					}
 
 					Console.println(Color.YELLOW, "-- " + key + " " + op + " " + value + " // " + o);
-
-//					if (key.startsWith("lookup("))
-//					{
-//						o = lookup(aCollection, key.substring(key.indexOf('(') + 1, key.length() - 1));
-//					}
-//					else
-//					{
-//						throw new IllegalStateException();
-//					}
 
 					if (op.equals("=") || op.equals("==") || op.equals("!=") || op.equals("!=="))
 					{
@@ -466,6 +537,10 @@ public class PathExpression
 		if (aValue instanceof Integer v && aExpression instanceof Integer w)
 		{
 			return v == (int)w;
+		}
+		if (aExpression instanceof Command c)
+		{
+			return c.equals(aValue);
 		}
 		return aValue.toString().equalsIgnoreCase(aExpression.toString());
 	}

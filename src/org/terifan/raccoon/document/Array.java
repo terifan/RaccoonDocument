@@ -5,7 +5,7 @@ import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator; 
+import java.util.Iterator;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -692,32 +692,32 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 	@SuppressWarnings("unchecked")
 	public <T> T getFirst()
 	{
-		return (T)mValues.get(0);
-//		return (T)mValues.getFirst();
+//		return (T)mValues.get(0);
+		return (T)mValues.getFirst();
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public <T> T removeFirst()
 	{
-		return (T)mValues.remove(0);
-//		return (T)mValues.removeFirst();
+//		return (T)mValues.remove(0);
+		return (T)mValues.removeFirst();
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public <T> T getLast()
 	{
-		return (T)mValues.get(mValues.size() - 1);
-//		return (T)mValues.getLast();
+//		return (T)mValues.get(mValues.size() - 1);
+		return (T)mValues.getLast();
 	}
 
 
 	@SuppressWarnings("unchecked")
 	public <T> T removeLast()
 	{
-		return (T)mValues.remove(mValues.size() - 1);
-//		return (T)mValues.removeLast();
+//		return (T)mValues.remove(mValues.size() - 1);
+		return (T)mValues.removeLast();
 	}
 
 
@@ -728,55 +728,12 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 	}
 
 
-	VisitorResult __visit(Visitor aVisitor, String aPath)
-	{
-		for (Object p : this)
-		{
-			if (p instanceof Document w)
-			{
-				if (aVisitor.visit(w.get(aPath)) == VisitorResult.ABORT)
-				{
-					return VisitorResult.ABORT;
-				}
-			}
-		}
-		return VisitorResult.CONTINUE;
-	}
-
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public Array sort(Comparator aComparator)
 	{
 		Collections.sort(mValues, aComparator);
 		return this;
-	}
-
-
-	@Override
-	public VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
-	{
-		if (aPath.startsWith("["))
-		{
-			int i = aPath.indexOf(']');
-			String number = aPath.substring(1, i);
-			if (number.matches("[0-9]+"))
-			{
-				String remain = aPath.substring(i + 1).trim();
-				aConsumedPath += "[" + number + "]";
-				return _visit(aConsumedPath, get(Integer.valueOf(number)), remain, aVisitor);
-			}
-			return evaluatePathExpression(aConsumedPath, aPath.substring(1), aVisitor);
-		}
-
-		for (Object item : this)
-		{
-			if (_visit(aConsumedPath, item, aPath, aVisitor) == VisitorResult.ABORT)
-			{
-				return VisitorResult.ABORT;
-			}
-		}
-		return VisitorResult.CONTINUE;
 	}
 
 
@@ -792,5 +749,112 @@ public class Array extends Collection<Integer, Array> implements Iterable<Object
 		Document dest = new Document();
 		flatten(dest, this, "", aSeparator, aFormatter);
 		return dest;
+	}
+
+
+	public Document toDocument()
+	{
+		Document dest = new Document();
+		int index = 0;
+		for (Object v : mValues)
+		{
+			dest.put("" + index++, v);
+		}
+		return dest;
+	}
+
+
+	@Override
+	protected VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
+	{
+		if (aPath.equals("."))
+		{
+			return aVisitor.visit(aConsumedPath + "/" + aPath, "", this);
+		}
+
+		if (aPath.startsWith("//"))
+		{
+			return super.visit(aConsumedPath, aPath, aVisitor);
+		}
+
+		if (aPath.startsWith("["))
+		{
+			int i = aPath.indexOf(']');
+			String number = aPath.substring(1, i);
+			if (number.matches("[0-9]+"))
+			{
+				String remain = aPath.substring(i + 1).trim();
+				return _visit(aConsumedPath + "[" + number + "]", get(Integer.valueOf(number)), remain, aVisitor);
+			}
+
+			PathParser.Expression expression = new PathParser.ExpressionAnd();
+			String remain = new PathParser().parse(aConsumedPath, aPath.substring(1), expression);
+
+			int index = 0;
+			for (Object item : this)
+			{
+				if (item instanceof Collection col)
+				{
+					if (expression.eval(col))
+					{
+						if (remain.equals("*"))
+						{
+							if (aVisitor.visit(aConsumedPath + "[" + index + "]", "", col) == VisitorResult.ABORT)
+							{
+								return VisitorResult.ABORT;
+							}
+						}
+						else if (col.visit(aConsumedPath + "[" + index + "]", remain, aVisitor) == VisitorResult.ABORT)
+						{
+							return VisitorResult.ABORT;
+						}
+					}
+				}
+				index++;
+			}
+			return VisitorResult.CONTINUE;
+		}
+
+		if (aPath.equals("*") || aPath.startsWith("*//"))
+		{
+			aPath = aPath.substring(1);
+		}
+		else if (aPath.startsWith("*/"))
+		{
+			aPath = aPath.substring(2);
+		}
+
+		for (Object item : this)
+		{
+			if (_visit(aConsumedPath, item, aPath, aVisitor) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+		}
+		return VisitorResult.CONTINUE;
+	}
+
+
+	@Override
+	protected VisitorResult visitAllRecursive(String aConsumedPath, String aPath, Visitor aVisitor)
+	{
+		int index = 0;
+		for (Object item : this)
+		{
+			String consumed = aConsumedPath + "[" + index + "]";
+			if (aVisitor.visit(consumed, aPath, item) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+			if (item instanceof Collection col)
+			{
+				if (col.visitAllRecursive(consumed, aPath, aVisitor) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+			}
+			index++;
+		}
+		return VisitorResult.CONTINUE;
 	}
 }

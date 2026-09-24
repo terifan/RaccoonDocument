@@ -21,7 +21,8 @@ import java.util.zip.DeflaterOutputStream;
 import static org.testng.Assert.*;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
- 
+import test_document.Console;
+
 
 public class DocumentNGTest
 {
@@ -130,12 +131,14 @@ public class DocumentNGTest
 				}
 			""");
 
-		int d = doc.findFirst("a/b/0/c/0/d");
-		int e = doc.findFirst("a/b/0/c/1/e");
-		int f = doc.findFirst("a/b/0/c/2/f");
-		int h = doc.findFirst("a/b/[x=false]/c/[g=bob]/h");
-		Integer i = doc.findFirst("a/b/[x=false]/c/[g=bob]/a");
-		Document j = doc.findFirst("a/j/1/1");
+		Console.enabled = true;
+
+		Document j = doc.findFirst("a/j[1][1]");
+		int h = doc.findFirst("a/b[x=false]/c[g=bob]/h");
+		int d = doc.findFirst("a/b[0]/c[0]/d");
+		int e = doc.findFirst("a/b[0]/c[1]/e");
+		int f = doc.findFirst("a/b[0]/c[2]/f");
+		Integer i = doc.findFirst("a/b[x=false]/c[g=bob]/a");
 
 		assertEquals(d, 1);
 		assertEquals(e, 2);
@@ -234,11 +237,11 @@ public class DocumentNGTest
 	{
 		Document doc = Document.of("maps:[{a:1,b:{x:4}},{a:2,b:{x:5}},{a:3,b:{x:6}}]");
 
-		assertEquals(doc.findMany("maps").toJson(), "[[{\"a\":1,\"b\":{\"x\":4}},{\"a\":2,\"b\":{\"x\":5}},{\"a\":3,\"b\":{\"x\":6}}]]");
-		assertEquals(doc.findMany("maps/*").toJson(), "[{\"a\":1,\"b\":{\"x\":4}},{\"a\":2,\"b\":{\"x\":5}},{\"a\":3,\"b\":{\"x\":6}}]");
-		assertEquals(doc.findMany("maps/a").toJson(), "[1,2,3]");
-		assertEquals(doc.findMany("maps/b").toJson(), "[{\"x\":4},{\"x\":5},{\"x\":6}]");
-		assertEquals(doc.findMany("maps/b/x").toJson(), "[4,5,6]");
+		assertEquals(doc.findMany("maps").toJson(true, true), "[[{'a':1,'b':{'x':4}},{'a':2,'b':{'x':5}},{'a':3,'b':{'x':6}}]]");
+		assertEquals(doc.findMany("maps/*").toJson(true, true), "[{'a':1,'b':{'x':4}},{'a':2,'b':{'x':5}},{'a':3,'b':{'x':6}}]");
+		assertEquals(doc.findMany("maps/a").toJson(true, true), "[1,2,3]");
+		assertEquals(doc.findMany("maps/b").toJson(true, true), "[{'x':4},{'x':5},{'x':6}]");
+		assertEquals(doc.findMany("maps/b/x").toJson(true, true), "[4,5,6]");
 	}
 
 
@@ -247,7 +250,7 @@ public class DocumentNGTest
 	{
 		Document doc = Document.of("maps:[{a:[0,{b:4},{b:x}]},{a:[0,{b:5}]},{a:[0,{b:6}]}]");
 
-		assertEquals(doc.findMany("maps/a/1/b").toJson(), "[4,5,6]");
+		assertEquals(doc.findMany("maps/a[1]/b").toJson(), "[4,5,6]");
 	}
 
 
@@ -616,8 +619,6 @@ public class DocumentNGTest
 //		assertEquals((int)v, a);
 //		assertEquals((int)(v >>> 32), b);
 //	}
-
-
 //	@Test
 //	public void testMarshall() throws IOException, ClassNotFoundException
 //	{
