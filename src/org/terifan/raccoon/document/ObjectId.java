@@ -130,7 +130,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	{
 		if (aBuffer == null || aBuffer.length != LENGTH)
 		{
-			throw new IllegalArgumentException("data must be " + LENGTH + " bytes in length");
+			throw new IllegalArgumentException("aBuffer must be " + LENGTH + " bytes in length");
 		}
 
 		return new ObjectId(getInt32(aBuffer, 0), getInt32(aBuffer, 4), getInt32(aBuffer, 8));
@@ -145,6 +145,11 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	 */
 	public static ObjectId fromString(String aName)
 	{
+		if (aName == null || aName.length() != 24)
+		{
+			throw new IllegalArgumentException("aName must be 24 bytes in length");
+		}
+
 		return new ObjectId(parseUnsignedInt(aName.substring(0, 8), 16), parseUnsignedInt(aName.substring(8, 16), 16), parseUnsignedInt(aName.substring(16, 24), 16));
 	}
 
@@ -155,11 +160,10 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 	public static class Key
 	{
 		private final int[] tweak = new int[9];
-		private final int[] cmap = new int[2048];
 
 
 		/**
-		 * Initialize the Key with a 64-bit secret value (expanded to 128-bits).
+		 * Initialize the Key with a 64-bit secret value.
 		 *
 		 * @param aKey the secret value
 		 */
@@ -179,26 +183,9 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		{
 			long a = mix(0x97628BAF, aKey1, aKey2, 12, 10);
 			long b = mix(0xFC12B326, aKey1, aKey2, 60, 36);
-			long c = mix(0x3D700587, aKey1, aKey2, 17, 26);
-			long d = mix(0x6D38F06E, aKey1, aKey2, 43, 44);
-			long e = mix(0x002BC6CB, aKey1, aKey2, 47, 16);
-			long f = mix(0xFE88B6C3, aKey1, aKey2, 22, 37);
 
 			long seed = mix(0x3D16A546, a, b, 7, 14);
 
-			for (int i = 0; i < cmap.length; i++)
-			{
-				cmap[i] = mod13(i);
-			}
-			for (int i = 0; i < cmap.length; i++)
-			{
-				seed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL;
-
-				int j = (int)(seed >>> 16) & 2047;
-				int t = cmap[i];
-				cmap[i] = cmap[j];
-				cmap[j] = t;
-			}
 			for (int i = 0; i < tweak.length; i++)
 			{
 				seed = (seed * 0x5DEECE66DL + 0xBL) & 0xFFFFFFFFFFFFL;
@@ -215,11 +202,11 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 
 	/**
-	 * Return an encrypted String representation of this ObjectId in Base62. The encoded String also contains a checksum used for validation
-	 * when decoding.
+	 * Return an obfuscated (weak encryption) String representation of this ObjectId in Base62. The encoded String also contains a
+	 * checksum used for validation when decoding.
 	 *
-	 * @param aKey the Key used for encryption
-	 * @return the ObjectId as an encrypted String representation
+	 * @param aKey the Key used for obfuscation
+	 * @return the ObjectId as an obfuscated String representation
 	 */
 	public String toArmouredString(Key aKey)
 	{
@@ -249,23 +236,48 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		long B = (b & 0xFFFFFFFFL) * 13L + mod13(chk / 13);
 		long C = (c & 0xFFFFFFFFL) * 13L + mod13(chk / 13 / 13);
 
-		char[] output = new char[18];
-		encodeBase62(output, A, 0);
-		encodeBase62(output, B, 6);
-		encodeBase62(output, C, 12);
-
-		return new String(output);
+		return toStringInternal(A, B, C);
 	}
 
 
 	/**
-	 * Return an ObjectId instance from an encrypted String representation
+	 * Return an ObjectId instance from an obfuscation String representation
 	 *
-	 * @param aKey the Key used for encryption
-	 * @param aName the encrypted String representation
+	 * @param aKey the Key used for obfuscation
+	 * @param aName the obfuscated String representation
 	 * @return the decoded ObjectId or null if the decoded checksum is incorrect
 	 */
 	public static ObjectId fromArmouredString(Key aKey, String aName)
+	{
+		int[] abc = decodeParameters(aName);
+
+		if (abc == null)
+		{
+			return null;
+		}
+
+		int a = abc[0] ^ aKey.tweak[6];
+		int b = abc[1] ^ aKey.tweak[7];
+		int c = abc[2] ^ aKey.tweak[8];
+		for (int i = 0; i < 3; i++)
+		{
+			c -= a ^ rotateLeft(b, R3);
+			b -= c ^ rotateLeft(a, R2);
+			a -= b ^ rotateLeft(c, R1);
+			a ^= aKey.tweak[5 - i];
+			c += a ^ rotateLeft(b, L3);
+			b += c ^ rotateLeft(a, L2);
+			a += b ^ rotateLeft(c, L1);
+		}
+		a ^= aKey.tweak[0];
+		b ^= aKey.tweak[1];
+		c ^= aKey.tweak[2];
+
+		return new ObjectId(a, b, c);
+	}
+
+
+	private static int[] decodeParameters(String aName)
 	{
 		char[] buf = aName.toCharArray();
 		long A = decodeBase62(buf, 0);
@@ -282,24 +294,10 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 			return null;
 		}
 
-		a ^= aKey.tweak[6];
-		b ^= aKey.tweak[7];
-		c ^= aKey.tweak[8];
-		for (int i = 0; i < 3; i++)
+		return new int[]
 		{
-			c -= a ^ rotateLeft(b, R3);
-			b -= c ^ rotateLeft(a, R2);
-			a -= b ^ rotateLeft(c, R1);
-			a ^= aKey.tweak[5 - i];
-			c += a ^ rotateLeft(b, L3);
-			b += c ^ rotateLeft(a, L2);
-			a += b ^ rotateLeft(c, L1);
-		}
-		a ^= aKey.tweak[0];
-		b ^= aKey.tweak[1];
-		c ^= aKey.tweak[2];
-
-		return new ObjectId(a, b, c);
+			a, b, c
+		};
 	}
 
 
@@ -320,11 +318,16 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 		long B = (b & 0xFFFFFFFFL) * 13L + mod13(chk / 13);
 		long C = (c & 0xFFFFFFFFL) * 13L + mod13(chk / 13 / 13);
 
-		char[] output = new char[18];
-		encodeBase62(output, A, 0);
-		encodeBase62(output, B, 6);
-		encodeBase62(output, C, 12);
+		return toStringInternal(A, B, C);
+	}
 
+
+	private static String toStringInternal(long aA, long aB, long aC)
+	{
+		char[] output = new char[18];
+		encodeBase62(output, aA, 0);
+		encodeBase62(output, aB, 6);
+		encodeBase62(output, aC, 12);
 		return new String(output);
 	}
 
@@ -366,22 +369,14 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 			throw new IllegalArgumentException("Provided aName is null or wrong length: " + (aName == null ? "null" : aName.length()));
 		}
 
-		char[] buf = aName.toCharArray();
-		long A = decodeBase62(buf, 0);
-		long B = decodeBase62(buf, 6);
-		long C = decodeBase62(buf, 12);
+		int[] abc = decodeParameters(aName);
 
-		int a = (int)(A / 13);
-		int b = (int)(B / 13);
-		int c = (int)(C / 13);
-
-		int chk = ((31 + a) * 31 + b) * 31 + c;
-		if ((A % 13) != mod13(chk) || ((B % 13) != mod13(chk / 13)) || ((C % 13) != mod13(chk / 13 / 13)))
+		if (abc == null)
 		{
 			return null;
 		}
 
-		return new ObjectId(a, b, c);
+		return new ObjectId(abc[0], abc[1], abc[2]);
 	}
 
 
