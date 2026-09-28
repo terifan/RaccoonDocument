@@ -3,12 +3,13 @@ package org.terifan.raccoon.document;
 import java.io.Externalizable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 
-public class Array extends Collection<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
+public class Array extends Collection<Integer, Array> implements Iterable, Externalizable, Cloneable, Comparable<Array>
 {
 	private final static long serialVersionUID = 1L;
 
@@ -107,13 +108,13 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 		else if (aValue instanceof Iterable v)
 		{
 			Array arr = new Array();
-			v.forEach(mValues::add);
+			v.forEach(arr::add);
 			mValues.add(arr);
 		}
 		else if (aValue instanceof Stream v)
 		{
 			Array arr = new Array();
-			v.forEach(mValues::add);
+			v.forEach(arr::add);
 			mValues.add(arr);
 		}
 		else
@@ -344,7 +345,7 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 					return false;
 				}
 			}
-			else if (!value.equals(otherValue))
+			else if (!Objects.equals(value, otherValue))
 			{
 				return false;
 			}
@@ -439,6 +440,10 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 					}
 				}
 			}
+			else if (value instanceof Iterator v)
+			{
+				v.forEachRemaining(array::add);
+			}
 			else if (value instanceof Iterable v)
 			{
 				v.forEach(array::add);
@@ -505,6 +510,10 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 					continue;
 				}
 				return -1;
+			}
+			if (o == null)
+			{
+				return 1;
 			}
 
 			if (!t.getClass().isAssignableFrom(o.getClass()))
@@ -637,14 +646,15 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 	}
 
 
+	/**
+	 * Return the elements of this Array as an array of type T. Note: due to type erasure the runtime array is a plain
+	 * Object[] cast to T[]; assigning the result to a more specific array type may throw ClassCastException. Use
+	 * {@link #asArrayOf(Class)} for a type-safe result.
+	 */
+	@SuppressWarnings("unchecked")
 	public <T> T[] as()
 	{
-		Document[] values = new Document[size()];
-		for (int i = 0; i < values.length; i++)
-		{
-			values[i] = getDocument(i);
-		}
-		return (T[])values;
+		return (T[])mValues.toArray();
 	}
 
 
@@ -652,7 +662,7 @@ public class Array extends Collection<Integer, Array> implements Iterable, Exter
 	{
 		for (int i = size(); --i >= 0; )
 		{
-			if (get(i).equals(aValue))
+			if (Objects.equals(get(i), aValue))
 			{
 				remove(i);
 			}

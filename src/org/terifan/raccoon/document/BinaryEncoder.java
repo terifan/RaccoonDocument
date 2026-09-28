@@ -7,35 +7,6 @@ import java.util.function.Function;
 import static org.terifan.raccoon.document.BinaryCodec.ARRAY;
 import static org.terifan.raccoon.document.BinaryCodec.DOCUMENT;
 
-// +--order{}        <-- 0
-//   +--a
-//   +--b
-//   +--orderLines[]
-//      +--0{}        <-- 1
-//      |  +--a
-//      |  +--b
-//      |  +--orderDetails[]
-//      |     +--0{}        <-- 2
-//      |        +--a
-//      |        +--b
-//      |     +--1{}        <-- 3
-//      |        +--a
-//      |        +--b
-//      +--1{}        <-- 4
-//         +--a
-//         +--b
-//         +--orderDetails[]
-//            +--0{}        <-- 5
-//               +--a
-//               +--b
-//            +--1{}        <-- 6
-//               +--a
-//               +--b
-
-// same keys
-// same keys/values
-
-// 
 
 class BinaryEncoder implements AutoCloseable
 {
@@ -57,6 +28,15 @@ class BinaryEncoder implements AutoCloseable
 
 	public BinaryEncoder(OutputStream aOutputStream, Function<Object, Boolean> aFilter, Dictionary aDictionary)
 	{
+		if (aOutputStream == null)
+		{
+			throw new IllegalArgumentException("aOutputStream is null");
+		}
+		if (aFilter == null)
+		{
+			throw new IllegalArgumentException("aFilter is null");
+		}
+
 		mOutputStream = aOutputStream;
 		mFilter = aFilter;
 		mDictionary = aDictionary;
@@ -264,7 +244,10 @@ class BinaryEncoder implements AutoCloseable
 	void writeBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
 	{
 		mOutputStream.write(aBuffer, aOffset, aLength);
-		mChecksum.updateBytes(aBuffer, aOffset, aLength);
+		if (mChecksum != null)
+		{
+			mChecksum.updateBytes(aBuffer, aOffset, aLength);
+		}
 	}
 
 
@@ -366,21 +349,4 @@ class BinaryEncoder implements AutoCloseable
 	{
 		return mChecksum.getValue4bits();
 	}
-
-
-//	private Integer parseInt(String aKey)
-//	{
-//		int v = 0;
-//		for (int i = 0; i < aKey.length(); i++)
-//		{
-//			char c = aKey.charAt(i);
-//			if (c < '0' || c > '9' || i == 0 && c == '0')
-//			{
-//				return null;
-//			}
-//			v *= 10;
-//			v += c - '0';
-//		}
-//		return v;
-//	}
 }

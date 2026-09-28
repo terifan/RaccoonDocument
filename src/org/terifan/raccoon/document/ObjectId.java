@@ -107,7 +107,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 
 	/**
-	 * Create a ObjectId from the three parts
+	 * Create an ObjectId from the three parts
 	 *
 	 * @param aTime time in seconds
 	 * @param aSession session id
@@ -121,7 +121,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 
 	/**
-	 * Create a ObjectId from a serialized instance
+	 * Create an ObjectId from a serialized instance
 	 *
 	 * @param aBuffer serialized instance
 	 * @return a new ObjectId
@@ -138,16 +138,16 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 
 	/**
-	 * Create a ObjectId from a hexadecimal serialized version
+	 * Create an ObjectId from a hexadecimal serialized version
 	 *
 	 * @param aName hexadecimal serialized string
 	 * @return a new ObjectId
 	 */
 	public static ObjectId fromString(String aName)
 	{
-		if (aName == null || aName.length() != 24)
+		if (aName == null || aName.length() != 2 * LENGTH)
 		{
-			throw new IllegalArgumentException("aName must be 24 bytes in length");
+			throw new IllegalArgumentException("aName must be " + 2 * LENGTH + " bytes in length");
 		}
 
 		return new ObjectId(parseUnsignedInt(aName.substring(0, 8), 16), parseUnsignedInt(aName.substring(8, 16), 16), parseUnsignedInt(aName.substring(16, 24), 16));
@@ -155,7 +155,7 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 
 	/**
-	 * Key used to encrypt an ObjectId.
+	 * Key used to obfuscate an ObjectId.
 	 */
 	public static class Key
 	{
@@ -202,8 +202,8 @@ public final class ObjectId implements Serializable, Comparable<ObjectId>
 
 
 	/**
-	 * Return an obfuscated (weak encryption) String representation of this ObjectId in Base62. The encoded String also contains a
-	 * checksum used for validation when decoding.
+	 * Return an obfuscated (weak encryption) String representation of this ObjectId in Base62. The encoded String also contains a checksum
+	 * used for validation when decoding.
 	 *
 	 * @param aKey the Key used for obfuscation
 	 * @return the ObjectId as an obfuscated String representation

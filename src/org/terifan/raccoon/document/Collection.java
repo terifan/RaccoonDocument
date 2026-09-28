@@ -312,7 +312,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		{
 			return w.floatValue();
 		}
-		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a Double");
+		throw new IllegalArgumentException("Value of key " + aKey + " (" + v.getClass().getSimpleName() + ") cannot be cast on a Float");
 	}
 
 
@@ -546,7 +546,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 	public Array[] getArrays(K aKey)
 	{
-		return getArray(aKey).asArrayOf(Array.class);
+		Array v = getArray(aKey); return v == null ? null : v.asArrayOf(Array.class);
 	}
 
 
@@ -563,7 +563,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		}
 		if (v instanceof String s)
 		{
-			if (s.matches("[a-zA-Z0-9\\-\\=\\\\].*"))
+			if (s.matches("[A-Za-z0-9+/]+={0,2}"))
 			{
 				return Base64.getDecoder().decode(s);
 			}
@@ -758,22 +758,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 			else if (o instanceof Array arr)
 			{
-				System.out.println("#");
-//				if (value.equals(arr.get(key)))
-//				{
-//					if (aFindMany)
-//					{
-//						arr.findMany(remain, aResult, aValuesOnly);
-//					}
-//					else
-//					{
-//						T result = arr.findFirst(remain);
-//						if (result != null)
-//						{
-//							return (T)result;
-//						}
-//					}
-//				}
+				// path expressions are not currently supported on Array elements
 			}
 		}
 		return null;

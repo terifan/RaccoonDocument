@@ -5,8 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.function.Function;
 import java.util.zip.DeflaterOutputStream;
@@ -166,7 +166,7 @@ public class Signer
 
 		Document aHeader = new Document().fromJson(new String(decoder.decode(messageHeader), StandardCharsets.UTF_8));
 
-		byte[] sign = sign(aHeader, messageHeader.getBytes(), messagePayload.getBytes());
+		byte[] sign = sign(aHeader, messageHeader.getBytes(StandardCharsets.UTF_8), messagePayload.getBytes(StandardCharsets.UTF_8));
 
 		verify(decoder.decode(messageSignature), sign);
 
@@ -265,7 +265,7 @@ public class Signer
 
 	protected void verify(byte[] aExpected, byte[] aFound) throws SignerException
 	{
-		if (!Arrays.equals(aExpected, aFound))
+		if (!MessageDigest.isEqual(aExpected, aFound))
 		{
 			throw new SignerException("Message signature failed verification");
 		}
@@ -356,7 +356,7 @@ public class Signer
 			case "MD5_HMAC" ->
 				"HmacMD5";
 			default ->
-				aAlgorithm;
+				throw new NoSuchAlgorithmException(aAlgorithm);
 		};
 		return Mac.getInstance(impl);
 	}

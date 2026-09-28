@@ -292,6 +292,7 @@ class JSONEncoder
 
 		mAppendable.append(text);
 		mNewLine = true;
+		mFirst = false;
 	}
 
 
@@ -314,39 +315,6 @@ class JSONEncoder
 			return "null";
 		}
 
-		if (aText instanceof Double || aText instanceof Float)
-		{
-			String text = aText.toString().replace(" ", "");
-
-			int i0 = text.indexOf(',');
-			if (i0 != -1)
-			{
-				int i1 = text.indexOf('.');
-				if (i1 != -1)
-				{
-					if (i0 < i1)
-					{
-						text = text.replace(",", ""); // handles: 10,000.7
-					}
-					else
-					{
-						text = text.replace(".", "").replace(',', '.'); // handles: 10.000,7
-					}
-				}
-				else
-				{
-					text = text.replace(',', '.'); // handles: 10000.7
-				}
-			}
-
-			if (text.endsWith(".0"))
-			{
-				text = text.substring(0, text.length() - 2);
-			}
-
-			return text;
-		}
-
 		return aText.toString();
 	}
 
@@ -367,10 +335,6 @@ class JSONEncoder
 
 	private String stripTrailing(String aText)
 	{
-		while (Character.isWhitespace(aText.charAt(aText.length() - 1)))
-		{
-			aText = aText.substring(0, aText.length() - 1);
-		}
-		return aText;
+		return aText.stripTrailing();
 	}
 }

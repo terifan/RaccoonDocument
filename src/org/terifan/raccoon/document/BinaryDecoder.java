@@ -328,28 +328,28 @@ public class BinaryDecoder
 
 	byte[] readBytes(byte[] aBuffer) throws IOException
 	{
-		int len = mInputStream.read(aBuffer);
-		mChecksum.updateBytes(aBuffer, 0, len);
-		return aBuffer;
+		return readBytes(aBuffer, 0, aBuffer.length);
 	}
 
 
 	<T> T skipBytes(int aLength) throws IOException
 	{
-		byte[] t = new byte[aLength];
-		int len = mInputStream.read(t);
-		mChecksum.updateBytes(t, 0, len);
+		readBytes(new byte[aLength], 0, aLength);
 		return null;
 	}
 
 
 	byte[] readBytes(byte[] aBuffer, int aOffset, int aLength) throws IOException
 	{
-		int len = mInputStream.read(aBuffer, aOffset, aLength);
-		mChecksum.updateBytes(aBuffer, aOffset, aLength);
-		if (len != aLength)
+		for (int total = 0; total < aLength;)
 		{
-			throw new IOException("Error reading from underlying stream. Only " + len + " bytes available, expected " + aLength);
+			int len = mInputStream.read(aBuffer, aOffset + total, aLength - total);
+			if (len == -1)
+			{
+				throw new StreamException("Premature end of stream. Only " + total + " bytes available, expected " + aLength);
+			}
+			mChecksum.updateBytes(aBuffer, aOffset + total, len);
+			total += len;
 		}
 		return aBuffer;
 	}

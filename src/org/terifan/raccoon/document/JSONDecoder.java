@@ -296,6 +296,17 @@ class JSONDecoder
 			// ignore, faster to allow an exception than to regex the value before parsing
 		}
 
+		try
+		{
+			// handles numbers in exponent form without a decimal point (e.g. "1e10"), which
+			// SupportedTypes.decode does not recognize since it only checks for a "." to detect a Double
+			return Double.parseDouble(in);
+		}
+		catch (NumberFormatException e)
+		{
+			// ignore, not a numeric value
+		}
+
 		return in;
 	}
 

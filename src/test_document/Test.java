@@ -1,22 +1,10 @@
 package test_document;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Random;
 import org.terifan.raccoon.document.Array;
-import org.terifan.raccoon.document.BinaryDecoder.Path;
-import org.terifan.raccoon.document.BinaryDecoder.Visitor;
-import org.terifan.raccoon.document.BinaryDecoder.VisitorResult;
-import org.terifan.raccoon.document.BinaryWalker;
-import org.terifan.raccoon.document.Collection;
 import org.terifan.raccoon.document.Dictionary;
 import org.terifan.raccoon.document.Document;
-import org.terifan.raccoon.document.ObjectId;
-import org.terifan.raccoon.document.Support;
 import static test_document._Log.hexDump;
 
 
@@ -45,11 +33,10 @@ public class Test
 //			System.out.printf("%10d ", dic.writeExternal().length);
 //			System.out.println();
 
-//			a();
-//			b();
-			c();
-//			d();
-//			e();
+			a();
+			b();
+			d();
+			e();
 //			ObjectId id = ObjectId.fromParts(1, 2, 3);
 //
 //			ObjectId.Key key = new ObjectId.Key(123);
@@ -64,57 +51,6 @@ public class Test
 //			System.out.println(ObjectId.fromArmouredString(key, as));
 		}
 		catch (Throwable e)
-		{
-			e.printStackTrace(System.out);
-		}
-	}
-
-
-	public static void c(String... args)
-	{
-		try
-		{
-			Document doc = _Person.createPerson(new Random(1));
-
-			byte[] data = doc.toByteArray();
-
-			BinaryWalker walker = new BinaryWalker(new ByteArrayInputStream(data));
-
-			walker.visit(new Visitor()
-			{
-				@Override
-				public VisitorResult preVisit(Path aPath)
-				{
-//					System.out.println(aPath);
-//					if (aPath.matches("work", "contacts"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-//					if (aPath.matches("locationHistory"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-//					if (aPath.matches("personal"))
-//					{
-//						return VisitorResult.SKIP;
-//					}
-					return VisitorResult.CONTINUE;
-				}
-
-
-				@Override
-				public VisitorResult postVisit(Path aPath, Object aValue)
-				{
-					System.out.println(aPath+" "+aValue);
-					if (aPath.matches("version"))
-					{
-						return VisitorResult.TERMINATE;
-					}
-					return VisitorResult.CONTINUE;
-				}
-			});
-		}
-		catch (Exception e)
 		{
 			e.printStackTrace(System.out);
 		}

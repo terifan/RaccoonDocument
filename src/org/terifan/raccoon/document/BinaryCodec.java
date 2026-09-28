@@ -132,44 +132,6 @@ enum BinaryCodec
 		(aEncoder, aValue) -> {},
 		(aDecoder, aPath, aState) -> (short)0
 	)
-//	/** fixed size encoding of a Short value */
-//	FIXEDSHORT(22,
-//		(aEncoder, aValue) -> aEncoder.writeShort((Short)aValue),
-//		(aDecoder, aPath, aState) -> (short)aDecoder.readShort()
-//	),
-//	/** fixed size encoding of a Integer value */
-//	FIXEDINT(23,
-//		(aEncoder, aValue) -> aEncoder.writeInt((Integer)aValue),
-//		(aDecoder, aPath, aState) -> (int)aDecoder.readInt()
-//	),
-//	/** fixed size encoding of a char value */
-//	FIXEDCHAR(24,
-//		(aEncoder, aValue) -> aEncoder.writeShort((short)(char)(Character)aValue),
-//		(aDecoder, aPath, aState) -> (char)aDecoder.readShort()
-//	),
-//	/** fixed size encoding of a Long value */
-//	FIXEDLONG(25,
-//		(aEncoder, aValue) -> aEncoder.writeLong((Long)aValue),
-//		(aDecoder, aPath, aState) -> aDecoder.readLong()
-//	),
-//	/** variable length encoding of a Float value */
-//	VARFLOAT(26,
-//		(aEncoder, aValue) -> aEncoder.writeVarint(Float.floatToIntBits((Float)aValue)),
-//		(aDecoder, aPath, aState) -> Float.intBitsToFloat((int)aDecoder.readVarint())
-//	),
-//	/** variable length encoding of a Double value */
-//	VARDOUBLE(27,
-//		(aEncoder, aValue) -> aEncoder.writeVarint(Long.reverseBytes(Double.doubleToLongBits((Double)aValue))),
-//		(aDecoder, aPath, aState) -> Double.longBitsToDouble(Long.reverseBytes(aDecoder.readVarint()))
-//	),
-//	REF(28,
-//		(aEncoder, aValue) -> {},
-//		(aDecoder, aPath, aState) -> null
-//	),
-//	REFVALUE(29,
-//		(aEncoder, aValue) -> {},
-//		(aDecoder, aPath, aState) -> null
-//	)
 	;
 
 

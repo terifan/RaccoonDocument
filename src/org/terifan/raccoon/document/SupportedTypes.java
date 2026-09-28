@@ -62,6 +62,10 @@ public class SupportedTypes
 			throw new IllegalArgumentException("Not a supported extended type: " + (aValue==null?null:aValue.getClass()));
 		}
 
+		if (aValue == null)
+		{
+			return "null";
+		}
 		if (!aTyped)
 		{
 			if (aValue instanceof byte[] v)

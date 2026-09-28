@@ -11,7 +11,7 @@ import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
 
-public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
+public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>
 {
 	private final static long serialVersionUID = 1L;
 
@@ -40,7 +40,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	@SuppressWarnings({"unchecked", "unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T get(String aKey, T aDefaultValue)
 	{
 		Object v = getImpl(aKey);
@@ -187,7 +187,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 	@SuppressWarnings("unchecked")
 	public <T> T getFirst()
 	{
-		return (T)mValues.firstEntry();
+		return (T)mValues.firstEntry().getValue();
 	}
 
 
@@ -201,7 +201,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 	@SuppressWarnings("unchecked")
 	public <T> T getLast()
 	{
-		return (T)mValues.lastEntry();
+		return (T)mValues.lastEntry().getValue();
 	}
 
 
@@ -218,9 +218,9 @@ public class Document extends Collection<String, Document> implements Externaliz
 		aChecksum.updateInt(861720859 ^ size()); // == "document".hashCode()
 
 		mValues.entrySet().forEach(entry ->
-		{
-			aChecksum.updateUTF8(entry.getKey());
-			super.hashCode(aChecksum, entry.getValue());
+			{
+				aChecksum.updateUTF8(entry.getKey());
+				super.hashCode(aChecksum, entry.getValue());
 		});
 
 		return aChecksum;
@@ -328,6 +328,10 @@ public class Document extends Collection<String, Document> implements Externaliz
 			thisKeys.remove(key);
 			othrKeys.remove(key);
 
+			if (a == null)
+			{
+				return b == null ? 0 : -1;
+			}
 			if (b == null)
 			{
 				return 1;
@@ -472,21 +476,22 @@ public class Document extends Collection<String, Document> implements Externaliz
 	 * according to their lexicographical order. E.g. order of keys: [_id, _alpha, 123, Banana, ape]
 	 */
 	public final static Comparator<String> STANDARD_COMPARATOR = (p, q) ->
-	{
-		boolean P = !p.isEmpty() && p.charAt(0) == '_'; // p.startsWith("_");
-		boolean Q = !q.isEmpty() && q.charAt(0) == '_'; // q.startsWith("_");
-		boolean S = P && "_id".equals(p);
-		boolean T = Q && "_id".equals(q);
-		if (S || T)
 		{
-			return S && !T ? -1 : T && !S ? 1 : 0;
-		}
-		return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
+			boolean P = !p.isEmpty() && p.charAt(0) == '_'; // p.startsWith("_");
+			boolean Q = !q.isEmpty() && q.charAt(0) == '_'; // q.startsWith("_");
+			boolean S = P && "_id".equals(p);
+			boolean T = Q && "_id".equals(q);
+			if (S || T)
+			{
+				return S && !T ? -1 : T && !S ? 1 : 0;
+			}
+			return P && !Q ? -1 : Q && !P ? 1 : p.compareTo(q);
 	};
 
 
 	/**
 	 * Sort keys in the Document according to the STANDARD_COMPARATOR.
+	 *
 	 * @see STANDARD_COMPARATOR
 	 * @return this Document
 	 */

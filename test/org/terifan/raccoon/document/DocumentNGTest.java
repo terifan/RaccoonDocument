@@ -142,10 +142,6 @@ public class DocumentNGTest
 		assertEquals(h, -4);
 		assertEquals(i, null);
 		assertEquals(j, Document.of("k:test"));
-
-//		Array arr = Array.of(Document.of("g:bob,h:5"), Document.of("g:eve,h:6"));
-//		int i = arr.findFirst("[g=bob]/h");
-//		assertEquals(i, 5);
 	}
 
 
@@ -255,7 +251,7 @@ public class DocumentNGTest
 	{
 		Document doc = Document.of("personal/details/language/*:1,personal/firstName:1,personal/ratings/2:1");
 
-//		System.out.println(doc);
+		System.out.println(doc);
 	}
 
 
