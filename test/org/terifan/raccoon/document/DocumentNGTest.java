@@ -974,4 +974,12 @@ public class DocumentNGTest
 		System.out.println(in.hashCode() == out.hashCode());
 		System.out.println(in.equals(out));
 	}
+
+
+	@Test
+	public void testSomeMethod3()
+	{
+		Document doc = Document.of("{\"bookmarks\":{\"itms\":{},\"web\":{},\"west\":{\"scanner\":true,\"converter\":true,\"lynx_invoice\":false,\"import_files_service_bus\":false,\"lynx_manifest\":false,\"mq_state\":false,\"mq_pdf\":false,\"mq_odm\":false,\"mq\":false},\"test\":{\"converter\":true,\"scanner\":true,\"mq_state\":false,\"mq_lynx_manifest\":false,\"import_files_service_bus\":false,\"mq_lynx_invoice\":false,\"mq_pdf\":false,\"mq\":false}}}");
+		System.out.println(doc.findFirst("bookmarks/" + "west" + "/" + "key", false));
+	}
 }

@@ -710,7 +710,15 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			{
 				if (!(v instanceof Number))
 				{
-					v = Double.valueOf(v.toString().replace(',', '.'));
+					String w = v.toString();
+					if (w.isEmpty())
+					{
+						v = 0.0;
+					}
+					else
+					{
+						v = Double.valueOf(w.replace(',', '.'));
+					}
 				}
 				sum.accumulateAndGet((Number)v, (a, b) -> a.doubleValue() + b.doubleValue());
 			}
@@ -781,9 +789,9 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		};
 		if (visit("", aPath, visitor) == VisitorResult.ABORT)
 		{
-			return result.get();
+			return result.get() == null ? aDefault : result.get();
 		}
-		return aDefault;
+		return result.get();
 	}
 
 
