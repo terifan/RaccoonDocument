@@ -144,48 +144,13 @@ public class DocumentNGTest
 	}
 
 
-	@Test(enabled = false)
-	public void testFindMany2()
-	{
-		Document doc = new Document().fromJson(new InputStreamReader(DocumentNGTest.class.getResourceAsStream("trip.json")));
-
-		System.out.println(doc._findMany("/projections/trip/consignments/parties/shippingLocation/identifiers/identifier"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc._findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/0/identifier"));
-		System.out.println(doc._findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/1/identifier"));
-		System.out.println(doc._findMany("/projections/trip/consignments/0/parties/shippingLocation/identifiers/2/identifier"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc._findMany("/projections/trip/consignments/1/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc._findMany("/projections/trip/consignments/2/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc._findMany("/projections/trip/consignments/3/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc._findMany("/projections/trip/consignments/4/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc._findMany("/projections/trip/consignments/5/parties/shippingLocation/identifiers/identifier"));
-		System.out.println(doc._findMany("/projections/trip/consignments/6/parties/shippingLocation/identifiers/identifier"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc._findMany("/projections/trip/consignments/parties/*/identifiers/identifier"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc._findMany("/projections/trip/consignments/parties/*/identifiers"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc._findMany("/projections/trip/consignments/parties/*/identifiers[domain=party]"));
-		System.out.println("-".repeat(100));
-
-		System.out.println(doc._findMany("/projections/trip/consignments/parties/*/identifiers[domain=party]/identifier"));
-		System.out.println("-".repeat(100));
-	}
-
-
 	@Test
 	public void testFindMany()
 	{
 		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:x,name:fag},{name:adam},{gender:m},{first:bob,last:andersson},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
 
-		Array m = doc._findMany("people/[gender=m]/name");
-		Array f = doc._findMany("people/[gender=f]/name");
+		Array m = doc.findMany("people/[gender=m]/name");
+		Array f = doc.findMany("people/[gender=f]/name");
 
 		assertEquals(m.toJson(), "[\"bob\",\"adam\"]");
 		assertEquals(f.toJson(), "[\"eve\",\"liv\",\"mary\"]");
@@ -197,7 +162,7 @@ public class DocumentNGTest
 	{
 		Document doc = Document.of("people:[{gender:f,name:eve},{gender:x,name:freak},{gender:f,name:liv},{gender:m,name:bob},{gender:m,name:adam},{gender:f,name:mary},{gender:[m,f],name:psycho}]");
 
-		assertEquals(doc._findMany("people/gender").toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\",[\"m\",\"f\"]]");
+		assertEquals(doc.findMany("people/gender").toJson(), "[\"f\",\"x\",\"f\",\"m\",\"m\",\"f\",[\"m\",\"f\"]]");
 	}
 
 
@@ -206,8 +171,8 @@ public class DocumentNGTest
 	{
 		Document doc = Document.of("people:[{language:[se,en]},{language:[en,fr,dk]},{language:[de,en]},{language:[fr,pl]}]");
 
-		assertEquals(doc._findMany("people/language").toJson(), "[[\"se\",\"en\"],[\"en\",\"fr\",\"dk\"],[\"de\",\"en\"],[\"fr\",\"pl\"]]");
-		assertEquals(doc._findMany("people/language/*").toJson(), "[\"se\",\"en\",\"en\",\"fr\",\"dk\",\"de\",\"en\",\"fr\",\"pl\"]");
+		assertEquals(doc.findMany("people/language").toJson(), "[[\"se\",\"en\"],[\"en\",\"fr\",\"dk\"],[\"de\",\"en\"],[\"fr\",\"pl\"]]");
+		assertEquals(doc.findMany("people/language/*").toJson(), "[\"se\",\"en\",\"en\",\"fr\",\"dk\",\"de\",\"en\",\"fr\",\"pl\"]");
 	}
 
 
@@ -450,7 +415,7 @@ public class DocumentNGTest
 		new Document().put("unsupported", new Object());
 	}
 
-	
+
 	@Test(invocationCount = 1, skipFailedInvocations = true)
 	public void testAllTypes()
 	{

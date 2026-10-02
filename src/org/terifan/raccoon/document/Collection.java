@@ -38,8 +38,20 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	private final static long serialVersionUID = 1L;
 
 
-	public final Serializer serialize(){ return new Serializer();};
-	public final Deserializer deserialize(){ return  new Deserializer();};
+	public final Serializer serialize()
+	{
+		return new Serializer();
+	}
+
+
+	;
+	public final Deserializer deserialize()
+	{
+		return new Deserializer();
+	}
+
+
+	;
 
 	public class Serializer
 	{
@@ -47,50 +59,74 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		{
 			return new SerializerJson();
 		}
+
+
 		public SerializerBinary asBinary()
 		{
 			return new SerializerBinary();
 		}
 	}
 
+
 	public class SerializerJson
 	{
 		private boolean mIndent;
 		private boolean mTypes;
+
+
 		public SerializerJson withIndents(boolean b)
 		{
 			mIndent = b;
 			return this;
 		}
+
+
 		public SerializerJson withTypes(boolean b)
 		{
 			mTypes = b;
 			return this;
 		}
+
+
 		public void to(OutputStream aOutputStream) throws IOException
 		{
 			if (mTypes)
-			aOutputStream.write(Collection.this.toTypedJson(!mIndent).getBytes(StandardCharsets.UTF_8));
+			{
+				aOutputStream.write(Collection.this.toTypedJson(!mIndent).getBytes(StandardCharsets.UTF_8));
+			}
 			else
-			aOutputStream.write(Collection.this.toJson(!mIndent).getBytes(StandardCharsets.UTF_8));
+			{
+				aOutputStream.write(Collection.this.toJson(!mIndent).getBytes(StandardCharsets.UTF_8));
+			}
 		}
+
+
 		public void to(Appendable aAppendable)
 		{
 			if (mTypes)
-			Collection.this.toTypedJson(aAppendable, !mIndent);
+			{
+				Collection.this.toTypedJson(aAppendable, !mIndent);
+			}
 			else
-			Collection.this.toJson(aAppendable, !mIndent);
+			{
+				Collection.this.toJson(aAppendable, !mIndent);
+			}
 		}
+
+
 		public byte[] toByteArray()
 		{
 			return null;
 		}
+
+
 		@Override
 		public String toString()
 		{
 			return "";
 		}
 	}
+
 
 	public class SerializerTypedJson
 	{
@@ -99,6 +135,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		}
 	}
 
+
 	public class SerializerBinary
 	{
 		public void to(OutputStream aOutputStream)
@@ -106,17 +143,21 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		}
 	}
 
+
 	public class Deserializer
 	{
 		public DeserializerJson asJson()
 		{
 			return new DeserializerJson();
 		}
+
+
 		public DeserializerBinary asBinary()
 		{
 			return new DeserializerBinary();
 		}
 	}
+
 
 	public class DeserializerBinary
 	{
@@ -124,6 +165,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		{
 		}
 	}
+
 
 	public static class DeserializerJson
 	{
@@ -550,7 +592,8 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 	public Array[] getArrays(K aKey)
 	{
-		Array v = getArray(aKey); return v == null ? null : v.asArrayOf(Array.class);
+		Array v = getArray(aKey);
+		return v == null ? null : v.asArrayOf(Array.class);
 	}
 
 
@@ -655,18 +698,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	{
 		return getImpl(aKey) == null;
 	}
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 	public double sum(String aPath)
@@ -1010,289 +1041,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			}
 		}
 		return VisitorResult.CONTINUE;
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	public <T extends Object> T _at(String aPath)
-	{
-		return _findFirst(aPath);
-	}
-
-
-	/**
-	 * Find a single value in the Document using a path by recursively visiting child Arrays and Documents.
-	 * <ul>
-	 * <li>find("name") - find field using name</li>
-	 * <li>find("7") - find array element</li>
-	 * <li>find("name/7") - find array element in child Document</li>
-	 * <li>find("people/7/name") - find the 8th name</li>
-	 * <li>find("people/[name=bob]/age")</li>
-	 * </ul>
-	 * todo:
-	 * <ul>
-	 * <li>find("people/[name=bob &amp;&amp; age > 18]/age")</li>
-	 * <li>find("people/[name=bob || age > 18 &amp;&amp; gender=male]/age")</li>
-	 * </ul>
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends Object> T _findFirst(String aPath)
-	{
-		if (aPath.startsWith("["))
-		{
-			return _evaluatePathExpression(aPath, null, false, false);
-		}
-
-		int i = aPath.indexOf('/');
-
-		if (i == -1)
-		{
-			if (aPath.matches("[0-9]*"))
-			{
-				return ((Array)this).get(Integer.valueOf(aPath));
-			}
-			return ((Document)this).get(aPath);
-		}
-		if (i == 0)
-		{
-			return _findFirst(aPath.substring(1));
-		}
-
-		String path = aPath.substring(0, i);
-		String remain = aPath.substring(i + 1);
-
-		Collection tmp;
-		if (this instanceof Array v)
-		{
-			if (path.matches("[0-9]*"))
-			{
-				tmp = v.get(Integer.valueOf(path));
-				return (T)tmp._findFirst(remain);
-			}
-			Array dest = new Array();
-			for (Object item : v)
-			{
-				if (item instanceof Collection collection)
-				{
-					dest.add(collection._findFirst(remain));
-				}
-				else
-				{
-					dest.add(item);
-				}
-			}
-			return (T)dest;
-		}
-		else
-		{
-			tmp = ((Document)this).get(path);
-			return (T)tmp._findFirst(remain);
-		}
-	}
-
-
-	protected <T extends Object> T _evaluatePathExpression(String aPath, Array aResult, boolean aValuesOnly, boolean aFindMany)
-	{
-		String key = aPath.substring(1, aPath.indexOf('='));
-		String expression = aPath.substring(aPath.indexOf('=') + 1, aPath.indexOf(']'));
-		String remain = aPath.substring(aPath.indexOf(']') + 1);
-
-		for (Object o : (Array)this)
-		{
-			if (o instanceof Document doc)
-			{
-				if (equalValues(doc.get(key), expression))
-				{
-					if (aFindMany)
-					{
-						doc._findMany(remain, aResult, aValuesOnly);
-					}
-					else
-					{
-						T result = doc._findFirst(remain);
-						if (result != null)
-						{
-							return (T)result;
-						}
-					}
-				}
-			}
-			else if (o instanceof Array arr)
-			{
-				// path expressions are not currently supported on Array elements
-			}
-		}
-		return null;
-	}
-
-
-	private boolean equalValues(Object aValue, String aExpression)
-	{
-		if (aValue == null)
-		{
-			return "null".equalsIgnoreCase(aExpression);
-		}
-		if (aValue instanceof Boolean v)
-		{
-			return aExpression.equalsIgnoreCase("true") == v;
-		}
-		return aExpression.equalsIgnoreCase(aValue.toString());
-	}
-
-
-	public Array _findMany(String aPath)
-	{
-		Array result = new Array();
-		_findMany(aPath, result, false);
-		return result;
-	}
-
-
-	/**
-	 * Find many values in the Document using a path by recursively visiting child Arrays and Documents.
-	 * <ul>
-	 * <li>findMany("people/7/name") - find a single name at index 7 (index starts at zero)</li>
-	 * <li>findMany("people/sales/name") - find the name of all sales people</li>
-	 * <li>findMany("people/ * /name") - find the name of all people</li>
-	 * </ul>
-	 */
-	public Array _findMany(String aPath, boolean aValuesOnly)
-	{
-		Array result = new Array();
-		_findMany(aPath, result, aValuesOnly);
-		return result;
-	}
-
-
-	@SuppressWarnings("unchecked")
-	protected <T> void _findMany(String aPath, Array aResult, boolean aValuesOnly)
-	{
-		int i = aPath.indexOf('/');
-
-		if (i == 0)
-		{
-			_findMany(aPath.substring(1), aResult, aValuesOnly);
-			return;
-		}
-		if (i == -1)
-		{
-			if (aPath.equals("*"))
-			{
-				Iterable it;
-				if (this instanceof Document v)
-				{
-					it = v.values();
-				}
-				else
-				{
-					it = (Iterable)this;
-				}
-				for (Object v : it)
-				{
-					optionalAdd(aResult, aValuesOnly, v);
-				}
-			}
-			else if (aPath.matches("[0-9]*"))
-			{
-				optionalAdd(aResult, aValuesOnly, ((Array)this).get(Integer.valueOf(aPath)));
-			}
-			else if (this instanceof Array v)
-			{
-				v.forEach(p ->
-				{
-					if (p instanceof Document w)
-					{
-						optionalAdd(aResult, aValuesOnly, w.get(aPath));
-					}
-				});
-			}
-			else
-			{
-				optionalAdd(aResult, aValuesOnly, ((Document)this).get(aPath));
-			}
-			return;
-		}
-
-		if (aPath.startsWith("["))
-		{
-			_evaluatePathExpression(aPath, aResult, aValuesOnly, true);
-			return;
-		}
-
-		String path = aPath.substring(0, i);
-		String remain = aPath.substring(i + 1);
-
-		if (this instanceof Array v)
-		{
-			if (path.equals("*"))
-			{
-				for (Object item : v)
-				{
-					if (item instanceof Collection collection)
-					{
-						collection._findMany(remain, aResult, aValuesOnly);
-					}
-				}
-			}
-			else if (path.matches("[0-9]*"))
-			{
-				if (v.get(Integer.valueOf(path)) instanceof Collection collection)
-				{
-					collection._findMany(remain, aResult, aValuesOnly);
-				}
-			}
-			else
-			{
-				v.forEach(item ->
-				{
-					Document doc = (Document)item;
-					if (doc.get(path) instanceof Collection collection)
-					{
-						collection._findMany(remain, aResult, aValuesOnly);
-					}
-				});
-			}
-		}
-		else if (this instanceof Document v)
-		{
-			if (path.equals("*"))
-			{
-				for (Object item : v.values())
-				{
-					if (item instanceof Collection collection)
-					{
-						collection._findMany(remain, aResult, aValuesOnly);
-					}
-				}
-			}
-			else if (v.get(path) instanceof Collection collection)
-			{
-				collection._findMany(remain, aResult, aValuesOnly);
-			}
-		}
-	}
-
-
-	private void optionalAdd(Array aResult, boolean aValuesOnly, Object v)
-	{
-		if (v != null && (!aValuesOnly || !(v instanceof Collection)))
-		{
-			aResult.add(v);
-		}
 	}
 
 
@@ -1814,8 +1562,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 //
 //		return (R)this;
 //	}
-
-
 	private static class ByteBufferInputStream extends InputStream
 	{
 		private final ByteBuffer mBuffer;
