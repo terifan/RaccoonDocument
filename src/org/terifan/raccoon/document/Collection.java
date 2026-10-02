@@ -1108,10 +1108,10 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	}
 
 
-	public R fromYml(String aYml)
-	{
-		return (R)this;
-	}
+//	public R fromYml(String aYml)
+//	{
+//		return (R)this;
+//	}
 
 
 	/**
