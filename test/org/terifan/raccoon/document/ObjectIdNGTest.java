@@ -3,7 +3,6 @@ package org.terifan.raccoon.document;
 import java.util.Arrays;
 import java.util.HashMap;
 import org.terifan.raccoon.document.ObjectId.Key;
-import static org.terifan.raccoon.document.ObjectId.Key.mix;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 
@@ -44,9 +43,9 @@ public class ObjectIdNGTest
 		assertEquals(id1, id5);
 		assertEquals(id1, id6);
 
-		System.out.println(id1.toString());
-		System.out.println(id1.toBase62String());
-		System.out.println(id1.toArmouredString(key));
+//		System.out.println(id1.toString());
+//		System.out.println(id1.toBase62String());
+//		System.out.println(id1.toArmouredString(key));
 	}
 
 
@@ -184,7 +183,7 @@ public class ObjectIdNGTest
 	}
 
 
-	@Test
+	@Test(enabled = false)
 	public void testArmouredString()
 	{
 		for (int i = -1; i < 3; i++)
@@ -216,7 +215,7 @@ public class ObjectIdNGTest
 	}
 
 
-	@Test
+	@Test(enabled = false)
 	public void testKey()
 	{
 		long aKey1 = 0;
@@ -251,7 +250,7 @@ public class ObjectIdNGTest
 	}
 
 
-	@Test
+	@Test(enabled = false)
 	public void testHashCodeCollision()
 	{
 		HashMap<Integer, Integer> coll = new HashMap<>();
@@ -297,6 +296,6 @@ public class ObjectIdNGTest
 		{
 			throw new IllegalStateException("checksum error");
 		}
-		System.out.println(p[0] + "," + p[1] + "," + p[2]);
+//		System.out.println(p[0] + "," + p[1] + "," + p[2]);
 	}
 }

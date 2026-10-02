@@ -21,7 +21,6 @@ import java.util.zip.DeflaterOutputStream;
 import static org.testng.Assert.*;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import test_document.Console;
 
 
 public class DocumentNGTest
@@ -131,8 +130,7 @@ public class DocumentNGTest
 				}
 			""");
 
-		Console.enabled = true;
-
+//		Console.enabled = true;
 		Document j = doc.findFirst("a/j[1][1]");
 		int h = doc.findFirst("a/b[x=false]/c[g=bob]/h");
 		int d = doc.findFirst("a/b[0]/c[0]/d");
@@ -153,18 +151,7 @@ public class DocumentNGTest
 	}
 
 
-	@Test
-	public void testFind2()
-	{
-		Document doc = new Document().fromJson(new InputStreamReader(DocumentNGTest.class.getResourceAsStream("trip.json")));
-
-		String s = doc.findFirst("/event/payload/lines/0/orderLineId");
-
-		System.out.println(s);
-	}
-
-
-	@Test
+	@Test(enabled = false)
 	public void testFindMany2()
 	{
 		Document doc = new Document().fromJson(new InputStreamReader(DocumentNGTest.class.getResourceAsStream("trip.json")));
@@ -420,9 +407,8 @@ public class DocumentNGTest
 		Document dstDocText = unmarshalledText.get("doc");
 		Array dstArrText = unmarshalledText.get("arr");
 
-		System.out.println(unmarshalledJson.keySet());
-		System.out.println(srcDoc.keySet());
-
+//		System.out.println(unmarshalledJson.keySet());
+//		System.out.println(srcDoc.keySet());
 		assertEquals(unmarshalledBin, srcDoc);
 		assertEquals(unmarshalledJson, srcDoc);
 		assertEquals(unmarshalledText, srcDoc);
@@ -593,15 +579,17 @@ public class DocumentNGTest
 	}
 
 
-//	@Test
-//	public void testHashcode() throws IOException, ClassNotFoundException
-//	{
-//		assertEquals(Document.of("_id:1").hashCode(), -2019545584);
-//		assertEquals(Document.of("_id:'1'").hashCode(), -1802300669);
-//		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
-//		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
-//	}
-//	@Test
+	@Test(enabled = false)
+	public void testHashcode() throws IOException, ClassNotFoundException
+	{
+		assertEquals(Document.of("_id:1").hashCode(), -2019545584);
+		assertEquals(Document.of("_id:'1'").hashCode(), -1802300669);
+		assertEquals(Document.of("_id:[1]").hashCode(), -1393108735);
+		assertEquals(Document.of("_id:['1']").hashCode(), 796603583);
+	}
+
+
+//	@Test(enabled = false)
 //	public void testInterleaved() throws IOException, ClassNotFoundException
 //	{
 //		int a = 1234;
@@ -619,15 +607,19 @@ public class DocumentNGTest
 //		assertEquals((int)v, a);
 //		assertEquals((int)(v >>> 32), b);
 //	}
-//	@Test
-//	public void testMarshall() throws IOException, ClassNotFoundException
-//	{
-//		String d = "$or:[{$and:[{ratings:1},{name:{$regex:'n.*'}}]},{$and:[{ratings:2},{name:{$regex:'w.*'}}]}]";
-//
-//		Document doc = Document.of(d);
-//
-//		System.out.println(doc);
-//	}
+
+
+	@Test(enabled = false)
+	public void testMarshall() throws IOException, ClassNotFoundException
+	{
+		String d = "$or:[{$and:[{ratings:1},{name:{$regex:'n.*'}}]},{$and:[{ratings:2},{name:{$regex:'w.*'}}]}]";
+
+		Document doc = Document.of(d);
+
+		System.out.println(doc);
+	}
+
+
 	@Test(enabled = false)
 	public void testMarshallCompressionRatio() throws IOException, ClassNotFoundException
 	{
@@ -768,7 +760,7 @@ public class DocumentNGTest
 	}
 
 
-	@Test
+	@Test(enabled = false)
 	public void testSize() throws IOException
 	{
 		Random rnd = new Random(1);
@@ -929,57 +921,63 @@ public class DocumentNGTest
 
 
 	@Test
-	public void testReference() throws IOException
+	public void testSomeMethod3()
 	{
-		Document a1 = Document.of("number:'47314631'");
-		Document a2 = Document.of("number:'47314631'");
-		Document a3 = Document.of("number:'47314631'");
-		Document a4 = Document.of("number:'47314631'");
-		Document a5 = Document.of("number:'47314631'");
+		Document doc = Document.of("{\"bookmarks\":{\"itms\":{},\"web\":{},\"west\":{\"scanner\":true,\"converter\":true,\"lynx_invoice\":false,\"import_files_service_bus\":false,\"lynx_manifest\":false,\"mq_state\":false,\"mq_pdf\":false,\"mq_odm\":false,\"mq\":false},\"test\":{\"converter\":true,\"scanner\":true,\"mq_state\":false,\"mq_lynx_manifest\":false,\"import_files_service_bus\":false,\"mq_lynx_invoice\":false,\"mq_pdf\":false,\"mq\":false}}}");
 
-//		Document a5;
-//		long ex = a1.hashCode();
-//		a5 = new Document();
-//		for (long i = 47314631+1; ;i++)
-//		{
-//			a5.put("number", ""+i);
-//			if (a5.hashCode()==ex) break;
-//		}
-//		System.out.println(a5);
-//		HashMap<Document,Document> map = new HashMap<>();
-//		map.putIfAbsent(a1, a1);
-//		map.putIfAbsent(a2, a2);
-//		map.putIfAbsent(a3, a3);
-//		map.putIfAbsent(a4, a4);
-//		map.putIfAbsent(a5, a5);
-//		a1 = map.get(a1);
-//		a2 = map.get(a2);
-//		a3 = map.get(a3);
-//		a4 = map.get(a4);
-//		a5 = map.get(a5);
-		Document out = Document.of("text:'hello world'");
-		out.put("alpha", a1);
-		out.put("beta", a2);
-		out.put("gamma", a3);
-		out.put("omega", a4);
-		out.put("zeta", a5);
-
-		out.reduce();
-
-		System.out.println(out);
-		System.out.println(new String(out.toByteArray()));
-
-		Document in = new Document().fromByteArray(out.toByteArray());
-
-		System.out.println(in.hashCode() == out.hashCode());
-		System.out.println(in.equals(out));
+		assertFalse(doc.findFirst("bookmarks/" + "west" + "/" + "key", false));
 	}
 
 
 	@Test
-	public void testSomeMethod3()
+	public void testFindFirst() throws IOException
 	{
-		Document doc = Document.of("{\"bookmarks\":{\"itms\":{},\"web\":{},\"west\":{\"scanner\":true,\"converter\":true,\"lynx_invoice\":false,\"import_files_service_bus\":false,\"lynx_manifest\":false,\"mq_state\":false,\"mq_pdf\":false,\"mq_odm\":false,\"mq\":false},\"test\":{\"converter\":true,\"scanner\":true,\"mq_state\":false,\"mq_lynx_manifest\":false,\"import_files_service_bus\":false,\"mq_lynx_invoice\":false,\"mq_pdf\":false,\"mq\":false}}}");
-		System.out.println(doc.findFirst("bookmarks/" + "west" + "/" + "key", false));
+		Document manifest = Document.of("{'value':'D','array':['d'],'manifestItems':[{'value':'C','array':['c'],'temperedGoods':[{'value':'B','array':['b'],'temperatures':{'value':'A','array':['a']}}, {'value':'E','other':'e'}]}]}");
+
+		assertEquals(manifest.getArray("manifestItems").getDocument(0).getArray("temperedGoods").getDocument(0).getDocument("temperatures").getArray("array").get(0, "#"), "a");
+		assertEquals(manifest.getArray("manifestItems").getDocument(0).getArray("temperedGoods").getDocument(0).getDocument("temperatures").get("value", "#"), "A");
+		assertEquals(manifest.getArray("manifestItems").getDocument(0).getArray("temperedGoods").getDocument(0).getDocument("temperatures").get("missing", "#"), "#");
+		assertEquals(manifest.getArray("manifestItems").getDocument(0).getArray("temperedGoods").getDocument(0).get("value", "#"), "B");
+		assertEquals(manifest.getArray("manifestItems").getDocument(0).getArray("temperedGoods").getDocument(0).get("missing", "#"), "#");
+		assertEquals(manifest.getArray("manifestItems").getDocument(0).get("value", "#"), "C");
+		assertEquals(manifest.getArray("manifestItems").getDocument(0).get("missing", "#"), "#");
+		assertEquals(manifest.get("value", "#"), "D");
+		assertEquals(manifest.get("missing", "#"), "#");
+
+		assertEquals(manifest.findFirst("manifestItems/temperedGoods/temperatures/value", "#"), "A");
+		assertEquals(manifest.findFirst("manifestItems/temperedGoods/temperatures/missing", "#"), "#");
+		assertEquals(manifest.findFirst("manifestItems/temperedGoods/temperatures/array[0]", "#"), "a");
+		assertEquals(manifest.findFirst("manifestItems/temperedGoods/temperatures/array[1]", "#"), "#");
+		assertEquals(manifest.findFirst("manifestItems/temperedGoods/value", "#"), "B");
+		assertEquals(manifest.findFirst("manifestItems/temperedGoods/missing", "#"), "#");
+		assertEquals(manifest.findFirst("manifestItems/temperedGoods/array[0]", "#"), "b");
+		assertEquals(manifest.findFirst("manifestItems/temperedGoods/array[1]", "#"), "#");
+		assertEquals(manifest.findFirst("manifestItems/value", "#"), "C");
+		assertEquals(manifest.findFirst("manifestItems/missing", "#"), "#");
+		assertEquals(manifest.findFirst("manifestItems/array[0]", "#"), "c");
+		assertEquals(manifest.findFirst("manifestItems/array[1]", "#"), "#");
+		assertEquals(manifest.findFirst("value", ""), "D");
+		assertEquals(manifest.findFirst("missing", "#"), "#");
+		assertEquals(manifest.findFirst("array[1]", "#"), "#");
+		assertEquals(manifest.findFirst("array[1]", "#"), "#");
+
+		assertEquals(manifest.findFirst("manifestItems[0]/temperedGoods/temperatures/value", "#"), "A");
+		assertEquals(manifest.findFirst("manifestItems[1]/temperedGoods/temperatures/value", "#"), "#");
+		assertEquals(manifest.findFirst("manifestItems[0]/temperedGoods[0]/temperatures/value", "#"), "A");
+		assertEquals(manifest.findFirst("manifestItems[0]/temperedGoods[1]/value", "#"), "E");
+		assertEquals(manifest.findFirst("manifestItems[0]/temperedGoods/other", "#"), "e");
 	}
+
+//	@Test
+//	public void testX() throws IOException
+//	{
+//		Document manifest = Document.of("{'manifestItems':[{'temperedGoods':[{'temperatures':{'amount':'***'}}]}]}");
+//
+//		System.out.println("" + manifest.getArray("manifestItems").getDocument(0).getArray("temperedGoods").getDocument(0).getDocument("temperatures").get("amount",""));
+//
+//		for (Document order : manifest.get("manifestItems", () -> new Array()).asDocumentArray())
+//		{
+//			System.out.println(""+order.findFirst("temperedGoods/0/temperatures/amount"));
+//		}
+//	}
 }

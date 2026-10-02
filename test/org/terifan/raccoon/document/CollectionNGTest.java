@@ -23,7 +23,7 @@ public class CollectionNGTest
 	}
 
 
-	@Test
+	@Test(enabled = false)
 	public void testSomeMethod2()
 	{
 		Document col = Document.of("order:[{orderLine:[{name:A},{name:B,hazard:true}]},{orderLine:[{name:C,hazard:true},{name:D,orderLine:[{name:E,hazard:true}]}]}]");

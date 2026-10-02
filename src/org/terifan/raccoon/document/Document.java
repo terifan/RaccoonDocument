@@ -15,7 +15,7 @@ import java.util.function.Function;
 import static org.terifan.raccoon.document.SupportedTypes.assertSupported;
 
 
-public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>, DocumentEntity
+public class Document extends Collection<String, Document> implements Externalizable, Cloneable, Comparable<Document>
 {
 	private final static long serialVersionUID = 1L;
 
@@ -227,7 +227,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 		LinkedHashMap<String, Object> tmp = new LinkedHashMap<>();
 		for (Entry<String, Object> entry : mValues.entrySet())
 		{
-			tmp.put(aMapper.apply(entry.getKey()).toString(), entry.getValue());
+			tmp.put(aMapper.apply(entry.getKey()), entry.getValue());
 		}
 		mValues = tmp;
 		return this;
@@ -332,7 +332,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	/**
-	 * Performs a deep clone of this Document and all it's values.
+	 * Note: this implementation performs a deep clone of this Document and all it's values.
 	 */
 	@Override
 	public Document clone()
@@ -343,6 +343,7 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 			// ???
 			doc.mValues = new LinkedHashMap<>();
+
 			return doc.fromByteArray(toByteArray());
 		}
 		catch (CloneNotSupportedException e)
@@ -658,38 +659,4 @@ public class Document extends Collection<String, Document> implements Externaliz
 		}
 		return VisitorResult.CONTINUE;
 	}
-
-
-//	public VisitorResult _x_visit(String aConsumedPath, String aPath, Visitor aVisitor)
-//	{
-//		if (aPath.equals("*"))
-//		{
-//			for (Entry<String, Object> entry : mValues.entrySet())
-//			{
-//				String consumedPath = aConsumedPath + "/" + entry.getKey();
-//				if (entry.getValue() instanceof Collection col)
-//				{
-//					if (col.visit(consumedPath, aPath, aVisitor) == VisitorResult.ABORT)
-//					{
-//						return VisitorResult.ABORT;
-//					}
-//				}
-//				else
-//				{
-//					if (_visit(consumedPath, entry.getValue(), aPath, aVisitor) == VisitorResult.ABORT)
-//					{
-//						return VisitorResult.ABORT;
-//					}
-//				}
-//			}
-//		}
-//		else
-//		{
-//			if (visit(aConsumedPath, aPath, aVisitor) == VisitorResult.ABORT)
-//			{
-//				return VisitorResult.ABORT;
-//			}
-//		}
-//		return VisitorResult.CONTINUE;
-//	}
 }

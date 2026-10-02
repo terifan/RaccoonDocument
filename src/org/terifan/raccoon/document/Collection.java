@@ -781,17 +781,18 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 		AtomicReference<T> result = new AtomicReference<>();
 		Visitor visitor = (cp, p, v) ->
 		{
+			if (v == null)
+			{
+				return VisitorResult.CONTINUE;
+			}
 			if (!result.compareAndSet(null, (T)v))
 			{
 				throw new IllegalStateException();
 			}
 			return VisitorResult.ABORT;
 		};
-		if (visit("", aPath, visitor) == VisitorResult.ABORT)
-		{
-			return result.get() == null ? aDefault : result.get();
-		}
-		return result.get();
+		visit("", aPath, visitor);
+		return result.get() == null ? aDefault : result.get();
 	}
 
 
@@ -841,7 +842,6 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			final String consumed = aConsumedPath;
 			String remain = aPath.substring(2);
 
-//			_visit(aConsumedPath, this, remain, aVisitor);
 			return visitAllRecursive(consumed, remain, (cp, p, o) ->
 			{
 				if (o instanceof Document col)
@@ -945,27 +945,44 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 
 		if (remain.startsWith("[") && remain.matches("\\[[0-9]+\\].*"))
 		{
-			int k = remain.indexOf(']');
-			int number = Integer.parseInt(remain.substring(1, k));
-			remain = remain.substring(k + 1).trim();
-
-			Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
-
-			aConsumedPath += "/" + path + "[" + number + "]";
-
-			Document doc = (Document)this;
-			Array arr = doc.get(path);
-			Collection col = arr.get(number);
-
-			if (col == null)
+			if (this instanceof Document doc)
 			{
-				return VisitorResult.CONTINUE;
-			}
-			if (col.visit(aConsumedPath, remain, aVisitor) == VisitorResult.ABORT)
-			{
+				int k = remain.indexOf(']');
+				int number = Integer.parseInt(remain.substring(1, k));
+				remain = remain.substring(k + 1).trim();
+
+				Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
+
+				aConsumedPath += "/" + path + "[" + number + "]";
+
+				if (doc.get(path) instanceof Array arr)
+				{
+					if (!arr.containsKey(number))
+					{
+						return VisitorResult.ABORT;
+					}
+					Object o = arr.get(number);
+
+					if (remain.isEmpty())
+					{
+						return aVisitor.visit(aConsumedPath, remain, o);
+					}
+
+					Collection col = (Collection)o;
+
+					if (col == null)
+					{
+						return VisitorResult.ABORT;
+					}
+					if (col.visit(aConsumedPath, remain, aVisitor) == VisitorResult.ABORT)
+					{
+						return VisitorResult.ABORT;
+					}
+					return VisitorResult.CONTINUE;
+				}
 				return VisitorResult.ABORT;
 			}
-			return VisitorResult.CONTINUE;
+			throw new IllegalStateException();
 		}
 
 		Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + " ==> " + remain);
@@ -1004,7 +1021,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			return v.visit(aConsumedPath, remain, aVisitor);
 		}
 
-		return VisitorResult.CONTINUE;
+		return aVisitor.visit(aConsumedPath, remain, obj);
 	}
 
 

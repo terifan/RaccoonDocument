@@ -24,7 +24,8 @@ enum BinaryCodec
 		(aDecoder, aPath, aState) -> aDecoder.readArray(aPath, new Array(), aState)
 	),
 	REFERENCE(3,
-		(aEncoder, aPath, aValue) -> {System.out.println(aValue);aEncoder.writeVarint((int)aValue);},
+//		(aEncoder, aPath, aValue) -> {System.out.println(aValue);aEncoder.writeVarint((int)aValue);},
+		(aEncoder, aPath, aValue) -> aEncoder.writeVarint((int)aValue),
 		(aDecoder, aPath, aState) -> (int)aDecoder.readVarint()
 	),
 	/** type: org.terifan.raccoon.document.ObjectId */

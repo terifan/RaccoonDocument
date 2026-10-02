@@ -61,7 +61,7 @@ class BinaryEncoder implements AutoCloseable
 			writeValue(type, aObject, path);
 		}
 
-		System.out.println(mReferences);
+//		System.out.println(mReferences);
 	}
 
 

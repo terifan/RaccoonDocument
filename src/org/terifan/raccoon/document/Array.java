@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import static org.terifan.raccoon.document.SupportedTypes.assertSupported;
 
 
-public class Array extends Collection<Integer, Array> implements Iterable<Object>, Externalizable, Cloneable, Comparable<Array>, DocumentEntity
+public class Array extends Collection<Integer, Array> implements Iterable<Object>, Externalizable, Cloneable, Comparable<Array>
 {
 	private final static long serialVersionUID = 1L;
 
