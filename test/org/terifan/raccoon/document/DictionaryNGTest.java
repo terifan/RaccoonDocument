@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import java.util.Random;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
-import test_document._Log;
 
 
 public class DictionaryNGTest
