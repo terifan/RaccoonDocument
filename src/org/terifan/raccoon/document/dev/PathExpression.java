@@ -1,4 +1,4 @@
-package org.terifan.raccoon.document;
+package org.terifan.raccoon.document.dev;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -159,6 +159,7 @@ public class PathExpression
 				}
 			}
 
+			System.out.println(root);
 			System.out.println(tokens);
 		}
 		catch (Exception e)
@@ -201,6 +202,19 @@ public class PathExpression
 				return type + "{" + tokens.toString() + "}";
 			}
 			return type + "{" + token + '}';
+		}
+	}
+
+
+	public static void main(String ... args)
+	{
+		try
+		{
+			PathExpression ex = new PathExpression("result/people/person[id=7]");
+		}
+		catch (Throwable e)
+		{
+			e.printStackTrace(System.out);
 		}
 	}
 }

@@ -11,7 +11,7 @@ import static org.terifan.raccoon.document.BinaryCodec.TERMINATOR;
 import static org.terifan.raccoon.document.BinaryEncoder.VERSION;
 
 
-public class BinaryDecoder
+public class BinaryDecoder implements AutoCloseable
 {
 	private final byte[] mReadBuffer = new byte[8];
 	private MurmurHash3 mChecksum;
@@ -272,7 +272,8 @@ public class BinaryDecoder
 	}
 
 
-	void close() throws IOException
+	@Override
+	public void close() throws IOException
 	{
 		mInputStream = null;
 	}

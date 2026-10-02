@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.terifan.raccoon.document.Console.Color;
+import org.terifan.raccoon.document._Console.Color;
 
 
 public abstract class Collection<K, R> implements Externalizable, Serializable
@@ -834,7 +834,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			throw new IllegalArgumentException();
 		}
 
-		Console.println(Color.GREEN, "--- " + aPath + " ----------------------");
+		_Console.println(Color.GREEN, "--- " + aPath + " ----------------------");
 
 		if (aPath.startsWith("//"))
 		{
@@ -950,7 +950,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 				int number = Integer.parseInt(remain.substring(1, k));
 				remain = remain.substring(k + 1).trim();
 
-				Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
+				_Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + "[" + number + "]" + " ==> " + remain);
 
 				aConsumedPath += "/" + path + "[" + number + "]";
 
@@ -984,7 +984,7 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 			throw new IllegalStateException();
 		}
 
-		Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + " ==> " + remain);
+		_Console.println(Color.BLUE, getClass().getSimpleName() + " << " + aConsumedPath + " >> " + path + " ==> " + remain);
 
 		aConsumedPath += "/" + path;
 
@@ -1105,6 +1105,12 @@ public abstract class Collection<K, R> implements Externalizable, Serializable
 	public R fromJson(Reader aJson)
 	{
 		return (R)new JSONDecoder().unmarshal(aJson, this);
+	}
+
+
+	public R fromYml(String aYml)
+	{
+		return (R)this;
 	}
 
 

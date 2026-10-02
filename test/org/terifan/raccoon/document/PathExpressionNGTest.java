@@ -1,5 +1,6 @@
 package org.terifan.raccoon.document;
 
+import org.terifan.raccoon.document.dev.PathExpression;
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 

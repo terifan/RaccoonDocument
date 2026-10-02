@@ -144,19 +144,20 @@ public class Dictionary implements Externalizable
 	public void writeExternal(ObjectOutput aOut) throws IOException
 	{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		BinaryEncoder encoder = new BinaryEncoder(baos, k -> true);
-		encoder.standalone();
-
-		for (Entry<Object, Integer> entry : mMap.entrySet())
+		try (BinaryEncoder encoder = new BinaryEncoder(baos, k -> true))
 		{
-			Object value = entry.getKey();
-			BinaryCodec type = BinaryCodec.identify(value);
-			encoder.writeToken(type, entry.getValue());
-			type.encoder.encode(encoder, value);
-		}
+			encoder.standalone();
 
-		encoder.terminate();
-		encoder.close();
+			for (Entry<Object, Integer> entry : mMap.entrySet())
+			{
+				Object value = entry.getKey();
+				BinaryCodec type = BinaryCodec.identify(value);
+				encoder.writeToken(type, entry.getValue());
+				type.encoder.encode(encoder, value);
+			}
+
+			encoder.terminate();
+		}
 
 		byte[] data = baos.toByteArray();
 		aOut.writeInt(data.length);
@@ -170,24 +171,26 @@ public class Dictionary implements Externalizable
 		byte[] data = new byte[aIn.readInt()];
 		aIn.readFully(data);
 
-		BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(data), null);
-		Token token = decoder.readToken();
-
-		if (token.type != BinaryCodec.DICTIONARY || token.value != VERSION)
+		try (BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(data), null))
 		{
-			throw new StreamException("Unsupported stream encoding version: " + token.value);
-		}
+			Token token = decoder.readToken();
 
-		Path path = new Path();
+			if (token.type != BinaryCodec.DICTIONARY || token.value != VERSION)
+			{
+				throw new StreamException("Unsupported stream encoding version: " + token.value);
+			}
 
-		while ((token = decoder.readToken()).type != BinaryCodec.TERMINATOR)
-		{
-			mMap.put(token.type.decoder.decode(decoder, path, BinaryDecoder.VisitorResult.CONTINUE), token.value);
-		}
+			Path path = new Path();
 
-		if (token.value != token.checksum)
-		{
-			throw new StreamException("Checksum error in data stream");
+			while ((token = decoder.readToken()).type != BinaryCodec.TERMINATOR)
+			{
+				mMap.put(token.type.decoder.decode(decoder, path, BinaryDecoder.VisitorResult.CONTINUE), token.value);
+			}
+
+			if (token.value != token.checksum)
+			{
+				throw new StreamException("Checksum error in data stream");
+			}
 		}
 	}
 

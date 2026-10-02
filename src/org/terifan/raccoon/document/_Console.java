@@ -1,10 +1,7 @@
 package org.terifan.raccoon.document;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
-
-public class Console
+class _Console
 {
 	public enum Color
 	{
