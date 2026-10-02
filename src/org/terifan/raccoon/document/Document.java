@@ -159,9 +159,9 @@ public class Document extends Collection<String, Document> implements Externaliz
 
 
 	@Override
-	public ArrayList<String> keySet()
+	public Set<String> keySet()
 	{
-		return new ArrayList<>(mValues.keySet());
+		return mValues.keySet();
 	}
 
 
@@ -431,6 +431,37 @@ public class Document extends Collection<String, Document> implements Externaliz
 	}
 
 
+	/**
+	 * Update the stored value, incrementing it with the amount provided. Stored value is cast to long.
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends Document> T increment(String aKey, long aAmount)
+	{
+		Object value = mValues.get(aKey);
+
+		if (value == null || "".equals(value))
+		{
+			value = 0L;
+		}
+		else if (value instanceof String v)
+		{
+			value = Long.valueOf(v);
+		}
+
+		if (value instanceof Number v)
+		{
+			value = v.longValue() + aAmount;
+		}
+		else
+		{
+			throw new IllegalArgumentException("The value of the key specified must be an long value (String and Number are cast to long).");
+		}
+
+		mValues.put(aKey, value);
+		return (T)this;
+	}
+
+
 	@SuppressWarnings("unchecked")
 	public <T extends Document> T increment(String aKey)
 	{
@@ -507,5 +538,98 @@ public class Document extends Collection<String, Document> implements Externaliz
 		tmp.putAll(mValues);
 		mValues = new LinkedHashMap<>(tmp);
 		return this;
+	}
+
+
+	@Override
+	protected VisitorResult visit(String aConsumedPath, String aPath, Visitor aVisitor)
+	{
+		if (aPath.equals("."))
+		{
+			return aVisitor.visit(aConsumedPath + "/" + aPath, "", this);
+		}
+
+		if (aPath.isEmpty())
+		{
+			if (aVisitor.visit(aConsumedPath, "", this) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+			return VisitorResult.CONTINUE;
+		}
+
+		if (aPath.equals("values()"))
+		{
+			for (Entry<String, Object> entry : entrySet())
+			{
+				String consumedPath = aConsumedPath + "/" + entry.getKey();
+				if (aVisitor.visit(consumedPath, "", entry.getValue()) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+			}
+			return VisitorResult.CONTINUE;
+		}
+
+		if (aPath.equals("names()"))
+		{
+			for (Entry<String, Object> entry : entrySet())
+			{
+				if (aVisitor.visit(aConsumedPath, "", entry.getKey()) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+			}
+			return VisitorResult.CONTINUE;
+		}
+
+		if (aPath.startsWith("//"))
+		{
+			final String consumed = aConsumedPath;
+			String remain = aPath.substring(2);
+
+			if (visit(consumed, remain, aVisitor) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+
+			return visitAllRecursive(consumed, remain, (cp, p, o) ->
+			{
+				if (o instanceof Document col)
+				{
+					return col.visit(cp, remain, aVisitor);
+				}
+				return VisitorResult.CONTINUE;
+			});
+		}
+
+		if (!aPath.contains("/") && !aPath.contains("["))
+		{
+			return aVisitor.visit(aConsumedPath + "/" + aPath, "", get(aPath));
+		}
+
+		return super.visit(aConsumedPath, aPath, aVisitor);
+	}
+
+
+	@Override
+	protected VisitorResult visitAllRecursive(String aConsumedPath, String aPath, Visitor aVisitor)
+	{
+		for (Entry<String, Object> entry : entrySet())
+		{
+			String consumedPath = aConsumedPath + "/" + entry.getKey();
+			if (aVisitor.visit(consumedPath, aPath, entry.getValue()) == VisitorResult.ABORT)
+			{
+				return VisitorResult.ABORT;
+			}
+			if (entry.getValue() instanceof Collection col)
+			{
+				if (col.visitAllRecursive(consumedPath, aPath, aVisitor) == VisitorResult.ABORT)
+				{
+					return VisitorResult.ABORT;
+				}
+			}
+		}
+		return VisitorResult.CONTINUE;
 	}
 }
